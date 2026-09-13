@@ -42,7 +42,7 @@ Re-verified rather than inherited: the spec's [S3] was established 2026-08-29, a
 
 | Phase | Goal | Fulfills AC | Owner | Status |
 |---|---|---|---|---|
-| P1 | Prove the transport carries a job across a session boundary | N/A (canary; de-risks AC-4 and AC-9 before either is built) | agent + maintainer | Not started |
+| P1 | Prove the transport carries a job across a session boundary | N/A (canary; de-risks AC-4 and AC-9 before either is built) | agent + maintainer | **Done 2026-09-12, both canaries pass** |
 | P2 | Dispatch submits, and a submit failure is reported rather than absorbed | AC-2, AC-3, AC-5 | agent | Not started |
 | P3 | Collection writes findings back, across a session boundary | AC-1, AC-4, AC-5, AC-6, AC-7, AC-9 | agent | Not started |
 | P4 | Close the skill edit: `argument-hint`, version, HISTORY, manifests | AC-8 | agent | Not started |
@@ -86,6 +86,30 @@ node ".../codex-companion.mjs" task --background --json --effort low "Reply with
 ```
 
 must print a job identifier and exit 0. Then, from a second session, `result <that-id> --json` must return JSON whose status is terminal and whose output contains `CANARY-OK`.
+
+### Result, 2026-09-12: both canaries pass, and the second one also validates D2
+
+**Step 1 passes.** `task --background --json` returned structured JSON, not prose:
+
+```json
+{ "jobId": "task-mtzc94pb-ctw94p", "status": "queued", "title": "Codex Task", "summary": "Reply with exactly: CANARY-OK", "logFile": "...jobs/task-mtzc94pb-ctw94p.log" }
+```
+
+Finding 1 is confirmed empirically. **P2 uses `--json` and no prose parsing is needed**, so the fallback named in step 1 is not required.
+
+**Step 2 passes, tested through the mechanism the filter itself uses.** `getCurrentClaudeSessionId()` reads the environment variable `CODEX_COMPANION_SESSION_ID` (`lib/tracked-jobs.mjs` line 6) and returns `null` when it is unset, in which case `filterJobsForCurrentClaudeSession` returns everything. **That variable is unset in a normal Claude Code session here**, so the filter is inert by default. Setting it to a foreign value is therefore a faithful simulation of a different session rather than an approximation of one, and it is a stricter test than a real second session, which may set nothing at all. Under `CODEX_COMPANION_SESSION_ID="not-the-session-that-submitted-it"`:
+
+| Call | Result |
+|---|---|
+| `status task-mtzc94pb-ctw94p --json` | returns the job, `status: running` |
+| `status --json` (listing, same foreign id) | **0 jobs visible** |
+| `result task-mtzc94pb-ctw94p --json` | returns the job, `status: completed`, payload contains `CANARY-OK` |
+
+**AC-9 is deliverable.** The identifier redeems across a session boundary, and the round trip completes end to end.
+
+**The listing row is the more valuable finding, because it converts D2 from a preference into a requirement.** D2's Option B was to hold the identifier in-session and re-query with `status --all` when needed, and its recorded cost was "a lookup that may be ambiguous when several jobs are in flight." The measurement says it is worse than ambiguous: **a job submitted by another session is not listed at all**, so Option B could not have found the job under any circumstances once the variable is set. Storing the identifier in the document is not the better of two workable options; it is the only one that works. The maintainer's decision holds, and now has proof rather than reasoning behind it.
+
+**One thing this does not establish.** Nothing here tested what sets `CODEX_COMPANION_SESSION_ID` in normal operation, or whether some other harness path sets it. It does not matter for AC-9: explicit-id lookup succeeds whether the variable is unset, set to the submitting session, or set to a foreign one, and those three cases exhaust the possibilities.
 
 ---
 
