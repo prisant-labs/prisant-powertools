@@ -4,9 +4,9 @@ title: "Programmatic review dispatch for plab-ai-review"
 type: spec
 status: committed
 created: 2026-08-29
-updated: 2026-09-01
+updated: 2026-09-12
 linked-effort: "the maintainer's private ai-review growth roadmap, entry A-2 (make the handoff programmatic), written 2026-08-16, which names this the single largest improvement available in the portfolio"
-linked-plan: null
+linked-plan: implementation-plan.md
 linked-release: null
 ac-count: 9
 source-count: 5
@@ -19,10 +19,10 @@ priority: P1
 ## Task Summary
 
 **Status:** committed
-**Last updated:** 2026-09-01 by claude, applying the maintainer's D1, D2 and D3 decisions
-**Linked plan:** not yet planned
+**Last updated:** 2026-09-12 by claude, setting the round-trip link to the implementation plan
+**Linked plan:** `implementation-plan.md`
 **Open questions:** 0
-**Revisions:** 1
+**Revisions:** 2
 
 ### Acceptance Criteria Fulfillment
 
@@ -162,6 +162,7 @@ The distinction that matters: a document with empty placeholders and a reported 
 | Date | Author | Type | Description |
 |------|--------|------|-------------|
 | 2026-08-29 | plab-spec | added | Initial draft created |
+| 2026-09-12 | claude | amended | Round-trip link set: `linked-plan` from `null` to `implementation-plan.md`, per the planning artifact model's rule that plan creation sets the spec's link. No acceptance criterion, requirement, scope boundary or decision changed; `ac-count` is unchanged at 9. |
 | 2026-09-01 | claude | amended | D1, D2 and D3 resolved by the maintainer. The Non-Goal on document format narrowed to the body, so it no longer contradicts the single frontmatter field D2 requires. AC-9 added, because AC-4 alone was satisfied by an in-session-only identifier and so did not test the session-boundary property D2 exists to deliver. Requirements 8 and 9 added for the identifier's persistence and the effort setting. Status promoted from draft to committed. |
 
 ## Sources & Evidence
