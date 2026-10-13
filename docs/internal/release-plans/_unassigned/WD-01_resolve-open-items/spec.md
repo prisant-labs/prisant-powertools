@@ -4,7 +4,7 @@ title: "plab-resolve-open-items: the in-session walk of open questions and decis
 type: spec
 status: committed
 created: 2026-10-05
-updated: 2026-10-08
+updated: 2026-10-12
 linked-effort: "the maintainer's private walk-decisions strategy brief, 2026-10-04"
 linked-plan: implementation-plan.md
 linked-release: null
@@ -19,10 +19,10 @@ priority: P2
 ## Task Summary
 
 **Status:** committed
-**Last updated:** 2026-10-08 by claude (Opus 5.5), status committed: the build has started
+**Last updated:** 2026-10-12 by claude (Opus 5.5), status committed: Requirement 2 anchored to the walk request, fixing the over-gathering found by the v0.7.0 install check
 **Linked plan:** `implementation-plan.md` in this folder
 **Open questions:** 1 (Q1 Needs info, skipped twice with its default in effect; see Open Questions / Decisions)
-**Revisions:** 3
+**Revisions:** 4
 
 ### Acceptance Criteria Fulfillment
 
@@ -111,7 +111,7 @@ Options the maintainer chose not to take now, kept here so they stay with this e
 ## Requirements
 
 1. Gathering is limited to two sources: the current conversation's own unresolved items, and the Open Questions / Decisions section of any document the session has read or edited. This is a deliberately narrow slice of a broader gathering design already written for a repository's specs, plans, and session logs; that broader design stays reserved for the `--backlog` mode, outside this spec (see Non-Goals). When the maintainer names one document to walk, gathering is limited to that document's Open Questions / Decisions section. [S1, S3, S7]
-2. A document counts as touched when the current session has read it or written to it. The design brief itself notes that what counts as pending inside a session is not defined anywhere, so this definition is this spec's own judgment call. [S1, model-inference]
+2. A document counts as touched when the current session read it or wrote to it before the maintainer asked for the walk. A file read during gathering, in order to find items, is not touched, so the set of sources cannot grow while the walk runs. The design brief itself notes that what counts as pending inside a session is not defined anywhere, so this definition is this spec's own judgment call. [S1, model-inference]
 3. Every gathered item is presented under one of three series: Q, a question only the maintainer can answer; D, a decision carrying two to four lettered options and exactly one recommendation with a stated confidence level; or T, a task only the maintainer can perform. [S1, S2, S7]
 4. An item drawn from a source document names that document and the item's own id there. An item with no source document is marked as having none, never given a fabricated one. [S1]
 5. Every Q item states the default the skill will assume if the maintainer does not answer it. A D item carries no such default, and an unanswered D item is left exactly as found. A T item carries no default either, and an unanswered T item stays open. [S1, S7]
@@ -225,6 +225,7 @@ A walk presents D1 through D3 and Q1. The maintainer answers "D2 B, Q1: the NAS,
 | 2026-10-07 | claude | changed | Recorded the maintainer's answers to D1 to D8 from walks on 2026-10-06 and 2026-10-07. Renamed the skill `plab-resolve-open-items` (D1) and the backlog mode `--backlog`. Widened gathering to a single named document (D2, option C: Scope item 1, Requirement 1, AC-1; `ac-count` unchanged). Added the Backlog section, rows D2 and D8 so this document is the single home for all nine items, and two new Proposed items, D9 and D10 |
 | 2026-10-07 | claude | changed | The maintainer ratified D9 (three answer rules) and D10 (T series). Written into Scope items 2 and 13 to 15, Requirements 3, 5 and 18 to 21, AC-2 and AC-4, and new AC-17 to AC-20; `ac-count` 16 to 20 |
 | 2026-10-07 | claude | changed | Linked `implementation-plan.md`, which covers all 20 criteria in seven phases. D9's Follow-up line now names Phase 1 of that plan. No criterion changed |
+| 2026-10-12 | claude | changed | Anchored Requirement 2's definition of a touched document to the moment the walk is requested. The v0.7.0 install check showed that "read or written by the session" let a walk make its own sources: an empty headless session listed `_local/` folders and read memory files instead of saying nothing was open, against AC-1. Fixed in the skill as 1.0.1. No criterion changed |
 
 ## Sources & Evidence
 
@@ -238,7 +239,7 @@ A walk presents D1 through D3 and Q1. The maintainer answers "D2 B, Q1: the NAS,
 
 ### Unverified Claims
 
-- "A document counts as touched when the current session has read it or written to it." Appears in Requirements item 2. The design brief names the gap this definition fills, but does not itself define it.
+- "A document counts as touched when the current session read it or wrote to it before the maintainer asked for the walk." Appears in Requirements item 2. The design brief names the gap this definition fills, but does not itself define it.
 - "A bare answer such as 'ok' or 'accept all' is recognized as an explicit instruction accepting every item." Appears in Requirements item 7 and AC-7. The exact trigger wording is this spec's own choice.
 
 ### Gaps

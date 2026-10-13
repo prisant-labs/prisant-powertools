@@ -4,12 +4,16 @@ How a walk finds its items, sorts them into series, gives each one home, and sho
 
 ## Sources
 
-A walk gathers from exactly two sources.
+A walk gathers from exactly two sources, and both are fixed at the moment the maintainer asks for the walk.
 
-1. **This conversation.** An item is open here when the agent asked the maintainer something that got no answer, proposed a choice the maintainer did not rule on, said a choice needs the maintainer, or named a task only the maintainer can do. A question the agent could answer by reading a file is not an item; answer it instead.
-2. **Documents this session has touched.** A document is touched when this session has read it or written to it. Its items are the entries in its "Open Questions / Decisions" section whose status is `Open` or `Needs info`. Items already `Decided`, `Provisional`, `Deferred`, `Canceled` or `Superseded` are settled and are not gathered. An item whose status is none of the seven, such as `Proposed`, `Ratified` or `Needs ruling`, is not silently skipped: present it as open, and name its unrecognized status in the source line, so the maintainer can settle the item and its status together.
+1. **This conversation.** An item is open here when the agent asked the maintainer something that got no answer, proposed a choice the maintainer did not rule on, said a choice needs the maintainer, or named a task only the maintainer can do. A question the agent could answer by reading a file is not an item; answer it instead. Text that a hook, a system reminder or a memory file injected into the session is not conversation for this purpose: nothing in it is an item unless the maintainer or the agent raised it in the conversation itself.
+2. **Documents this session touched before the walk was requested.** A document is touched when this session read it or wrote to it before the maintainer asked for the walk. Its items are the entries in its "Open Questions / Decisions" section whose status is `Open` or `Needs info`. Items already `Decided`, `Provisional`, `Deferred`, `Canceled` or `Superseded` are settled and are not gathered. An item whose status is none of the seven, such as `Proposed`, `Ratified` or `Needs ruling`, is not silently skipped: present it as open, and name its unrecognized status in the source line, so the maintainer can settle the item and its status together.
 
-Nothing else is a source: not a document the session never opened, not another repository, and not the session-log store. Sweeping those is the `--backlog` mode, which is not built.
+**Gathering never searches.** Do not list a folder, open a file, or read a memory file in order to find items. A file read during gathering is not touched, because the definition above is anchored to the walk request so that the set of sources cannot grow while the walk runs. Re-reading a document that was touched before the request, to get the current text of its section, is allowed.
+
+Nothing else is a source: not a document the session never opened, not a memory file, not a decision register or status document the session did not open before the request, not another repository, and not the session-log store. Sweeping those is the `--backlog` mode, which is not built.
+
+**Nothing open.** When neither source holds an open item, say so in one sentence, note that the `--backlog` sweep across the repository is not built, offer to walk one document the maintainer names, and stop. Write no walk record for an empty walk.
 
 **Named-document mode.** When the maintainer names one document ("resolve the open items in `<path>`"), the walk gathers from that document's section alone, and the conversation is not a source. If that document has no section in the format of `references/decisions-section.md`, say so. Offer to walk its items anyway, with every answer landing in the walk record only, because write-back needs the format.
 
