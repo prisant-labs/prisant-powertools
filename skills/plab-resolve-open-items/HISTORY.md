@@ -2,7 +2,21 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.0.1 | 2026-10-12 | unreleased | fixed | A walk in a session with nothing open listed `_local/` folders and read memory files, looking for items, instead of saying nothing was open. A document now counts as a source only if the session read or wrote it before the walk was requested, and gathering never searches. |
 | 1.0.0 | 2026-10-08 | v0.7.0 | added | First version. Walks the open questions, decisions and tasks of the current session, or of one named document, takes a one-line answer, writes each answer back to its one home, and writes a walk record that `walk-check.py` verifies. |
+
+## 1.0.1 - 2026-10-12
+
+**Fixed: a walk with nothing open went looking for items.** The install check of v0.7.0 on 2026-10-09 gave the walk request to a fresh headless session that had read nothing. Instead of saying nothing was open, the skill listed `_local/`, `_local/status/`, the session-log store and `_local/decisions/`, read memory files, and ran out of turns still searching. That broke AC-1 (gathering limited to the conversation and touched documents) of WD-01 (resolve open items).
+
+The cause was the definition of a touched document: one "this session has read or written". Reading a file while gathering made that file touched, so the search created its own sources.
+
+- **`references/walk-format.md` anchors both sources to the walk request.** A document counts only if the session read or wrote it before the maintainer asked for the walk. A new rule, "Gathering never searches", forbids listing a folder, opening a file or reading a memory file to find items. Re-reading a document touched before the request is still allowed.
+- **Injected text is not conversation.** Text that a hook, a system reminder or a memory file put into the session is not an item unless someone raised it in the conversation. The maintainer's own start-up hook injects overdue rows from another repository's tracker into every session, and that is the case this rule names.
+- **An empty walk has a defined reply.** The skill says nothing is open in one sentence, notes that `--backlog` is not built, offers to walk one named document, and stops. `SKILL.md` step 1 carries the same rules in short form.
+- **The spec's Requirement 2 is amended to match.** The definition was the spec's own judgment call, and the skill must not contradict its contract.
+
+**Canary.** Each arm ran the same headless prompt from the same clean `main` checkout, with the installed plugin and auto-memory switched off for that invocation, through a `.claude/skills/` junction. Only the skill text differed. Under 1.0.0 the session listed `_local/` and `_local/decisions/` and globbed the release plans for WD-01 documents before replying. Under 1.0.1, in two runs, it read only its own `walk-format.md` and replied that nothing was open. Memory had to be off because this project's own memory describes the defect and its fix: with memory on, a 1.0.0 run read that memory and avoided the search by hand.
 
 ## 1.0.0 - 2026-10-08
 

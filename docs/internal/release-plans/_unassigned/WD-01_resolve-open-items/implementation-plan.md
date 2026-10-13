@@ -2,9 +2,9 @@
 id: WD-01
 title: "Implementation plan: plab-resolve-open-items, the in-session walk of open questions and decisions"
 type: implementation-plan
-status: in-progress
+status: complete
 created: 2026-10-07
-updated: 2026-10-08
+updated: 2026-10-12
 linked-spec: spec.md
 linked-release: null
 ac-coverage: complete
@@ -65,7 +65,7 @@ None of these adds an acceptance criterion. Each one reads a criterion where the
 | P3 | The walk checker exists, runs in CI, and is proven to fail | AC-6, AC-8, AC-10, AC-18, AC-19, AC-20 (deterministic halves) | agent | **Done** 2026-10-08, `a55b8de`, 14 canaries |
 | P4 | `library.json` registers ten skills at plugin 0.7.0, and the manifests agree | AC-14 (invocation setting) | agent | **Done** 2026-10-08, `d3d295d` |
 | P5 | Every human-facing file names the new skill | AC-16 (documentation half) | agent | **Done** 2026-10-08, `29108f1` |
-| P6 | A live walk proves the behaviour | AC-1 to AC-15 and AC-17 to AC-20 (behaviour, including AC-14's trigger test) | agent and maintainer | Not started |
+| P6 | A live walk proves the behaviour | AC-1 to AC-15 and AC-17 to AC-20 (behaviour, including AC-14's trigger test) | agent and maintainer | **Done** 2026-10-12, against 1.0.1; all 20 criteria pass. Run headless and relayed; see the note under Phase 6 |
 | P7 | v0.7.0 ships with `plab-audit` 1.1.0 and loads from the cache | N/A (release) | agent and maintainer | **Released ahead of P6** by maintainer ruling, 2026-10-09; see the note under Phase 6 |
 
 ---
@@ -409,6 +409,13 @@ All three gates exit 0. The loop prints a count of at least 1 for each of the fi
 
 **Run after the release, by maintainer ruling of 2026-10-09.** The maintainer, the plugin's only user, chose to ship v0.7.0 first and run this walk against the installed version, as v0.6.0 did for `plab-audit`. Three steps change as a result. Skip step 1: the skill loads from the installed plugin, and Phase 7 step 7 has already removed the junction. In step 5, the base-directory line must name the `prisant-utilities\0.7.0` cache instead of the junction. And a defect this walk finds ships as a patch release, 0.7.1, rather than blocking the tag. The spec stays `committed` until this phase ticks its boxes; it has no `target-release`, so invariant 4 does not require it to be `fulfilled`.
 
+**As run, 2026-10-12.** A headless install check of 0.7.0 found that an empty session over-gathered, so the skill was fixed as 1.0.1 first and the walk ran against that fix through the step 1 junction, not against the installed cache. Two more changes followed from what the run met:
+
+- **The walk ran headless, relayed turn by turn.** The maintainer was away from the computer. A fresh session started with `claude -p` and continued with `--resume`, receiving the scripted lines of steps 6 to 11; it never saw the session that relayed them. The one unscripted answer, Q1's, is the maintainer's own text, relayed verbatim.
+- **The walk session ran with the installed plugin and auto-memory switched off,** through a `--settings` file. With the plugin on, the unfixed copy is also on offer under the plugin's namespace. With memory on, the project memory tells the session about the defect and this trial.
+
+Every check in step 12 passed except the write-back check on the design brief, which exits 2 because the brief's section heading is not the standard one; a manual diff shows only its three surfaces changed. No check failed, so step 14 needed no repeat.
+
 **Goal:** In a fresh session that loads the skill through a junction, a real walk shows every behaviour the checker cannot see. The same walk answers the spec's last open item, Q1 (what happened to past walk answers).
 
 **Files:**
@@ -423,19 +430,19 @@ All three gates exit 0. The loop prints a count of at least 1 for each of the fi
 
 **Steps:**
 
-1. [ ] **Create the junction**, in PowerShell from the repository root:
+1. [x] **Create the junction**, in PowerShell from the repository root:
 
    ```powershell
    New-Item -ItemType Junction -Path .claude\skills\plab-resolve-open-items -Target (Resolve-Path skills\plab-resolve-open-items)
    ```
 
-2. [ ] **Write `fixture.md`**, a document whose decisions section follows `references/decisions-section.md`. It holds five D items (D1 to D5) and one Q item with a stated default. Make D4 architectural: it must state alternatives considered and be hard to reverse, so that it meets the ADR bar. Write `fixture-b.md` with two D items and one Q item. Copy both to `*.before.md` beside them.
-3. [ ] **Create the branch-guard worktree:** `git worktree add ../prisant-utilities-wd01-trial -b trial/wd01-branch-guard`. In it, write `_local/branch-guard.md` with one Open D item in the same format, and record its SHA-256 hash.
-4. [ ] **Make pre-trial copies of `spec.md` and of the maintainer's private design brief** for this skill, dated 2026-10-04 and kept in the gitignored ideas folder. Copy each into `_local/verification/wd01-trial/`. The brief's Q1 is the same item as the spec's Q1, and the spec is its home, so the pair tests the one-home rule. Do not use `git show HEAD:` as the spec's "before": Phase 2 already changed the spec's status, and Phase 2 step 6 explains why `HEAD` is not a safe baseline.
-5. [ ] **Start a fresh Claude Code session** in the repository root, because `/clear` does not reload skills. When the skill first loads, confirm that its base directory line names the `.claude\skills\plab-resolve-open-items` junction. On Windows the line uses backslashes.
-6. [ ] **Touch the sources.** Ask the session to read `fixture.md`, the worktree's `branch-guard.md`, `spec.md` and the design brief. Then say two things in conversation: "I haven't decided whether the trial results go in RESULTS.md or a session log" (a sourceless Q), and "I still need to delete the decision-21 canary clone" (a T item). Do not let it read the maintainer's decision register, because that register's absence from the walk is the AC-1 test.
-7. [ ] **Ask for the walk** with the maintainer's own words: "Walk me through the pending questions, decisions, and needed clarifications." Check the presentation against AC-1 to AC-4 and AC-17. No item may come from the decision register. Q1 must appear once, naming the spec as its home. Every D item has options and a recommendation with confidence. Every Q item has a default. The T item has done, later and drop.
-8. [ ] **Answer round 1**, using the walk's own numbers for these roles:
+2. [x] **Write `fixture.md`**, a document whose decisions section follows `references/decisions-section.md`. It holds five D items (D1 to D5) and one Q item with a stated default. Make D4 architectural: it must state alternatives considered and be hard to reverse, so that it meets the ADR bar. Write `fixture-b.md` with two D items and one Q item. Copy both to `*.before.md` beside them.
+3. [x] **Create the branch-guard worktree:** `git worktree add ../prisant-utilities-wd01-trial -b trial/wd01-branch-guard`. In it, write `_local/branch-guard.md` with one Open D item in the same format, and record its SHA-256 hash.
+4. [x] **Make pre-trial copies of `spec.md` and of the maintainer's private design brief** for this skill, dated 2026-10-04 and kept in the gitignored ideas folder. Copy each into `_local/verification/wd01-trial/`. The brief's Q1 is the same item as the spec's Q1, and the spec is its home, so the pair tests the one-home rule. Do not use `git show HEAD:` as the spec's "before": Phase 2 already changed the spec's status, and Phase 2 step 6 explains why `HEAD` is not a safe baseline.
+5. [x] **Start a fresh Claude Code session** in the repository root, because `/clear` does not reload skills. When the skill first loads, confirm that its base directory line names the `.claude\skills\plab-resolve-open-items` junction. On Windows the line uses backslashes.
+6. [x] **Touch the sources.** Ask the session to read `fixture.md`, the worktree's `branch-guard.md`, `spec.md` and the design brief. Then say two things in conversation: "I haven't decided whether the trial results go in RESULTS.md or a session log" (a sourceless Q), and "I still need to delete the decision-21 canary clone" (a T item). Do not let it read the maintainer's decision register, because that register's absence from the walk is the AC-1 test.
+7. [x] **Ask for the walk** with the maintainer's own words: "Walk me through the pending questions, decisions, and needed clarifications." Check the presentation against AC-1 to AC-4 and AC-17. No item may come from the decision register. Q1 must appear once, naming the spec as its home. Every D item has options and a recommendation with confidence. Every Q item has a default. The T item has done, later and drop.
+8. [x] **Answer round 1**, using the walk's own numbers for these roles:
    - fixture D1: `A, but I'm not sure`
    - fixture D2: `expand this`
    - fixture D3: `I don't understand this`
@@ -443,10 +450,10 @@ All three gates exit 0. The loop prints a count of at least 1 for each of the fi
    - spec Q1: the maintainer's true answer
    - the T item: `later`
    - Omit fixture D4, fixture D5, the fixture's Q, and the conversation Q.
-9. [ ] **Answer round 2**, which must re-present fixture D2 and D3 with more context, and nothing else: answer D2 `B`, D3 `A`, and D4 `A`. Fixture D5 and both remaining Q items stay omitted.
-10. [ ] **Ask for the GitHub command** for fixture D2. Then decline the ADR offer that D4 should have triggered.
-11. [ ] **Run a second walk in named-document mode:** "Resolve the open items in `_local/verification/wd01-trial/fixture-b.md`." Answer `ok`.
-12. [ ] **Check each result** and record it in `RESULTS.md`, with one row per acceptance criterion, its evidence, and pass or fail:
+9. [x] **Answer round 2**, which must re-present fixture D2 and D3 with more context, and nothing else: answer D2 `B`, D3 `A`, and D4 `A`. Fixture D5 and both remaining Q items stay omitted.
+10. [x] **Ask for the GitHub command** for fixture D2. Then decline the ADR offer that D4 should have triggered.
+11. [x] **Run a second walk in named-document mode:** "Resolve the open items in `_local/verification/wd01-trial/fixture-b.md`." Answer `ok`.
+12. [x] **Check each result** and record it in `RESULTS.md`, with one row per acceptance criterion, its evidence, and pass or fail:
 
     | Check | Criteria | Pass condition |
     |---|---|---|
@@ -460,7 +467,7 @@ All three gates exit 0. The loop prints a count of at least 1 for each of the fi
     | The session transcript | AC-12, AC-13, AC-15 | The ADR offer appears for D4 only, and `docs/internal/decisions/` does not exist. No Bash call runs `gh issue create`. No confirmation question comes between an answer line and its write-back. |
     | The presentation, read in step 7 | AC-2, AC-3, AC-4, AC-5 | As stated in step 7, and every answer token resolved to the item it named. |
 
-13. [ ] **Run the trigger test** for AC-14 in headless sessions, one per prompt:
+13. [x] **Run the trigger test** for AC-14 in headless sessions, one per prompt:
 
     ```bash
     claude -p "<prompt>" --output-format stream-json --verbose --max-turns 3 > trig_N.jsonl
@@ -468,10 +475,10 @@ All three gates exit 0. The loop prints a count of at least 1 for each of the fi
     ```
 
     Re-verify the event shape on the first run: the grep assumes compact JSON with a `"name":"Skill"` tool-use field. It must fire, with a count of at least 1, on: "Walk me through the pending questions, decisions, and needed clarifications.", "resolve open items", and "what do you need me to decide before we go on?" It must not fire, with a count of 0, on: "Walk me through how skills/plab-audit/scripts/bundle-check.py works.", "Should walk records go in _local/decisions or docs/decisions? Just tell me which.", and "Where are we?"
-14. [ ] **Fix and repeat.** A failed check is fixed in `skills/plab-resolve-open-items/`, which the junction exposes at once, and re-run in a fresh session. Record the failure and the fix in `RESULTS.md` rather than overwriting it.
-15. [ ] **Run every step-12 check first.** The Task Summary and the spec's `updated:` frontmatter sit outside the decisions section, so editing them before step 12's `writeback` check makes W1 fire on this step's own edit. The skill itself must not touch either, under AC-8.
+14. [x] **Fix and repeat.** A failed check is fixed in `skills/plab-resolve-open-items/`, which the junction exposes at once, and re-run in a fresh session. Record the failure and the fix in `RESULTS.md` rather than overwriting it.
+15. [x] **Run every step-12 check first.** The Task Summary and the spec's `updated:` frontmatter sit outside the decisions section, so editing them before step 12's `writeback` check makes W1 fire on this step's own edit. The skill itself must not touch either, under AC-8.
     **Tick each proven criterion** in the spec's Task Summary. Update its `**Open questions:**` line, because Q1 is now answered. Leave unticked any criterion that did not pass, and say why in `RESULTS.md`.
-16. [ ] **Clean up.** Run `git worktree remove ../prisant-utilities-wd01-trial` and `git branch -D trial/wd01-branch-guard`. Keep the junction until Phase 7, step 7.
+16. [x] **Clean up.** Run `git worktree remove ../prisant-utilities-wd01-trial` and `git branch -D trial/wd01-branch-guard`. Keep the junction until Phase 7, step 7.
 
 **Verification:**
 
@@ -489,17 +496,19 @@ All three gates exit 0. The loop prints a count of at least 1 for each of the fi
 
 **Ask the maintainer before each merge and before the tag.** This is a standing convention in this repository.
 
+**As run.** Steps 1 to 4 and 6 to 9 ran on 2026-10-09 in PR #27, ahead of Phase 6, by maintainer ruling. Step 5 ran on 2026-10-12, after Phase 6 ticked every criterion. The fix that Phase 6 ran against ships as 0.7.1, by the same procedure.
+
 **Steps:**
 
-1. [ ] `CHANGELOG.md`. Before: `## [Unreleased]` After: `## [0.7.0] - YYYY-MM-DD`, dated with the tag date. A date written in advance is a prediction rather than a record, as AU-01 Phase 7 step 8 found.
-2. [ ] `skills/plab-audit/HISTORY.md`, the 1.1.0 row. Before: `| 1.1.0 | 2026-10-06 | unreleased | added |` After: `| 1.1.0 | 2026-10-06 | v0.7.0 | added |`
-3. [ ] `skills/plab-resolve-open-items/HISTORY.md`, the 1.0.0 row: `unreleased` becomes `v0.7.0` in the same way.
-4. [ ] `docs/status-skills.md`: set `**As of:**` to the tag date.
-5. [ ] If Phase 6 ticked every criterion, change the spec's `status: committed` to `status: fulfilled`, and its Task Summary status line to match. Invariant 9 requires every box to be ticked first. Then set this plan's `status: complete` and fill in its Completion Status table.
-6. [ ] Open the release PR, wait for all checks, ask, and merge with a merge commit. Then tag the merge commit: `git tag -a v0.7.0 -m "v0.7.0" <merge-sha>` and `git push origin v0.7.0`. Confirm with `gh release view v0.7.0` that `publish-release.yml` created the release from the CHANGELOG section.
-7. [ ] **Remove the junction before verifying the install.** Use `cmd /c rmdir .claude\skills\plab-resolve-open-items`, which removes only the link. Do not use `Remove-Item -Recurse`, which can follow a junction and delete the real files. While the junction exists, a session loads the skill from the repository, so it proves nothing about the cache.
-8. [ ] Repin the marketplace in the `prisant-labs/agent-plugins` repository's `.claude-plugin/marketplace.json`: `"ref": "v0.6.1"` becomes `"ref": "v0.7.0"`, and `"version": "0.6.1"` becomes `"version": "0.7.0"`. Add "resolving open questions and decisions" to its `description` in the same position as step 4 of Phase 4. Commit and push that repository, asking first.
-9. [ ] Run `claude plugin marketplace update prisant-labs`, then `claude plugin update prisant-utilities@prisant-labs`.
+1. [x] `CHANGELOG.md`. Before: `## [Unreleased]` After: `## [0.7.0] - YYYY-MM-DD`, dated with the tag date. A date written in advance is a prediction rather than a record, as AU-01 Phase 7 step 8 found.
+2. [x] `skills/plab-audit/HISTORY.md`, the 1.1.0 row. Before: `| 1.1.0 | 2026-10-06 | unreleased | added |` After: `| 1.1.0 | 2026-10-06 | v0.7.0 | added |`
+3. [x] `skills/plab-resolve-open-items/HISTORY.md`, the 1.0.0 row: `unreleased` becomes `v0.7.0` in the same way.
+4. [x] `docs/status-skills.md`: set `**As of:**` to the tag date.
+5. [x] If Phase 6 ticked every criterion, change the spec's `status: committed` to `status: fulfilled`, and its Task Summary status line to match. Invariant 9 requires every box to be ticked first. Then set this plan's `status: complete` and fill in its Completion Status table.
+6. [x] Open the release PR, wait for all checks, ask, and merge with a merge commit. Then tag the merge commit: `git tag -a v0.7.0 -m "v0.7.0" <merge-sha>` and `git push origin v0.7.0`. Confirm with `gh release view v0.7.0` that `publish-release.yml` created the release from the CHANGELOG section.
+7. [x] **Remove the junction before verifying the install.** Use `cmd /c rmdir .claude\skills\plab-resolve-open-items`, which removes only the link. Do not use `Remove-Item -Recurse`, which can follow a junction and delete the real files. While the junction exists, a session loads the skill from the repository, so it proves nothing about the cache.
+8. [x] Repin the marketplace in the `prisant-labs/agent-plugins` repository's `.claude-plugin/marketplace.json`: `"ref": "v0.6.1"` becomes `"ref": "v0.7.0"`, and `"version": "0.6.1"` becomes `"version": "0.7.0"`. Add "resolving open questions and decisions" to its `description` in the same position as step 4 of Phase 4. Commit and push that repository, asking first.
+9. [x] Run `claude plugin marketplace update prisant-labs`, then `claude plugin update prisant-utilities@prisant-labs`.
 
 **Verification:**
 

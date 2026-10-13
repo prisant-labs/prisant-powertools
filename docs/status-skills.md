@@ -18,7 +18,7 @@ The current configuration of every skill in `prisant-utilities`, as declared in 
 | `plab-guide` | 2.2.2 | Auto + explicit | `<topic-or-repo-url> [--type repo-url\|tool\|concept] [--out <dir>] [--force]` | `_output/plab-guide/` |
 | `plab-init-project` | 1.3.0 | **Explicit only** | `[--profile minimal\|standard\|public] [--type ...] [--agents ...] [--dry-run]` | The target repository root |
 | `plab-release-plan` | 1.5.1 | Auto + explicit | `--create \| --promote \| --demote \| --update \| --gate` | `docs/internal/release-plans/plan_NN_<slug>/` |
-| `plab-resolve-open-items` | 1.0.0 | Auto + explicit | `[<document>]` | Each item's home document; the walk record in `_local/decisions/` |
+| `plab-resolve-open-items` | 1.0.1 | Auto + explicit | `[<document>]` | Each item's home document; the walk record in `_local/decisions/` |
 | `plab-spec` | 1.3.3 | Auto + explicit | `--effort <id> [--target-release vX.Y.Z] [--revise] [--dry-run]` | `docs/internal/release-plans/_unassigned/` by default |
 | `plab-strategy-brief` | 1.1.1 | Auto + explicit | `[paste raw thinking]` | `_output/plab-strategy-brief/` |
 | `plab-wrap-session` | 1.7.0 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
@@ -136,7 +136,7 @@ Manages a version-scoped release plan folder.
 
 Auto-generates the aggregation table from folder contents and enforces hygiene gates plus a doc-update checklist that gates the tag. **Refuses to invent or modify acceptance criteria**; those live in specs, and the release plan only aggregates.
 
-### `plab-resolve-open-items` 1.0.0
+### `plab-resolve-open-items` 1.0.1
 
 Walks the maintainer through what a session has left open, and writes each answer back to where its question came from.
 

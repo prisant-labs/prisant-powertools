@@ -1,6 +1,6 @@
 # plab-resolve-open-items
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Source:** [`skills/plab-resolve-open-items/`](../../../skills/plab-resolve-open-items/)
 
 Walk through the questions, decisions and tasks a session has left open, answer them all in one line, and have each answer written back beside its question. Every walk also leaves a local walk record, so the conversation that produced the answers can be found again.
@@ -59,7 +59,7 @@ Install via the prisant-labs marketplace:
 
 ## How It Works
 
-1. **Gather.** Items come from two places only: what this conversation left unresolved, and the "Open Questions / Decisions" sections of documents this session has read or written. Pointed at one document, the walk covers that document alone.
+1. **Gather.** Items come from two places only: what this conversation left unresolved, and the "Open Questions / Decisions" sections of documents this session read or wrote before you asked for the walk. The walk never goes looking for more. Pointed at one document, the walk covers that document alone.
 2. **Present.** Each item is a **D** (a decision between lettered options, with a recommendation and a confidence level), a **Q** (a question only you can answer, with the default the walk assumes if you skip it), or a **T** (a task only you can do). An item found in several documents is shown once, under its one home.
 3. **Read your answer.** One line answers everything. Each item ends up with one state.
 4. **Write back.** Each answered item's home document is updated on its three surfaces: the summary-table row, the subsection's status, and the maintainer decision block, which gains a `Follow-up` line. Every other copy gets a pointer to the home. A self-check confirms nothing else changed.

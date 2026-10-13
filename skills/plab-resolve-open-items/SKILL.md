@@ -4,8 +4,8 @@ description: "Walk the maintainer through every open question, decision and task
 argument-hint: "[<document>]"
 license: MIT
 metadata:
-  version: "1.0.0"
-  updated: 2026-10-08
+  version: "1.0.1"
+  updated: 2026-10-12
 ---
 
 # Resolve Open Items
@@ -30,9 +30,9 @@ An answer that lives only in the conversation is lost when the session ends. Thi
 
 ### 1. Gather
 
-Collect open items from exactly two sources: this conversation's own unresolved items, and the "Open Questions / Decisions" section of every document this session has read or written. When the maintainer names one document, gather from that document's section alone. Assign each item to the Q, D or T series, and give each item one home. Rules: `references/walk-format.md`.
+Collect open items from exactly two sources, both fixed at the moment the maintainer asks for the walk: this conversation's own unresolved items, and the "Open Questions / Decisions" section of every document this session read or wrote before that request. Never list a folder, open a file, or read a memory file to look for items; a file read during gathering is not a source. When the maintainer names one document, gather from that document's section alone. Assign each item to the Q, D or T series, and give each item one home. Rules: `references/walk-format.md`.
 
-If nothing is open, say so in one sentence and stop. Do not write a walk record for an empty walk.
+If nothing is open, say so in one sentence, note that the `--backlog` sweep is not built, offer to walk one document the maintainer names, and stop. Do not write a walk record for an empty walk.
 
 ### 2. Present
 
