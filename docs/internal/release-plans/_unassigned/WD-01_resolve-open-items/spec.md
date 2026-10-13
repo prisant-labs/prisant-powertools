@@ -2,7 +2,7 @@
 id: WD-01
 title: "plab-resolve-open-items: the in-session walk of open questions and decisions"
 type: spec
-status: committed
+status: fulfilled
 created: 2026-10-05
 updated: 2026-10-12
 linked-effort: "the maintainer's private walk-decisions strategy brief, 2026-10-04"
@@ -18,38 +18,38 @@ priority: P2
 
 ## Task Summary
 
-**Status:** committed
-**Last updated:** 2026-10-12 by claude (Opus 5.5), status committed: Requirement 2 anchored to the walk request, fixing the over-gathering found by the v0.7.0 install check
+**Status:** fulfilled
+**Last updated:** 2026-10-12 by claude (Opus 5.5), status fulfilled: the Phase 6 live walk proved all 20 criteria
 **Linked plan:** `implementation-plan.md` in this folder
-**Open questions:** 1 (Q1 Needs info, skipped twice with its default in effect; see Open Questions / Decisions)
-**Revisions:** 4
+**Open questions:** 0 (Q1 decided in the Phase 6 walk, 2026-10-12)
+**Revisions:** 5
 
 ### Acceptance Criteria Fulfillment
 
-- [ ] **AC-1** - Gathering is limited to the conversation and documents touched this session
-- [ ] **AC-2** - Items are presented as Q, D or T, with lettered options and a recommendation on D items
-- [ ] **AC-3** - Every sourced item names its source document and that document's own item id
-- [ ] **AC-4** - Every Q item states its default if skipped; a D or T item states none
-- [ ] **AC-5** - A one-line answer parses to the exact item and option or text it names
-- [ ] **AC-6** - A skipped D item is left untouched; a skipped Q item proceeds on its stated default
-- [ ] **AC-7** - A bare accept-all answer is explicit, never inferred from silence
-- [ ] **AC-8** - Write-back touches only the three documented surfaces and never the item's own body
-- [ ] **AC-9** - A source document on another branch is never written; its edit is reported as text
-- [ ] **AC-10** - Every walk produces a walk record naming every item, its answer, and where it landed
-- [ ] **AC-11** - The walk record defaults to `_local/decisions/`, or an existing repository convention
-- [ ] **AC-12** - ADR promotion for an architectural decision is offered, never performed automatically
-- [ ] **AC-13** - The only GitHub action is printing a ready command and body, never filing it
-- [ ] **AC-14** - The skill is auto-invocable, with do-NOT-fire clauses for three named cases
-- [ ] **AC-15** - Applying answers needs no extra confirmation; only outward actions do
-- [ ] **AC-16** - The skill's own description names the deferred future work rather than omitting it
-- [ ] **AC-17** - An item found in several documents is presented once and answered only in its home
-- [ ] **AC-18** - A reservation marks an answer provisional; a request for more re-presents the item next round
-- [ ] **AC-19** - Every decided item names its follow-up action and where it is tracked, or that none is needed
-- [ ] **AC-20** - A T item is answered done, later or drop, recorded in the walk record only
+- [x] **AC-1** - Gathering is limited to the conversation and documents touched this session
+- [x] **AC-2** - Items are presented as Q, D or T, with lettered options and a recommendation on D items
+- [x] **AC-3** - Every sourced item names its source document and that document's own item id
+- [x] **AC-4** - Every Q item states its default if skipped; a D or T item states none
+- [x] **AC-5** - A one-line answer parses to the exact item and option or text it names
+- [x] **AC-6** - A skipped D item is left untouched; a skipped Q item proceeds on its stated default
+- [x] **AC-7** - A bare accept-all answer is explicit, never inferred from silence
+- [x] **AC-8** - Write-back touches only the three documented surfaces and never the item's own body
+- [x] **AC-9** - A source document on another branch is never written; its edit is reported as text
+- [x] **AC-10** - Every walk produces a walk record naming every item, its answer, and where it landed
+- [x] **AC-11** - The walk record defaults to `_local/decisions/`, or an existing repository convention
+- [x] **AC-12** - ADR promotion for an architectural decision is offered, never performed automatically
+- [x] **AC-13** - The only GitHub action is printing a ready command and body, never filing it
+- [x] **AC-14** - The skill is auto-invocable, with do-NOT-fire clauses for three named cases
+- [x] **AC-15** - Applying answers needs no extra confirmation; only outward actions do
+- [x] **AC-16** - The skill's own description names the deferred future work rather than omitting it
+- [x] **AC-17** - An item found in several documents is presented once and answered only in its home
+- [x] **AC-18** - A reservation marks an answer provisional; a request for more re-presents the item next round
+- [x] **AC-19** - Every decided item names its follow-up action and where it is tracked, or that none is needed
+- [x] **AC-20** - A T item is answered done, later or drop, recorded in the walk record only
 
 ### Currently In Progress
 
-Phases 1 to 5 of `implementation-plan.md` are built and merged (PR #25, 2026-10-08). Next is Phase 6, the live walk in a fresh session, which is what ticks these criteria. No box is ticked yet, because no criterion has been proven by a real walk.
+None. Phases 1 to 5 of `implementation-plan.md` merged in PR #25 (2026-10-08) and shipped in v0.7.0. Phase 6, the live walk, ran on 2026-10-12 against `plab-resolve-open-items` 1.0.1 and proved all 20 criteria; each tick above rests on that walk's transcript, its two walk records, and the write-back checks run against pre-trial copies. AC-16 rests on the Phase 5 grep and AC-14's trigger half on six headless sessions, three that must fire and three that must not.
 
 ---
 
@@ -226,6 +226,7 @@ A walk presents D1 through D3 and Q1. The maintainer answers "D2 B, Q1: the NAS,
 | 2026-10-07 | claude | changed | The maintainer ratified D9 (three answer rules) and D10 (T series). Written into Scope items 2 and 13 to 15, Requirements 3, 5 and 18 to 21, AC-2 and AC-4, and new AC-17 to AC-20; `ac-count` 16 to 20 |
 | 2026-10-07 | claude | changed | Linked `implementation-plan.md`, which covers all 20 criteria in seven phases. D9's Follow-up line now names Phase 1 of that plan. No criterion changed |
 | 2026-10-12 | claude | changed | Anchored Requirement 2's definition of a touched document to the moment the walk is requested. The v0.7.0 install check showed that "read or written by the session" let a walk make its own sources: an empty headless session listed `_local/` folders and read memory files instead of saying nothing was open, against AC-1. Fixed in the skill as 1.0.1. No criterion changed |
+| 2026-10-12 | claude | changed | Phase 6, the live walk, ran against 1.0.1 and proved all 20 criteria; every box is ticked and the status is `fulfilled`. The walk itself wrote Q1's answer on its three surfaces. This revision changed only the Task Summary, the Currently In Progress note, and the section introduction's sentence on what is open, which a walk may not touch. No criterion changed |
 
 ## Sources & Evidence
 
@@ -249,7 +250,7 @@ A walk presents D1 through D3 and Q1. The maintainer answers "D2 B, Q1: the NAS,
 
 ## Open Questions / Decisions
 
-**What these statuses mean.** `Decided` and `Deferred` carry the maintainer's answer, given in two walks on 2026-10-06 and 2026-10-07 and recorded in each item's maintainer block; that block is the authoritative record. `Proposed` marks an answer adopted as a working default that the maintainer has not ratified. `Needs info` marks a question only the maintainer can answer. This section is the single home for these items. The design brief [S1] carried the same D1 to D8 and Q1 with fuller analysis, and points here; D2 and D8 were first omitted from this spec as settled by its scope, and are now recorded here so that no item has two homes. D9 and D10 came out of the 2026-10-06 walk and were ratified on 2026-10-07. Q1 is the only item still open, and its default is in effect.
+**What these statuses mean.** `Decided` and `Deferred` carry the maintainer's answer, given in two walks on 2026-10-06 and 2026-10-07 and recorded in each item's maintainer block; that block is the authoritative record. `Proposed` marks an answer adopted as a working default that the maintainer has not ratified. `Needs info` marks a question only the maintainer can answer. This section is the single home for these items. The design brief [S1] carried the same D1 to D8 and Q1 with fuller analysis, and points here; D2 and D8 were first omitted from this spec as settled by its scope, and are now recorded here so that no item has two homes. D9 and D10 came out of the 2026-10-06 walk and were ratified on 2026-10-07. Q1, the last open item, was answered in the Phase 6 walk on 2026-10-12, and no item is open.
 
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
@@ -263,7 +264,7 @@ A walk presents D1 through D3 and Q1. The maintainer answers "D2 B, Q1: the NAS,
 | D8 | Overlap with the options board and status document | Deferred to the backlog mode | Deferred | 2026-10-07 |
 | D9 | Answers that are not a letter, and items with several homes | Option A, all three rules | Decided | 2026-10-07 |
 | D10 | A third series for maintainer tasks | Option A, a T series | Decided | 2026-10-07 |
-| Q1 | What happened to past walk answers | Skipped twice; default in effect | Needs info | 2026-10-07 |
+| Q1 | What happened to past walk answers | Acted on at once; the fear is lost context | Decided | 2026-10-12 |
 
 ### D1: Skill name (Decided)
 
@@ -537,7 +538,7 @@ A walk presents D1 through D3 and Q1. The maintainer answers "D2 B, Q1: the NAS,
 > * **Follow-up:** None beyond building the criteria above.
 > * **Decided by / date:** jp / 2026-10-07. Proposed by claude the same day, raised in the walk as its D11 and parked here as Proposed.
 
-### Q1: What happened to past walk answers (Needs info)
+### Q1: What happened to past walk answers (Decided)
 
 **Summary.** After roughly a dozen earlier in-session walks the maintainer typed by hand, did any answer ever need to be found again later, or was each one acted on at once and then forgotten?
 
@@ -547,9 +548,10 @@ A walk presents D1 through D3 and Q1. The maintainer answers "D2 B, Q1: the NAS,
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-10-12 by jp
 >
-> * **Status:** Needs info
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** "I generally act on them immediately. However,  my fear is that I or an agent will lack context"
+> * **Reasoning:** In the maintainer's words, quoted above. Past answers were usually acted on at once rather than looked up later, but the maintainer fears that a later reader, human or agent, will lack the context behind them. Write-back beside the question and the walk record exist to keep that context, so the default stands and both stay in slice 1.
+> * **Follow-up:** None needed. Write-back and the walk record are already built in slice 1, in Phases 1 to 5 of `implementation-plan.md`, merged in PR #25.
+> * **Decided by / date:** jp / 2026-10-12

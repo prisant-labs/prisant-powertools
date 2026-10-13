@@ -52,7 +52,7 @@ Specs written before being assigned to a release: the documented default home `/
 | [W-02](_unassigned/W-02_derived-log-facts/spec.md) | derived log facts | W (wrap-session roadmap item) | draft | draft | P1 | No |
 | [W-03](_unassigned/W-03_waiting-on-escapes-gitignore/spec.md) | waiting on escapes gitignore | W (wrap-session roadmap item) | draft | draft | P2 | Yes |
 | [W-04](_unassigned/W-04_digest-mode/spec.md) | digest mode | W (wrap-session roadmap item) | draft | draft | P2 | Yes |
-| [WD-01](_unassigned/WD-01_resolve-open-items/spec.md) | resolve open items | WD (resolve-open-items roadmap item) | committed | in-progress | P2 | Yes |
+| [WD-01](_unassigned/WD-01_resolve-open-items/spec.md) | resolve open items | WD (resolve-open-items roadmap item) | fulfilled | complete | P2 | Yes |
 
 ---
 
@@ -80,5 +80,5 @@ One row per effort, grouped by release in sequence order (see the Release column
 | [W-02](_unassigned/W-02_derived-log-facts/spec.md) | derived log facts | W (wrap-session roadmap item) | draft | draft | `_unassigned/` | - | P1 | No |
 | [W-03](_unassigned/W-03_waiting-on-escapes-gitignore/spec.md) | waiting on escapes gitignore | W (wrap-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | Yes |
 | [W-04](_unassigned/W-04_digest-mode/spec.md) | digest mode | W (wrap-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | Yes |
-| [WD-01](_unassigned/WD-01_resolve-open-items/spec.md) | resolve open items | WD (resolve-open-items roadmap item) | committed | in-progress | `_unassigned/` | - | P2 | Yes |
+| [WD-01](_unassigned/WD-01_resolve-open-items/spec.md) | resolve open items | WD (resolve-open-items roadmap item) | fulfilled | complete | `_unassigned/` | - | P2 | Yes |
 
