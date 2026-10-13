@@ -16,6 +16,8 @@ The cause was the definition of a touched document: one "this session has read o
 - **An empty walk has a defined reply.** The skill says nothing is open in one sentence, notes that `--backlog` is not built, offers to walk one named document, and stops. `SKILL.md` step 1 carries the same rules in short form.
 - **The spec's Requirement 2 is amended to match.** The definition was the spec's own judgment call, and the skill must not contradict its contract.
 
+**Canary.** Each arm ran the same headless prompt from the same clean `main` checkout, with the installed plugin and auto-memory switched off for that invocation, through a `.claude/skills/` junction. Only the skill text differed. Under 1.0.0 the session listed `_local/` and `_local/decisions/` and globbed the release plans for WD-01 documents before replying. Under 1.0.1, in two runs, it read only its own `walk-format.md` and replied that nothing was open. Memory had to be off because this project's own memory describes the defect and its fix: with memory on, a 1.0.0 run read that memory and avoided the search by hand.
+
 ## 1.0.0 - 2026-10-08
 
 **Added: the in-session walk.** A walk gathers open items from the conversation and from the "Open Questions / Decisions" sections of documents the session has touched, or from one document the maintainer names. It presents them as D (a decision between lettered options), Q (a question only the maintainer can answer) and T (a task only the maintainer can perform), and reads a one-line reply such as `D1 A, D2 B, Q1: the NAS`.
