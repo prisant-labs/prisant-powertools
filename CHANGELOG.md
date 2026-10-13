@@ -5,7 +5,7 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.7.1] - 2026-10-13
 
 The patch release that the 0.7.0 entry promised. The live-walk trial that 0.7.0 shipped ahead of ran on 2026-10-12, against the fix below, and proved all 20 of the skill's acceptance criteria; its specification is now fulfilled.
 
