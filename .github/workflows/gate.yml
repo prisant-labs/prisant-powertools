@@ -169,3 +169,15 @@ jobs:
       - name: The walk checker, against its committed write-back pair
         if: always()
         run: python3 skills/plab-resolve-open-items/scripts/walk-check.py writeback skills/plab-resolve-open-items/examples/sample-walk/before.md skills/plab-resolve-open-items/examples/sample-walk/after.md
+
+      # plab-ai-review's dispatch helper (A-02). This is the one script in this
+      # job that talks to a subprocess at all, but that subprocess is a fake
+      # codex-companion.mjs the test writes into a tempdir itself - never the
+      # real Codex CLI, which is deliberately NOT a CI dependency (the spec's
+      # portability requirement: the skill must work with no Codex CLI
+      # installed at all). `node` is already on this runner for the Standard
+      # gate job; setup-node is not needed here because actions/setup-python's
+      # runner image ships one.
+      - name: The dispatch helper, against a fake companion
+        if: always()
+        run: python3 skills/plab-ai-review/scripts/test-dispatch.py

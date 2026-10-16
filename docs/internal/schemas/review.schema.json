@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "required": [
+    "type",
+    "dispatch-job"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["review"]
+    },
+    "dispatch-job": {
+      "type": "string",
+      "pattern": "^task-[0-9a-z]+-[0-9a-z]+$"
+    }
+  }
+}

@@ -4,7 +4,7 @@ title: "Programmatic review dispatch for plab-ai-review"
 type: spec
 status: committed
 created: 2026-08-29
-updated: 2026-09-12
+updated: 2026-10-15
 linked-effort: "the maintainer's private ai-review growth roadmap, entry A-2 (make the handoff programmatic), written 2026-08-16, which names this the single largest improvement available in the portfolio"
 linked-plan: implementation-plan.md
 linked-release: null
@@ -19,22 +19,22 @@ priority: P1
 ## Task Summary
 
 **Status:** committed
-**Last updated:** 2026-09-12 by claude, setting the round-trip link to the implementation plan
+**Last updated:** 2026-10-15 by agent, implementing Phases 2-4 under the maintainer's 2026-10-15 go-ahead
 **Linked plan:** `implementation-plan.md`
-**Open questions:** 0
-**Revisions:** 2
+**Open questions:** 2 (D4, D5 - both Open, built on their recommendations as working defaults; see Open Questions / Decisions below)
+**Revisions:** 3
 
 ### Acceptance Criteria Fulfillment
 
-- [ ] **AC-1** - An opt-in flag sends the review request to the reviewer and writes findings back, with no copying by hand
-- [ ] **AC-2** - Without the flag, the existing manual path behaves exactly as it does today
-- [ ] **AC-3** - Dispatch goes through the codex-companion `task` helper, not a hand-rolled CLI string
-- [ ] **AC-4** - Dispatch is asynchronous: submit, poll, collect, so the session is never blocked
-- [ ] **AC-5** - A reviewer that fails or is unavailable produces a distinct reported state, never a silently empty review
-- [ ] **AC-6** - A dispatched review produces the same document shape as a manual one, so `--respond` works on it unchanged
-- [ ] **AC-7** - Dispatch metadata is recorded in the document for attribution
-- [ ] **AC-8** - `argument-hint` documents `--close`, which exists today but is undocumented
-- [ ] **AC-9** - A pending job identifier survives the session that submitted it, so a review started before a break is collectable after it
+- [x] **AC-1** - An opt-in flag sends the review request to the reviewer and writes findings back, with no copying by hand
+- [x] **AC-2** - Without the flag, the existing manual path behaves exactly as it does today
+- [x] **AC-3** - Dispatch goes through the codex-companion `task` helper, not a hand-rolled CLI string
+- [x] **AC-4** - Dispatch is asynchronous: submit, poll, collect, so the session is never blocked
+- [x] **AC-5** - A reviewer that fails or is unavailable produces a distinct reported state, never a silently empty review
+- [x] **AC-6** - A dispatched review produces the same document shape as a manual one, so `--respond` works on it unchanged
+- [x] **AC-7** - Dispatch metadata is recorded in the document for attribution
+- [x] **AC-8** - `argument-hint` documents `--close`, which exists today but is undocumented
+- [x] **AC-9** - A pending job identifier survives the session that submitted it, so a review started before a break is collectable after it
 
 ### Currently In Progress
 
@@ -164,6 +164,7 @@ The distinction that matters: a document with empty placeholders and a reported 
 | 2026-08-29 | plab-spec | added | Initial draft created |
 | 2026-09-12 | claude | amended | Round-trip link set: `linked-plan` from `null` to `implementation-plan.md`, per the planning artifact model's rule that plan creation sets the spec's link. No acceptance criterion, requirement, scope boundary or decision changed; `ac-count` is unchanged at 9. |
 | 2026-09-01 | claude | amended | D1, D2 and D3 resolved by the maintainer. The Non-Goal on document format narrowed to the body, so it no longer contradicts the single frontmatter field D2 requires. AC-9 added, because AC-4 alone was satisfied by an in-session-only identifier and so did not test the session-boundary property D2 exists to deliver. Requirements 8 and 9 added for the identifier's persistence and the effort setting. Status promoted from draft to committed. |
+| 2026-10-15 | agent | amended | Phases 2 through 4 of `implementation-plan.md` implemented, under the maintainer's 2026-10-15 go-ahead. No acceptance criterion, requirement, or scope boundary changed; `ac-count` is unchanged at 9. Two new decisions added, both Open rather than Decided (D4: the `dispatch-job` frontmatter field's name; D5: the `--collect` flag's name) - both were required to write any code and both were built on their recommendations as working defaults, but neither was put to the maintainer, so neither is Decided. The runtime this spec's [S3] and [S5] describe has moved: Codex CLI is now 0.155.0 (was 0.144.5), and the implementation plan's Phase 1 re-verification found that the session-boundary mechanism AC-9 depends on is workspace-root consistency, not the `CODEX_COMPANION_SESSION_ID` variable AC-9's original canary credited - see the implementation plan's "Re-verification, 2026-10-15" subsection. AC-9 itself is unchanged by this: the property it tests (collectable after a session boundary, with no id supplied by hand) still holds, under the corrected mechanism. |
 
 ## Sources & Evidence
 
@@ -190,6 +191,8 @@ The distinction that matters: a document with empty placeholders and a reported 
 | D1 | Dispatch opt-in shape | Option A: a per-invocation flag; the manual path stays the default | Decided | 2026-09-01 |
 | D2 | Where the pending job identifier lives | Option A: the review document's frontmatter, with the Non-Goal narrowed and AC-9 added | Decided | 2026-09-01 |
 | D3 | Reviewer model and effort selection | Option B at `high`: pass `--effort high`, pin no model | Decided | 2026-09-01 |
+| D4 | The frontmatter field's name | (none) | Open | 2026-10-15 |
+| D5 | The collection flag's name | (none) | Open | 2026-10-15 |
 
 ### D1: Dispatch opt-in shape (Decided)
 
@@ -262,3 +265,52 @@ The distinction that matters: a document with empty placeholders and a reported 
 > * **Choice:** Option B. Dispatch passes `--effort high` and names no model.
 > * **Reasoning:** The recommendation's hedge, "if it can be expressed without pinning a model", was verified on 2026-09-01 against codex-companion 1.0.6 and Codex CLI 0.144.5: `--effort` accepts `none|minimal|low|medium|high|xhigh` independently of `--model`, so the split is expressible and the hedge resolves. Effort is a dial that means the same thing regardless of which model sits behind it, whereas a model identifier is an unversioned reference to something retired on another party's schedule, and skill files are not covered by this repository's document gates, so such a reference would rot unobserved. `xhigh` was considered and declined: review is adversarial work and the routing rule does reserve the strongest tier for it, but every review would then cost more and take longer, which pushes against the one thing this effort exists to achieve, namely making reviews cheap enough to actually run.
 > * **Decided by / date:** JP / 2026-09-01
+
+### D4: The frontmatter field's name (Open)
+
+**Summary.** D2 decided that the pending job identifier lives in the review document's frontmatter; it did not name the field.
+
+**Context.** The maintainer's own decision register (its entry 17) already carries this exact question, with a recommendation attached, from work adjacent to this effort. Building Phases 2 through 4 required a name before any code could be written, and the maintainer's 2026-10-15 go-ahead ("Go ahead and complete the work") authorized building under the register's recommendation rather than stopping to ask - but authorization to proceed is not the same as the maintainer having chosen, so this is recorded Open, not Decided.
+
+**Desired outcome.** One field name, used consistently in `references/review-template.md`, `docs/internal/schemas/review.schema.json`, `skills/plab-ai-review/scripts/dispatch.py`, and every reference to it in `SKILL.md` and `references/dispatch.md`.
+
+**Options / approaches.**
+
+* **Option A: `dispatch-job`.** Short, and reads naturally as "the dispatch's job [id]" in the frontmatter block it sits in alone. The decision register's recommendation.
+* **Option B: `review-dispatch-job`.** More explicit about which skill owns the field, at the cost of being the only frontmatter field in this repository's schemas with a skill name baked into it (every other field - `linked-plan`, `ac-count`, `dispatch-job` itself - names a concept, not a skill).
+
+**Recommendation.** Option A, `dispatch-job`. It is the shorter name, it is the only field in this frontmatter block so there is no sibling field to disambiguate it from, and it is the decision register's own recommendation. Working default: built on this recommendation on 2026-10-15 under the maintainer's go-ahead; not yet ratified.
+
+---
+
+> **Maintainer decision:** _(pending)_
+>
+> * **Status:** Open
+> * **Choice:** (none)
+> * **Reasoning:** (none)
+> * **Decided by / date:** (none)
+
+### D5: The collection flag's name (Open)
+
+**Summary.** Phase 3 of the implementation plan said to "add the collection path" without naming a flag or mode for it; something had to be chosen to write `SKILL.md`, `references/dispatch.md`, and `docs/skills/plab-ai-review/README.md`.
+
+**Context.** `--respond` was deliberately left unchanged (see Non-Goals): AC-6 requires it to behave identically on a dispatched document and a hand-pasted one, which rules out quietly teaching it to collect first. Something still has to trigger collection on a maintainer's command, in addition to the no-flag auto-detect (which only fires when the maintainer happens to invoke the skill with no flag at all on a document that turns out to be dispatched).
+
+**Desired outcome.** A name that is discoverable in `argument-hint` (the exact problem AC-8 exists to fix for `--close` must not recur for whatever this is called) and reads clearly as "go fetch the dispatched findings," distinct from `--respond`'s "write synthesis now that findings exist."
+
+**Options / approaches.**
+
+* **Option A: `--collect`.** Names the action precisely (the read side of `--dispatch`) and pairs naturally with it in documentation and in `argument-hint`.
+* **Option B: fold collection into `--respond` itself as an automatic first step.** One fewer flag to remember, but changes `--respond`'s behavior depending on invisible document state (whether `dispatch-job` is present), which is exactly the kind of machine-varies-by-state surprise D1's reasoning (recorded above, 2026-09-01) already argued against for dispatch's opt-in shape, applied to a different flag.
+* **Option C: no new flag; rely on the no-flag auto-detect alone.** Costs discoverability - a maintainer who wants to force a re-check of a job currently believed still-running has no explicit command to ask for one, and must re-run the skill with no flag and rely on the prompt appearing.
+
+**Recommendation.** Option A, `--collect`. It is the only option that gives collection an explicit, `argument-hint`-visible name without changing `--respond`'s behavior. Working default: built on this recommendation on 2026-10-15 under the maintainer's go-ahead; not yet ratified.
+
+---
+
+> **Maintainer decision:** _(pending)_
+>
+> * **Status:** Open
+> * **Choice:** (none)
+> * **Reasoning:** (none)
+> * **Decided by / date:** (none)
