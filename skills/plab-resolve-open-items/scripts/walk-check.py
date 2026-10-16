@@ -43,6 +43,10 @@ It compares one document before and after a walk wrote to it. The format is
 `references/decisions-section.md` at the plugin root: a summary table, one
 "### <ID>: <Title> (<Status>)" subsection per item, and a maintainer block
 after a "---" rule. A walk may change three surfaces and nothing else (AC-8).
+SECTION_RE accepts the heading `## Open Questions / Decisions` plus exactly
+the variants `references/walk-format.md` says this skill gathers from: an
+optional numbered prefix ("## 7. ...") and "&" or "and" standing in for the
+slash. No other heading, punctuation or word order is a decisions section.
 
   W1  everything outside the "## Open Questions / Decisions"        AC-8
       section is identical, and so is the section's own text
@@ -271,7 +275,7 @@ def run_record_checks(text):
 # Writeback mode
 # ---------------------------------------------------------------------------
 
-SECTION_RE = re.compile(r"^##\s+Open Questions\s*/\s*Decisions\s*$")
+SECTION_RE = re.compile(r"^##\s+(?:\d+\.\s+)?Open Questions\s*(?:/|&|and)\s*Decisions\s*$")
 LEVEL2_RE = re.compile(r"^##\s")
 ITEM_RE = re.compile(r"^###\s+([A-Z]+\d+):\s+(.*?)\s*\(([^()]*)\)\s*$")
 BLOCK_START_RE = re.compile(r"^>\s*\*\*Maintainer decision:\*\*")
@@ -586,6 +590,16 @@ def self_test():
                          .replace('"A". The local copy', '"A, but I\'m not sure." The local copy'))
     provisional = _decide_d1(GOOD_BEFORE, provisional_block, "Provisional", "Provisional")
     expect_writeback("anti-canary, a provisional answer", GOOD_BEFORE, provisional, False)
+    # WD-01 finding 1: the live trial's brief was headed "## 7. Open Questions & Decisions",
+    # a heading the skill gathers from (references/walk-format.md) that the checker used to
+    # reject with Broken. Both the numbered "&" form and the unnumbered "and" form must be
+    # accepted, because walk-format.md names both as gathered variants.
+    numbered_before = GOOD_BEFORE.replace("## Open Questions / Decisions", "## 7. Open Questions & Decisions")
+    numbered_after = GOOD_AFTER.replace("## Open Questions / Decisions", "## 7. Open Questions & Decisions")
+    expect_writeback("anti-canary, a numbered '&' heading (WD-01 finding 1)", numbered_before, numbered_after, False)
+    and_before = GOOD_BEFORE.replace("## Open Questions / Decisions", "## Open Questions and Decisions")
+    and_after = GOOD_AFTER.replace("## Open Questions / Decisions", "## Open Questions and Decisions")
+    expect_writeback("anti-canary, an unnumbered 'and' heading", and_before, and_after, False)
 
     # R1 to R8
     expect_record("R1 wrong type", GOOD_RECORD.replace("type: walk-record", "type: session-log"), True, "R1")
@@ -632,8 +646,13 @@ def self_test():
                          "> * **Follow-up:** Build option A in phase 2 of the sync plan.\n", "")), True, "W5")
 
     # BROKEN, not FINDINGS.
+    # A heading this skill does NOT gather from, per walk-format.md, must still be
+    # rejected: a colon instead of a period after the number is outside the
+    # documented variants, so the checker must not widen past what the skill reads.
+    unsupported_heading = GOOD_BEFORE.replace("## Open Questions / Decisions", "## 7: Open Questions & Decisions")
     for label, text in (("no decisions section", "# A document\n\nNo section here.\n"),
-                        ("no summary table", "# A\n\n## Open Questions / Decisions\n\nNone at this time.\n")):
+                        ("no summary table", "# A\n\n## Open Questions / Decisions\n\nNone at this time.\n"),
+                        ("a heading variant the skill does not gather from", unsupported_heading)):
         try:
             run_writeback_checks(text, text)
             bad.append("  %s: expected Broken, got a normal return" % label)
@@ -689,8 +708,9 @@ def main():
         sys.exit(2)
     sys.stdout.write(
         "gate self-test: PASS (8 record rules and 5 write-back rules proved against 24 canaries, "
-        "6 anti-canaries including a CRLF record, a pointer block and a provisional answer, "
-        "3 BROKEN cases, and two pipeline fixtures that must reach every record rule)\n")
+        "8 anti-canaries including a CRLF record, a pointer block, a provisional answer and two "
+        "accepted heading variants, 4 BROKEN cases, and two pipeline fixtures that must reach "
+        "every record rule)\n")
 
     mode = argv[0]
     try:

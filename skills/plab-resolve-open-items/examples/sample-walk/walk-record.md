@@ -3,6 +3,8 @@ type: walk-record
 date: 2026-10-07
 repo: prisant-labs/prisant-utilities
 rounds: 3
+handle: jp
+handle-source: git config user.name (this walk predates the skill and its write-back automation)
 ---
 
 # Walk record: designing plab-resolve-open-items
