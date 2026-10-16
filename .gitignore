@@ -27,3 +27,7 @@ Thumbs.db
 # Project-level skill copies used to test an unreleased skill before it ships
 # (AU-01 Phase 7). Never committed: the plugin, not this folder, is what users load.
 .claude/skills/
+
+# claude plugin eval results (R5). Each run writes a timestamped report and
+# JSON under here; these are run artifacts, not suite source, and are never committed.
+evals/results/
