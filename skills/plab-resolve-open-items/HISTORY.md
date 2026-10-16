@@ -2,9 +2,18 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.1.0 | 2026-10-15 | unreleased | added | The `--backlog` sweep across every spec, plan, implementation plan and the newest session log, specified by WD-02 (backlog sweep). Gathers in one script call, triages into ready, moot and judgment tiers, caps a walk at ten items, and writes a dated snapshot under `_local/decisions/`. Built on six working-default decisions, D1 to D6 in the WD-02 spec, all still `Open` pending the maintainer's ratification: which sources it reads, how items are triaged and ordered, the ten-item cap, the dated-snapshot file, no overlap with the options board or a living status page, and a script rather than one-document-at-a-time reading. |
 | 1.0.2 | 2026-10-15 | unreleased | fixed | Three defects recorded against WD-01's (resolve open items) Phase 6 live trial. `walk-check.py` now accepts the numbered and `&`/`and` heading variants the skill itself gathers from. One handle is chosen once per walk, from the first filled maintainer block in gathering order, and recorded in the walk record. An item omitted in one round can still be answered in a later round. |
 | 1.0.1 | 2026-10-12 | v0.7.1 | fixed | A walk in a session with nothing open listed `_local/` folders and read memory files, looking for items, instead of saying nothing was open. A document now counts as a source only if the session read or wrote it before the walk was requested, and gathering never searches. |
 | 1.0.0 | 2026-10-08 | v0.7.0 | added | First version. Walks the open questions, decisions and tasks of the current session, or of one named document, takes a one-line answer, writes each answer back to its one home, and writes a walk record that `walk-check.py` verifies. |
+
+## 1.1.0 - 2026-10-15
+
+**Added: the `--backlog` sweep.** Specified by WD-02 (backlog sweep) in `docs/internal/release-plans/_unassigned/WD-02_backlog-sweep/spec.md`. WD-01 (resolve open items) deliberately left this out as its slice 2: the in-session walk settles what one session raised, and nothing read the Open Questions / Decisions sections scattered across every spec and plan, or the newest session log's Waiting on You list, at once.
+
+`scripts/gather-backlog.py` gathers both sources in one call, writes nothing, and exits 2 naming the one source it could not parse rather than returning a shorter list. It imports `scripts/walk-check.py`'s own heading rule, so a decisions section the sweep gathers from is a section the checker can verify. `references/backlog.md` sorts the result into three tiers (ready, moot, judgment), caps a walk at ten items, oldest first within a tier, and defines how a moot item is presented, how a Waiting on You item is presented, and the dated snapshot file at `_local/decisions/YYYY-MM-DD_HH-MM_backlog.md`, written once per sweep and never edited afterwards.
+
+Six design decisions (D1 to D6 in the WD-02 spec) were built on their own recommendations as working defaults under the maintainer's instruction to complete the work the same day it was specified; all six stay `Open` until walked and ratified. `references/walk-record.md` gains an optional `backlog-file` frontmatter field naming the snapshot a backlog walk came from; `scripts/walk-check.py` needed no change, because its frontmatter parser already ignores a key its rules do not name.
 
 ## 1.0.2 - 2026-10-15
 
