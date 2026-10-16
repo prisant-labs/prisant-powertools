@@ -25,7 +25,8 @@ RECORD MODE: WHAT IT CHECKS, AND WHICH ACCEPTANCE CRITERION EACH RULE CARRIES
 The format is `references/walk-record.md`. The criteria are WD-01's.
 
   R1  frontmatter: type walk-record, a YYYY-MM-DD date, a repo,     AC-10
-      and an integer rounds of at least 1
+      an integer rounds of at least 1, and a non-empty handle and   WD-01
+      handle-source (references/write-back.md's one-handle rule)    finding 2
   R2  an items table with exactly the seven documented columns,     AC-10
       and at least one row
   R3  every Walk ID is Q, D or T plus a number, and is unique       AC-2
@@ -174,6 +175,10 @@ def check_frontmatter(text, findings):
         findings.append("frontmatter date %r is not YYYY-MM-DD (R1, AC-10)" % fm.get("date"))
     if not fm.get("repo"):
         findings.append("frontmatter names no repo (R1, AC-10)")
+    if not fm.get("handle"):
+        findings.append("frontmatter names no handle (R1, WD-01 finding 2)")
+    if not fm.get("handle-source"):
+        findings.append("frontmatter names no handle-source (R1, WD-01 finding 2)")
     rounds = fm.get("rounds", "")
     if not rounds.isdigit() or int(rounds) < 1:
         findings.append("frontmatter rounds %r is not an integer of at least 1 (R1, AC-18)" % rounds)
@@ -424,6 +429,8 @@ type: walk-record
 date: 2026-11-02
 repo: example/repo
 rounds: 2
+handle: jp
+handle-source: docs/spec.md D2's maintainer block
 ---
 
 # Walk record: sample
@@ -604,6 +611,9 @@ def self_test():
     # R1 to R8
     expect_record("R1 wrong type", GOOD_RECORD.replace("type: walk-record", "type: session-log"), True, "R1")
     expect_record("R1 rounds missing", GOOD_RECORD.replace("rounds: 2\n", ""), True, "R1")
+    expect_record("R1 handle missing", GOOD_RECORD.replace("handle: jp\n", ""), True, "R1")
+    expect_record("R1 handle-source missing",
+                  GOOD_RECORD.replace("handle-source: docs/spec.md D2's maintainer block\n", ""), True, "R1")
     expect_record("R2 a column missing", GOOD_RECORD.replace("| Walk ID | Home | Answer | State | Round | Follow-up | Landed |",
                                                              "| Walk ID | Home | Answer | Round | Landed |"), True, "R2")
     expect_record("R3 a bad Walk ID", GOOD_RECORD.replace("| Q1 | none |", "| X1 | none |"), True, "R3")
@@ -707,7 +717,7 @@ def main():
         sys.stderr.write("\n".join(failures) + "\n")
         sys.exit(2)
     sys.stdout.write(
-        "gate self-test: PASS (8 record rules and 5 write-back rules proved against 24 canaries, "
+        "gate self-test: PASS (8 record rules and 5 write-back rules proved against 25 canaries, "
         "8 anti-canaries including a CRLF record, a pointer block, a provisional answer and two "
         "accepted heading variants, 4 BROKEN cases, and two pipeline fixtures that must reach "
         "every record rule)\n")

@@ -24,7 +24,7 @@ handle-source: <the document and block it came from, or "git config user.name">
 ---
 ```
 
-`handle` and `handle-source` record the choice `references/write-back.md` makes once, before the first write: the handle used on every write-back in the walk, and where it came from, either a gathered document's filled maintainer block or the `git config user.name` fallback. This keeps one walk from writing two different handles into two different documents, which happened in the WD-01 (resolve open items) live trial before this rule existed.
+`handle` and `handle-source` are required, and `scripts/walk-check.py`'s R1 rejects a record missing either. They record the choice `references/write-back.md` makes once, before the first write: the handle used on every write-back in the walk, and where it came from, either a gathered document's filled maintainer block or the `git config user.name` fallback. This keeps one walk from writing two different handles into two different documents, which happened in the WD-01 (resolve open items) live trial before this rule existed.
 
 ## The items table
 
