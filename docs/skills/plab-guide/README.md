@@ -234,8 +234,8 @@ Detects a Chromium-based browser; prints the resolved path or an install hint.
 | What | Where |
 |------|-------|
 | Skill body / pipeline | [`skills/plab-guide/SKILL.md`](../../../skills/plab-guide/SKILL.md) |
-| Reference material | [`skills/plab-guide/references/`](../../../skills/plab-guide/references/) (8 files) |
-| Local scripts | [`skills/plab-guide/scripts/`](../../../skills/plab-guide/scripts/) (5 scripts) |
+| Reference material | [`skills/plab-guide/references/`](../../../skills/plab-guide/references/) (9 files) |
+| Local scripts | [`skills/plab-guide/scripts/`](../../../skills/plab-guide/scripts/) (8 scripts) |
 | Locked output templates | [`skills/plab-guide/assets/templates/`](../../../skills/plab-guide/assets/templates/) (3 files) |
 | Quick-ref visual theme | The `:root` block in `quick-reference-template_v1-technical-white.html`; see [`quick-ref-theme.md`](../../../skills/plab-guide/references/quick-ref-theme.md) |
 | Spec and plan | Not shipped; they remain in the author's private development repository |
