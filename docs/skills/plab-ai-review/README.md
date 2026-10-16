@@ -27,6 +27,17 @@ This generates a structured review request at `path/to/document_reviewed-by-code
 5. Review decisions and proposed actions       # Human resolves
 ```
 
+### Dispatched Workflow (no copy-paste)
+
+```
+1. /plab-ai-review doc.md --reviewer codex --dispatch  # Generate + submit as a background job
+2. /plab-ai-review doc_reviewed-by-codex.md --collect  # Fetch findings once the job completes
+3. /plab-ai-review doc_reviewed-by-codex.md --respond  # Add synthesis, exactly as above
+4. Review decisions and proposed actions               # Human resolves
+```
+
+Step 2 can run in the same session as step 1 or a later one - the job id travels in the document's own frontmatter, never in your head. If `--collect` reports the job is still running, or that the reviewer could not be reached, nothing is written and step 2 can simply be run again later; the plain workflow above still works on the same document at any point. See `references/dispatch.md` in the skill's own directory for the transport contract, and `HISTORY.md` 1.3.0 for what shipped.
+
 ### Installation
 
 Install via the prisant-labs marketplace:
@@ -56,11 +67,11 @@ ln -s /path/to/prisant-utilities/skills/plab-ai-review .claude/skills/plab-ai-re
 - Trivial documents (< 500 words, low-stakes, no decisions)
 - Code review (use git-based review tools)
 - Documents you want validated, not challenged (plab-ai-review is adversarial by design)
-- When you need the review done automatically (the user handles the LLM handoff)
+- When no Codex CLI is installed and you also don't want to paste by hand - `--dispatch` requires the `codex-companion` helper (see Modes below); without it, the user still handles the handoff
 
 ---
 
-## Three Modes
+## Modes
 
 ### `--review` (Generate Review Request)
 
@@ -70,8 +81,19 @@ Reads the source document, auto-detects the document type, selects 5-7 review di
 - Document path (required)
 - `--reviewer <name>` - target reviewer LLM (required): `codex`, `gpt`, `gemini`, `claude`, `grok`, `mistral`, `local-<model>`
 - `--type <type>` - optional override: `plan`, `brief`, `spec`, `rfc`, `doc`
+- `--dispatch` - optional. Instead of ending with "paste this into a reviewer," submits the generated document to Codex as a background job through the `codex-companion` helper and writes the returned job id into the document's frontmatter (`dispatch-job`). The session is not blocked. Without this flag, behavior is unchanged from before it existed.
 
-**Output:** `<basename>_reviewed-by-<reviewer>.md` in the same directory as the source.
+**Output:** `<basename>_reviewed-by-<reviewer>.md` in the same directory as the source. With `--dispatch`, the same file additionally carries a two-field frontmatter block (`type: review`, `dispatch-job: <job id>`).
+
+### `--collect` (Collect a Dispatched Review)
+
+The read side of `--dispatch`. Reads the `dispatch-job` id back out of the document's own frontmatter - never asked of you - and, if the job has completed, writes its findings into the same Reviewer Assessment and per-dimension placeholders a manual paste would have filled, attributed to Codex with the collection date.
+
+**Input:** The `_reviewed-by-` file a `--dispatch` run produced.
+
+**Output:** Updates the same file in place. Four other outcomes are reported instead of a silent no-op: the job is still running, the reviewer could not be reached, the job's output did not parse as findings (its raw text is saved to a sidecar file next to the document), or no `codex-companion` helper is installed on this machine at all. None of these touch the document.
+
+Also reachable without typing `--collect`: running the skill with no flag on a dispatched document whose placeholders are still empty offers to collect automatically.
 
 ### `--respond` (Requestor Synthesis)
 
@@ -132,7 +154,7 @@ Running `/plab-ai-review doc_reviewed-by-codex.md` (no flag) detects reviewer fi
 
 ## Output Shape
 
-The skill produces a single cross-LLM review document named `<basename>_reviewed-by-<reviewer>.md`, built up in phases: `--review` generates the structure with placeholders, the reviewer LLM fills findings, `--respond` adds synthesis, and `--close` archives the source plus review and applies accepted changes. The document includes (in order):
+The skill produces a single cross-LLM review document named `<basename>_reviewed-by-<reviewer>.md`, built up in phases: `--review` generates the structure with placeholders, the reviewer LLM fills findings (by hand, or via `--dispatch` and `--collect`), `--respond` adds synthesis, and `--close` archives the source plus review and applies accepted changes. The document includes (in order):
 
 | Section / Element | Purpose |
 |-------------------|---------|
@@ -225,6 +247,7 @@ Full template: `references/review-template.md`
 | `references/attribution-guide.md` | Finding format, severity definitions, anti-sycophancy, structured decisions | When the attribution or finding format needs clarification |
 | `references/file-lifecycle.md` | File naming, archive workflow, user-facing steps | When managing review artifacts |
 | `references/backlog-entry-format.md` | Shape of the entries `--close` appends to a backlog file | When reading or reformatting backlog output |
+| `references/dispatch.md` | The `--dispatch`/`--collect` transport contract: companion discovery, the submit prompt, the workspace-root rule, the three-state outcomes | When dispatch behaves unexpectedly, or before changing `scripts/dispatch.py` |
 
 ---
 
@@ -271,7 +294,7 @@ The `_archive/` directory sits alongside the source document.
 
 - Review document must be self-contained
 - Every finding must cite specific evidence
-- Does not call the reviewer LLM (user handles the handoff)
+- Does not call the reviewer LLM or construct a Codex CLI string by hand - without `--dispatch`, the user handles the handoff; with it, only `scripts/dispatch.py`, through the installed `codex-companion` helper, ever talks to Codex
 - All LLM content attributed with role + name + date
 - Reviewer Assessment and Requestor Analysis are separate sections
 - Response depth scales with severity

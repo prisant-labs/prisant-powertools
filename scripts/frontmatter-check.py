@@ -18,11 +18,11 @@ A spec, implementation plan, or release plan whose frontmatter has drifted from 
 
 THE SCHEMA FILES ARE DETECTOR CONFIGURATION, NOT SCAN INPUT
 -------------------------------------------------------------
-The three JSON Schema files in `docs/internal/schemas/` are always loaded from that fixed, script-relative location, never from `--root`. They are part of this detector in the same sense that `check-dashes.py`'s `PATTERN` constant is part of that detector: a fixed instrument, not a document being validated. `--root` controls only which `docs/internal/release-plans/` tree gets scanned, matching `--repo-root` in `path-citation-check.py`, whose docstring makes the same distinction between the project being scanned and the tool's own installed location. Because the schemas are detector configuration, `self_test()` below loads and exercises the real, committed schema files rather than a duplicate copy - a second, hand-maintained copy embedded in this script would be exactly the kind of two-sources-of-truth setup that drifts silently and is never caught, which is what canary discipline exists to prevent. Only the documents being validated (the synthetic `.md` fixtures with frontmatter) are built fresh inside a `tempfile.TemporaryDirectory()` and never touch the real repository, so a clean self-test does not depend on which project happens to be under the cursor.
+The four JSON Schema files in `docs/internal/schemas/` are always loaded from that fixed, script-relative location, never from `--root`. They are part of this detector in the same sense that `check-dashes.py`'s `PATTERN` constant is part of that detector: a fixed instrument, not a document being validated. `--root` controls only which `docs/internal/release-plans/` tree gets scanned, matching `--repo-root` in `path-citation-check.py`, whose docstring makes the same distinction between the project being scanned and the tool's own installed location. Because the schemas are detector configuration, `self_test()` below loads and exercises the real, committed schema files rather than a duplicate copy - a second, hand-maintained copy embedded in this script would be exactly the kind of two-sources-of-truth setup that drifts silently and is never caught, which is what canary discipline exists to prevent. Only the documents being validated (the synthetic `.md` fixtures with frontmatter) are built fresh inside a `tempfile.TemporaryDirectory()` and never touch the real repository, so a clean self-test does not depend on which project happens to be under the cursor.
 
 THE SMALL JSON SCHEMA SUBSET THIS VALIDATOR IMPLEMENTS
 ---------------------------------------------------------
-Exactly: `required`, `type` (the values `string`, `integer`, `boolean`, `array`, `null`, or a JSON array of any of those - e.g. `["string", "null"]` for a nullable field), `enum`, `pattern`, `additionalProperties: false`, `properties`, and `items` (carrying only `type`). `$schema` is read and ignored as metadata. This is not a general JSON Schema engine and must never grow into pretending to be one; see `docs/internal/schemas/README.md` for why the schema files themselves stay within this subset (no `const`, no `"type": "object"` at the root) even though nothing stops a future editor from reaching for a keyword outside it. Only the three schema files this script maps `type` values to (`spec.schema.json`, `implementation-plan.schema.json`, `release-plan.schema.json` - see `SCHEMA_FILES` below) are ever opened; a stray file dropped into `docs/internal/schemas/` under a different name is never read and is not part of this contract. If one of the three mapped schema files uses a keyword this validator does not implement - at any nesting depth, inside `properties` or `items` - the whole run exits 2 (BROKEN) before a single document is scanned. Silently ignoring an unrecognized keyword would mean validating less than the schema claims while still reporting success, which is a fail-open and is exactly the class of defect this repository refuses to ship (see the ripgrep and Perl failures documented in `scripts/check-dashes.py`, a different mechanism producing the identical false-clean shape).
+Exactly: `required`, `type` (the values `string`, `integer`, `boolean`, `array`, `null`, or a JSON array of any of those - e.g. `["string", "null"]` for a nullable field), `enum`, `pattern`, `additionalProperties: false`, `properties`, and `items` (carrying only `type`). `$schema` is read and ignored as metadata. This is not a general JSON Schema engine and must never grow into pretending to be one; see `docs/internal/schemas/README.md` for why the schema files themselves stay within this subset (no `const`, no `"type": "object"` at the root) even though nothing stops a future editor from reaching for a keyword outside it. Only the four schema files this script maps `type` values to (`spec.schema.json`, `implementation-plan.schema.json`, `release-plan.schema.json`, `review.schema.json` - see `SCHEMA_FILES` below) are ever opened; a stray file dropped into `docs/internal/schemas/` under a different name is never read and is not part of this contract. If one of the four mapped schema files uses a keyword this validator does not implement - at any nesting depth, inside `properties` or `items` - the whole run exits 2 (BROKEN) before a single document is scanned. Silently ignoring an unrecognized keyword would mean validating less than the schema claims while still reporting success, which is a fail-open and is exactly the class of defect this repository refuses to ship (see the ripgrep and Perl failures documented in `scripts/check-dashes.py`, a different mechanism producing the identical false-clean shape).
 
 THE COERCION RULE IS SCHEMA-AWARE, NOT GRAMMAR-BASED
 ---------------------------------------------------------
@@ -75,6 +75,7 @@ SCHEMA_FILES = {
     "spec": "spec.schema.json",
     "implementation-plan": "implementation-plan.schema.json",
     "release-plan": "release-plan.schema.json",
+    "review": "review.schema.json",
 }
 
 SUPPORTED_SCHEMA_KEYWORDS = {
@@ -509,6 +510,31 @@ RELEASE_PLAN_MISSING_REQUIRED = VALID_RELEASE_PLAN.replace("theme: \"Canary\"\n"
 RELEASE_PLAN_UNKNOWN_KEY = VALID_RELEASE_PLAN.replace(
     "checklist-complete: false\n", "checklist-complete: false\nnot-a-real-field: surprise\n", 1)
 
+# review.schema.json: a dispatched plab-ai-review document. Unlike the other three
+# document types, a review carries frontmatter ONLY when A-02's dispatch flag was used;
+# the overwhelming majority of `_reviewed-by-` files carry none at all and are skipped
+# (see SKIPPING FILES WITH NO FRONTMATTER IS DELIBERATE above) - this fixture covers the
+# minority that do. `dispatch-job` matches the real job id shape codex-companion.mjs's
+# generateJobId() produces: "<prefix>-<base36 timestamp>-<base36 random>".
+VALID_REVIEW = """---
+type: review
+dispatch-job: task-mvaign5s-0pq15s
+---
+
+# AI Review: Canary
+"""
+
+REVIEW_BAD_DISPATCH_JOB_PATTERN = VALID_REVIEW.replace(
+    "dispatch-job: task-mvaign5s-0pq15s", "dispatch-job: not-a-job-id", 1)
+
+REVIEW_MISSING_DISPATCH_JOB = VALID_REVIEW.replace("dispatch-job: task-mvaign5s-0pq15s\n", "", 1)
+
+REVIEW_UNKNOWN_KEY = VALID_REVIEW.replace(
+    "dispatch-job: task-mvaign5s-0pq15s\n",
+    "dispatch-job: task-mvaign5s-0pq15s\nreviewer: codex\n",
+    1,
+)
+
 # DEFECT B canary: a leading blank line before the opening fence must NOT exempt a real document.
 LEADING_BLANK_THEN_SPEC = "\n" + SPEC_BAD_STATUS
 
@@ -547,7 +573,7 @@ def _write(path, content):
 
 
 def _check_item_coercion(failures):
-    """DEFECT G proof, isolated from the main fixture tree: list items are routed through the same schema-aware coercion as scalars. Uses a synthetic items:{"type":"integer"} node (none of the three real schemas need an integer-typed array today) so both directions are demonstrated: a bare numeric token coerces and validates, a bare non-numeric token stays a string and is correctly flagged against the integer item type."""
+    """DEFECT G proof, isolated from the main fixture tree: list items are routed through the same schema-aware coercion as scalars. Uses a synthetic items:{"type":"integer"} node (none of the four real schemas need an integer-typed array today) so both directions are demonstrated: a bare numeric token coerces and validates, a bare non-numeric token stays a string and is correctly flagged against the integer item type."""
     int_items_node = {"type": "array", "items": {"type": "integer"}}
     fm = coerce_frontmatter(
         {"nums": ("list", [("5", False), ("abc", False), ("6", False)])},
@@ -649,6 +675,11 @@ def self_test():
             "canary/release-missing-required/plan.md": RELEASE_PLAN_MISSING_REQUIRED,
             "canary/release-unknown-key/plan.md": RELEASE_PLAN_UNKNOWN_KEY,
             "canary/release-null-list-item/plan.md": RELEASE_PLAN_NULL_LIST_ITEM,
+            # review.schema.json: same must-flag discipline as the other three types -
+            # a bad pattern, a missing required field, an unexpected extra key.
+            "canary/review-bad-dispatch-job/spec_reviewed-by-codex.md": REVIEW_BAD_DISPATCH_JOB_PATTERN,
+            "canary/review-missing-dispatch-job/spec_reviewed-by-codex.md": REVIEW_MISSING_DISPATCH_JOB,
+            "canary/review-unknown-key/spec_reviewed-by-codex.md": REVIEW_UNKNOWN_KEY,
         }
         must_not_flag = {
             "anti-canary/spec/spec.md": VALID_SPEC,
@@ -661,6 +692,10 @@ def self_test():
             "anti-canary/release-sequence-10/plan.md": SEQUENCE_10,
             "anti-canary/release-sequence-12/plan.md": SEQUENCE_12,
             "anti-canary/no-frontmatter/README.md": NO_FRONTMATTER,
+            # A dispatched review document is the minority case (most `_reviewed-by-`
+            # files carry no frontmatter at all and are skipped, not checked here) -
+            # this is the one that does, and it must validate cleanly.
+            "anti-canary/review-dispatched/spec_reviewed-by-codex.md": VALID_REVIEW,
         }
         for rel, content in {**must_flag, **must_not_flag}.items():
             _write(os.path.join(release_plans, rel), content)
