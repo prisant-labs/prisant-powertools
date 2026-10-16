@@ -4,12 +4,10 @@ description: "Run a structured peer review of a document with a second model, th
   synthesize the findings into decisions. Use when you need a second opinion on a plan,
   brief, spec, RFC, or design doc, or when the user says 'review this with codex', 'get a
   second opinion', 'peer review this', or 'close this review'. Three modes: --review
-  generates a self-contained review request for another model, optionally dispatching it
-  to Codex in the background with --dispatch instead of waiting for a manual paste;
-  --respond adds requestor synthesis once findings come back; --close archives the pair,
-  applies accepted changes, and writes unresolved decisions to a backlog. --collect fetches
-  a dispatched job's findings into the same document, and the no-flag auto-detect offers it
-  automatically when one is pending."
+  generates a self-contained review request for another model, or with --dispatch sends it
+  to Codex in the background; --respond adds requestor synthesis once findings come back;
+  --close archives the pair, applies accepted changes, and writes unresolved decisions to a
+  backlog."
 argument-hint: "<doc.md> [--reviewer codex|gpt|gemini] [--dispatch] [--respond] [--collect] [--close]"
 license: MIT
 metadata:
