@@ -18,7 +18,7 @@ The current configuration of every skill in `prisant-utilities`, as declared in 
 | `plab-guide` | 2.2.2 | Auto + explicit | `<topic-or-repo-url> [--type repo-url\|tool\|concept] [--out <dir>] [--force]` | `_output/plab-guide/` |
 | `plab-init-project` | 1.3.0 | **Explicit only** | `[--profile minimal\|standard\|public] [--type ...] [--agents ...] [--dry-run]` | The target repository root |
 | `plab-release-plan` | 1.5.1 | Auto + explicit | `--create \| --promote \| --demote \| --update \| --gate` | `docs/internal/release-plans/plan_NN_<slug>/` |
-| `plab-resolve-open-items` | 1.0.1 | Auto + explicit | `[<document>]` | Each item's home document; the walk record in `_local/decisions/` |
+| `plab-resolve-open-items` | 1.1.0 | Auto + explicit | `[--backlog \| <document>]` | Each item's home document; the walk record and any backlog file in `_local/decisions/` |
 | `plab-spec` | 1.3.3 | Auto + explicit | `--effort <id> [--target-release vX.Y.Z] [--revise] [--dry-run]` | `docs/internal/release-plans/_unassigned/` by default |
 | `plab-strategy-brief` | 1.1.1 | Auto + explicit | `[paste raw thinking]` | `_output/plab-strategy-brief/` |
 | `plab-wrap-session` | 1.8.0 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
@@ -136,7 +136,7 @@ Manages a version-scoped release plan folder.
 
 Auto-generates the aggregation table from folder contents and enforces hygiene gates plus a doc-update checklist that gates the tag. **Refuses to invent or modify acceptance criteria**; those live in specs, and the release plan only aggregates.
 
-### `plab-resolve-open-items` 1.0.1
+### `plab-resolve-open-items` 1.1.0
 
 Walks the maintainer through what a session has left open, and writes each answer back to where its question came from.
 
@@ -145,10 +145,11 @@ Walks the maintainer through what a session has left open, and writes each answe
 | Invocation | **Auto-discoverable from 1.0.0.** Fires on an explicit request to walk what is pending. Do-NOT-fire clauses cover a code walkthrough, a single standalone decision question, and a status question |
 | Default behavior | Gather open items from the conversation and from documents the session touched, present them as D, Q and T, read a one-line answer, write back, and write a walk record |
 | Named-document mode | `[<document>]` walks one document's "Open Questions / Decisions" section alone |
+| Backlog mode | `--backlog` gathers every pending item from the repository's specs, plans and release plans and the newest session log's Waiting on You list in one script call, sorts them into ready, moot and judgment tiers, writes a dated backlog file, and walks at most ten |
 | Output | Each answered item's home document, on the three surfaces of `references/decisions-section.md`; a pointer in every other copy; the walk record in `_local/decisions/` (gitignored) |
-| Scripts | `walk-check.py`, run by the skill after each write-back and walk record, and by CI against a committed sample. Eight record rules and five write-back rules |
+| Scripts | `walk-check.py`, run by the skill after each write-back and walk record, and by CI against a committed sample. Eight record rules and five write-back rules. `gather-backlog.py` for `--backlog`, with `test-gather-backlog.py` |
 | Setup required | Python 3 on PATH for the self-check. Without it, the walk still runs and reports its write-backs as unverified |
-| References | 4 files, plus the plugin-root `references/decisions-section.md` |
+| References | 5 files, plus the plugin-root `references/decisions-section.md` |
 
 **Silence is never acceptance.** An omitted decision is left exactly as found, an omitted question proceeds on its stated default and is recorded as assumed, and only an explicit "ok" or "accept the rest" applies recommendations. A document on another branch is never written; the intended edit is printed instead. Not built yet: the `--backlog` sweep across every spec, plan and log, automatic GitHub filing, a Projects board, cross-repository gathering, and a web-page rendering.
 

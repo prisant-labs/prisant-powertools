@@ -1,6 +1,6 @@
 # plab-resolve-open-items
 
-**Version:** 1.0.1
+**Version:** 1.1.0
 **Source:** [`skills/plab-resolve-open-items/`](../../../skills/plab-resolve-open-items/)
 
 Walk through the questions, decisions and tasks a session has left open, answer them all in one line, and have each answer written back beside its question. Every walk also leaves a local walk record, so the conversation that produced the answers can be found again.
