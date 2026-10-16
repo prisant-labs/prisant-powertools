@@ -13,9 +13,9 @@ A walk gathers from exactly two sources, and both are fixed at the moment the ma
 
 **Gathering never searches.** Do not list a folder, open a file, or read a memory file in order to find items. A file read during gathering is not touched, because the definition above is anchored to the walk request so that the set of sources cannot grow while the walk runs. Re-reading a document that was touched before the request, to get the current text of its section, is allowed.
 
-Nothing else is a source: not a document the session never opened, not a memory file, not a decision register or status document the session did not open before the request, not another repository, and not the session-log store. Sweeping those is the `--backlog` mode, which is not built.
+Nothing else is a source: not a document the session never opened, not a memory file, not a decision register or status document the session did not open before the request, not another repository, and not the session-log store. Sweeping those is the `--backlog` mode; see `references/backlog.md`.
 
-**Nothing open.** When neither source holds an open item, say so in one sentence, note that the `--backlog` sweep across the repository is not built, offer to walk one document the maintainer names, and stop. Write no walk record for an empty walk.
+**Nothing open.** When neither source holds an open item, say so in one sentence, offer to run `--backlog` or to walk one document the maintainer names, and stop. Write no walk record for an empty walk.
 
 **Named-document mode.** When the maintainer names one document ("resolve the open items in `<path>`"), the walk gathers from that document's section alone, and the conversation is not a source. If that document has no section in the format of `references/decisions-section.md`, say so. Offer to walk its items anyway, with every answer landing in the walk record only, because write-back needs the format.
 

@@ -21,10 +21,13 @@ repo: <owner>/<repository>
 rounds: <the number of rounds, at least 1>
 handle: <the one handle used for every write-back in this walk>
 handle-source: <the document and block it came from, or "git config user.name">
+backlog-file: <the backlog file this walk came from, for a --backlog walk only>
 ---
 ```
 
 `handle` and `handle-source` are required, and `scripts/walk-check.py`'s R1 rejects a record missing either. They record the choice `references/write-back.md` makes once, before the first write: the handle used on every write-back in the walk, and where it came from, either a gathered document's filled maintainer block or the `git config user.name` fallback. This keeps one walk from writing two different handles into two different documents, which happened in the WD-01 (resolve open items) live trial before this rule existed.
+
+`backlog-file` is optional, and only a `--backlog` walk writes it: the path of the dated snapshot `references/backlog.md` describes, so the record and the snapshot it walked can be found from each other. `scripts/walk-check.py`'s frontmatter parser reads frontmatter as a flat `key: value` dict and ignores any key its rules do not name, so this field needs no change to the checker; a record carrying it passes exactly as one without it.
 
 ## The items table
 

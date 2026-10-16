@@ -30,7 +30,14 @@ The skill gathers what is open, presents it as numbered D, Q and T items, and wa
 
 # The same, in plain words; the skill fires on either
 resolve the open items in the WD-01 spec
+
+# Sweep the whole repository, not just this session
+/plab-resolve-open-items --backlog
 ```
+
+### The `--backlog` sweep
+
+`--backlog` gathers every pending item from the repository's specs, plans and the newest session log's Waiting on You list, in one script call. It sorts them into three tiers, ready for a yes or no, probably moot, and judgment, oldest first within each, and walks at most ten. The rest stay in a dated snapshot at `_local/decisions/YYYY-MM-DD_HH-MM_backlog.md`, written once per sweep and never edited afterwards; the report says how many items it holds beyond the ten shown. A moot item names the fact that made it moot, such as its home spec being superseded, and is offered as a cancel-or-keep decision. Answers write back exactly as an in-session walk's do; a Waiting on You item's answer lands in the walk record only, and the session log it came from is never written.
 
 ### Installation
 
@@ -146,7 +153,6 @@ Exit 0 is clean, 1 names each broken rule, and 2 means the check could not run, 
 
 These are deferred or separate work:
 
-- **The `--backlog` mode.** A sweep across every spec, plan, session log and decision register in the repository at once, sorted into a standalone backlog file.
 - **No automatic GitHub filing.** The walk prints a `gh issue create` command and never files the issue itself.
 - **No GitHub Projects board.** Items are not placed on, or moved across, a board.
 - **No gathering across repositories.** A walk covers the current repository only.
@@ -160,6 +166,7 @@ These are deferred or separate work:
 | `references/answer-line.md` | The answer grammar, the states, skips, explicit acceptance, and worked examples |
 | `references/write-back.md` | The three surfaces, provisional answers, `Follow-up`, pointers, the branch guard, the self-check, and what needs confirmation |
 | `references/walk-record.md` | The walk record's location, table, rounds, and an example |
+| `references/backlog.md` | The `--backlog` sources, the three tiers, the cap, the moot presentation and the snapshot file |
 
 ## Hard Constraints
 
