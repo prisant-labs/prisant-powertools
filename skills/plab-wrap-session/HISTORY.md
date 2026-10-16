@@ -2,6 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.8.0 | 2026-10-15 | unreleased | added | `derive-log-facts.py` derives frontmatter facts, the Evidence Gathering inputs, and the hygiene sweep's detection results from git and the environment, in place of model recall and one-at-a-time commands. |
 | 1.7.0 | 2026-09-13 | v0.5.4 | added | Deep-mode logs carry an Uncertainty Ledger and a What You May Not Realize section. |
 | 1.6.2 | 2026-08-28 | v0.5.2 | fixed | Path-citation gate: three false-positive classes removed, a line-anchor shape brought into scope, and the proof corpus grown from 11 entries to 40. |
 | 1.6.1 | 2026-08-25 | v0.4.1 | fixed | Session-log body prose is not hard-wrapped. CI pin moved to the toolkit release that fixed the Action. |
@@ -9,6 +10,18 @@
 | 1.5.0 | 2026-08-18 | v0.2.0 | added | `--organize` files old logs into `YYYY-MM/` folders. Hygiene sweep gained Check 5. |
 | 1.4.1 | 2026-08-18 | v0.1.2 | fixed | Dropped the "what did we do" trigger. Added `type:` to the frontmatter block and `machine:` to the Quick and Blocked templates. |
 | 1.4.0 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.4.0; prior history remains there. |
+
+## 1.8.0 - 2026-10-15
+
+**Added: `scripts/derive-log-facts.py`, implementing W-02 (derive session-log facts from git instead of model recall).** The script replaces model-recalled transcription of `machine`, `repo`, `branch`, `date`, `files-changed`, commit range, and the latest tag with values read directly from git and the environment, under the new frontmatter fields `commit-range` and `latest-tag` (confirmed not to collide with the existing `commit-sha` and `tags` fields). `decisions-count` moves from a model estimate to a mechanical count of the drafted Decisions Made section's own entries, via the script's `--count-decisions` mode, run once that section exists.
+
+**The same single invocation also returns what Evidence Gathering and the Pre-Wrap Hygiene Sweep used to gather one command at a time.** A 2026-10-01 measurement found a wrap's cost dominated by its number of assistant API calls rather than by the length of the log it writes, because each call re-reads the whole session; collapsing several one-at-a-time commands into one script call attacks that directly. The output carries the newest existing log's filename and its Waiting on You items verbatim with their original `(blocked since ...)` dates, any qualifying capture-lite record count, the gitignored-file inventory Evidence Gathering starts from, and the five hygiene checks' detection results (remote reconciliation, working-tree and worktree state, release and repo hygiene, documentation drift, and the session-log store). `references/hygiene-sweep.md` now points each check at the output field that carries it rather than restating the commands as the thing to run; the commands stay in that file as the recipe the field is a direct port of.
+
+**Verification-relevant facts are derived only from a live transcript, never from capture-lite.** A `SessionEnd`-triggered capture-lite record describes a prior, already-closed session, and cannot describe the session still being wrapped. When `CLAUDE_CODE_SESSION_ID` and a matching transcript are both available, the script streams it line by line and surfaces which test, gate, and check commands ran this session and whether each one errored. When no record is available, the Verification section stays exactly as model-authored as it was before this version, and the script says so explicitly rather than reporting an empty success.
+
+**The script's only write path is an explicit, non-pruning fetch.** By default it writes nothing at all; `--fetch` runs exactly `git fetch --no-prune origin --tags`. The explicit flag matters: a plain `git fetch` prunes whenever `fetch.prune` or a remote's own prune setting is configured, which is exactly what deleted a remote-tracking ref without confirmation on 2026-09-25. The sibling `test-derive-log-facts.py` proves both halves of that contract with canaries: a byte-for-byte hash of the fixture tree across a no-`--fetch` run, and a fixture clone with `fetch.prune=true` whose stale ref must survive `--fetch`, which was confirmed to fail when `--no-prune` is removed from the fetch call.
+
+**Evidence Gathering, the Pre-Wrap Hygiene Sweep, and the Frontmatter block in `SKILL.md` are rewired to call the script and use its output**, replacing the manual per-field derivation prose they carried before. Summary, Decisions Made, Waiting on You, and the Continuation Prompt are untouched - the explicit point of this split is that judgment over those four sections remains agent work, while everything mechanically derivable moves to the script.
 
 ## 1.7.0 - 2026-09-13
 
