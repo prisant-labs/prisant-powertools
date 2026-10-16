@@ -29,12 +29,23 @@ The document trio is a pipeline: `plab-spec` writes the acceptance criteria, an 
 
 ## Install
 
+In Claude Code:
+
 ```
 /plugin marketplace add prisant-labs/agent-plugins
 /plugin install prisant-utilities@prisant-labs
 ```
 
-Then invoke any skill by name, for example `/plab-wrap-session`.
+In Codex, from a terminal:
+
+```
+codex plugin marketplace add prisant-labs/agent-plugins
+codex plugin add prisant-utilities@prisant-labs
+```
+
+Both harnesses read the same marketplace, `prisant-labs`, which pins a released tag. Then invoke any skill by name, for example `/plab-wrap-session`.
+
+To update after a release: in Claude Code, `claude plugin marketplace update prisant-labs` then `claude plugin update prisant-utilities@prisant-labs`, and restart; in Codex, `codex plugin marketplace upgrade prisant-labs`.
 
 ## Conventions
 

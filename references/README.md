@@ -9,6 +9,7 @@ This folder is a **plugin utility**, not a skill.
 | File | Purpose | Consumers |
 |------|---------|-----------|
 | `diagrams.md` | Mermaid diagram authoring guidance: when to use a diagram, which type fits which need, syntax validity rules, quality checklist | `plab-guide`, `plab-strategy-brief` |
+| `decisions-section.md` | Shared decisions-section format: the seven statuses, the three surfaces a write-back may touch, and the `Follow-up` line | `plab-spec`, `plab-strategy-brief`, `plab-resolve-open-items`, `plab-release-plan` |
 
 ## When to add a file here
 

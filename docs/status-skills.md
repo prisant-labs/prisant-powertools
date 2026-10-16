@@ -151,7 +151,7 @@ Walks the maintainer through what a session has left open, and writes each answe
 | Setup required | Python 3 on PATH for the self-check. Without it, the walk still runs and reports its write-backs as unverified |
 | References | 5 files, plus the plugin-root `references/decisions-section.md` |
 
-**Silence is never acceptance.** An omitted decision is left exactly as found, an omitted question proceeds on its stated default and is recorded as assumed, and only an explicit "ok" or "accept the rest" applies recommendations. A document on another branch is never written; the intended edit is printed instead. Not built yet: the `--backlog` sweep across every spec, plan and log, automatic GitHub filing, a Projects board, cross-repository gathering, and a web-page rendering.
+**Silence is never acceptance.** An omitted decision is left exactly as found, an omitted question proceeds on its stated default and is recorded as assumed, and only an explicit "ok" or "accept the rest" applies recommendations. A document on another branch is never written; the intended edit is printed instead. Not built yet: automatic GitHub filing, a Projects board, cross-repository gathering, and a web-page rendering.
 
 ### `plab-init-project` 1.3.0, explicit only
 
@@ -202,7 +202,7 @@ Used by skills rather than duplicated inside them:
 |---|---|---|
 | `lib/render-mermaid.py` | `plab-guide` | Mermaid diagram rendering |
 | `references/diagrams.md` | `plab-guide` | Diagram conventions |
-| `references/decisions-section.md` | `plab-spec`, `plab-strategy-brief`, `plab-resolve-open-items` | Shared decisions-section format. Resolves at plugin root, not skill root |
+| `references/decisions-section.md` | `plab-spec`, `plab-strategy-brief`, `plab-resolve-open-items`, `plab-release-plan` | Shared decisions-section format. Resolves at plugin root, not skill root |
 | `scripts/check-dashes.py` | CI | Canary-proven dash detector, invoked by `.github/workflows/gate.yml` |
 
 ---
@@ -219,10 +219,10 @@ Used by skills rather than duplicated inside them:
 | License | MIT, on the plugin and every skill |
 | Dash rule | No em-dashes or en-dashes anywhere. Enforced in CI and by a local PreToolUse hook |
 
-Every skill carries a `HISTORY.md` and a usage README at `docs/skills/<name>/README.md`. All eight usage READMEs currently state the same version as their skill.
+Every skill carries a `HISTORY.md` and a usage README at `docs/skills/<name>/README.md`. All ten usage READMEs currently state the same version as their skill.
 
 ---
 
-## Regenerating this file
+## Keeping this file accurate
 
-Every value above is derived from `library.json`, `manifest.generated.json`, and the frontmatter of each `skills/*/SKILL.md`. Nothing here is authored judgment, so nothing here should be hand-maintained: when a skill version, argument hint, or dormancy flag changes, this file is stale until regenerated from those sources.
+Every value above should match `library.json`, `manifest.generated.json`, and the frontmatter of each `skills/*/SKILL.md`. This file is hand-maintained, not generated: `scripts/version-parity-check.py` gates the version claims here and in `README.md` against those sources, but it only reports drift, it does not write the correction. When a skill's version, argument hint, or dormancy flag changes, update this file by hand and re-run the gate.
