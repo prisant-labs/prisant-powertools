@@ -90,7 +90,7 @@ Install via the prisant-labs marketplace:
 
 **Output:** Full log + evidence index + detailed verification table. Everything in Final mode, plus forensic-level detail.
 
-Before writing, deep and final modes run the **pre-wrap hygiene sweep** ([`references/hygiene-sweep.md`](../../../skills/plab-wrap-session/references/hygiene-sweep.md)): git fetch and remote comparison (catches parallel work from another checkout), working-tree and worktree state, release hygiene (pending CHANGELOG content, version-vs-tag consistency, the repo's own CI scripts), and documentation drift. Each finding becomes one concrete proposal executed only on your per-action confirmation; declined proposals are recorded and carried into the continuation prompt.
+Before writing, deep and final modes run the **pre-wrap hygiene sweep** ([`references/hygiene-sweep.md`](../../../skills/plab-wrap-session/references/hygiene-sweep.md)). As of 1.8.0, one call to `scripts/derive-log-facts.py --fetch` returns the detection results for all five checks in a single pass: git fetch and remote comparison (catches parallel work from another checkout), working-tree and worktree state, release hygiene (pending CHANGELOG content, version-vs-tag consistency), documentation drift, and the session-log store. The repo's own CI validation scripts, when it has any, are still run and reported as a separate step, since the script has no way to know what those scripts are. Each finding becomes one concrete proposal executed only on your per-action confirmation; declined proposals are recorded and carried into the continuation prompt.
 
 ### Blocked
 
@@ -263,11 +263,13 @@ Every log includes metadata for indexing and future tooling:
 
 | Tier | Fields | When |
 |------|--------|------|
-| **1 (always)** | date, repo, branch, summary, files-changed | Every log |
+| **1 (always)** | date, type, machine, repo, branch, summary, files-changed | Every log |
 | **2 (when available)** | session-type, parent-session, model, model-settings, agent, status, decisions-count | Most logs |
 | **3 (when applicable)** | duration-minutes, tokens-used, commit-sha, tags, related-issues | Complex sessions |
 
-See `references/frontmatter-schema.md` for the complete 18-field specification.
+Since 1.8.0, `derive-log-facts.py` also always returns two further fields, `commit-range` (the `base..HEAD` short-SHA range the script diffed) and `latest-tag` (the nearest reachable tag, distinct from the topic-keyword `tags` field above), alongside the rest of Tier 1. `decisions-count` now comes from the script's `--count-decisions` mode, run once the Decisions Made section is drafted, rather than a model estimate.
+
+See `references/frontmatter-schema.md` for the field-by-field specification (23 fields as that file currently lists them; it does not yet carry `commit-range` or `latest-tag`).
 
 ### Session Types
 
@@ -291,10 +293,13 @@ After writing the log, the skill checks if changes warrant updates to README, CH
 
 | File | Purpose | When to Read |
 |------|---------|-------------|
-| `references/frontmatter-schema.md` | Complete 18-field metadata specification (3 tiers) | When customizing frontmatter or building tooling |
+| `references/frontmatter-schema.md` | Complete 23-field metadata specification (3 tiers) | When customizing frontmatter or building tooling |
 | `references/session-log-template.md` | Output skeletons for all 4 modes | When examining exact output structure per mode |
 | `references/hygiene-sweep.md` | The five pre-wrap checks, their commands, and the per-action confirmation protocol | When understanding what the sweep inspects and proposes |
 | `references/doc-update-rules.md` | When/how to update README, CHANGELOG, plans, and ADRs | When understanding the surrounding document update rules |
+| `scripts/derive-log-facts.py` | One call gathers the frontmatter facts, the Waiting on You carry-forward, and the detection results of all five hygiene checks | Run once per wrap, before drafting the log |
+| `scripts/dash-check.py` | Log Self-Check: no em-dash or en-dash in the drafted log, detector-backed and canary-proven | Before writing |
+| `scripts/path-citation-check.py` | Log Self-Check: path citations in the drafted log resolve, detector-backed and canary-proven | Before writing |
 | `scripts/organize-logs.py` | Files logs from closed months into `YYYY-MM/` folders; dry run by default | Run by `--organize` and by hygiene Check 5 |
 | `examples/organize-logs-walkthrough.md` | A worked `--organize` run with real captured output | When you want to see exactly what filing does before running it |
 
@@ -307,12 +312,16 @@ skills/plab-wrap-session/
 ├── SKILL.md                        # Core instructions
 ├── HISTORY.md                      # Per-version change record
 ├── references/
-│   ├── frontmatter-schema.md       # 18-field metadata reference (3 tiers)
+│   ├── frontmatter-schema.md       # 23-field metadata reference (3 tiers)
 │   ├── session-log-template.md     # Output templates for all 4 modes
 │   ├── hygiene-sweep.md            # The 5 pre-wrap checks and the confirmation protocol
 │   └── doc-update-rules.md         # README/CHANGELOG/plan/ADR update rules
 ├── scripts/
+│   ├── dash-check.py               # Log Self-Check: no em-dash or en-dash, canary-proven
+│   ├── derive-log-facts.py         # One call: frontmatter facts, Waiting on You, all 5 hygiene checks
 │   ├── organize-logs.py            # Files logs into YYYY-MM/ folders (--organize, Check 5)
+│   ├── path-citation-check.py      # Log Self-Check: path citations resolve, canary-proven
+│   ├── test-derive-log-facts.py    # Fixture checks for derive-log-facts.py
 │   └── test-organize-logs.py       # 34 fixture checks for the organizer
 └── examples/
     └── organize-logs-walkthrough.md  # Worked --organize run with real output
