@@ -33,7 +33,7 @@ A skipped item's document is left exactly as found. An assumed Q is not a decisi
 > * **Decided by / date:** <handle> / <YYYY-MM-DD>
 ```
 
-Use the handle the document's existing blocks use, such as `jp`; otherwise use `git config user.name`.
+**One handle for the whole walk.** Choose the handle once, before the first write of the walk, not per document. Look through the walk's gathered documents, in the order in which this session touched them (`references/walk-format.md`), for the first filled maintainer block, meaning one whose `Decided by / date` names a handle rather than `(none)`, and use that handle for every write in the walk, even one to a document whose own filled blocks use a different handle. Only when no gathered document has a filled block, use `git config user.name`. Record which source supplied the handle, the document and its block or `git config user.name`, in the walk record's frontmatter (`references/walk-record.md`).
 
 The document statuses map from the walk's states: `decided` is `Decided`, `provisional` is `Provisional`, `deferred` is `Deferred`, and `canceled` is `Canceled`.
 
