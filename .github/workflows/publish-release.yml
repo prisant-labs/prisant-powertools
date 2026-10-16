@@ -8,7 +8,7 @@
 # WHAT THIS DOES NOT DO, and the distinction matters because `AGENTS.md` says CI never
 # fixes, bumps, or tags:
 #
-#   it does not choose a version    the maintainer edits the version by hand in the five
+#   it does not choose a version    the maintainer edits the version by hand in the four
 #                                   places `scripts/version-parity-check.py` guards, per
 #                                   `docs/internal/release-plans/release-checklist.yaml`
 #

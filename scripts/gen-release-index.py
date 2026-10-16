@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generates docs/internal/release-plans/INDEX.md, the cross-release effort index. Nothing else in this repository shows every effort across every release at a glance: the release plan (plan.md) aggregates only within its own release, so a maintainer wanting the whole picture has to open five folders and sixteen spec files by hand. This script derives that picture from frontmatter alone, on every run, so the index can never carry a fact that disk does not also carry.
+Generates docs/internal/release-plans/INDEX.md, the cross-release effort index. Nothing else in this repository shows every effort across every release at a glance: the release plan (plan.md) aggregates only within its own release, so a maintainer wanting the whole picture has to open five folders and twenty spec files by hand. This script derives that picture from frontmatter alone, on every run, so the index can never carry a fact that disk does not also carry.
 
 EXIT-CODE CONTRACT
 ------------------

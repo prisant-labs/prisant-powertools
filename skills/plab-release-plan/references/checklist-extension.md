@@ -74,7 +74,7 @@ This is the resolution of D3 in the spec:
 - **Pure hardcode** would make the skill awkward for any project whose doc set differs from these defaults.
 - **Pure config-first** is YAGNI overhead before there's a second consumer.
 
-The hybrid gives correct defaults for a conventional plugin layout plus a clean extension surface for any project whose doc set differs. This repository is itself a worked example: see `docs/internal/release-plans/release-checklist.yaml`, which adds five rows and marks one built-in as not applicable. The YAML config is optional; absent file = empty extension, defaults only.
+The hybrid gives correct defaults for a conventional plugin layout plus a clean extension surface for any project whose doc set differs. This repository is itself a worked example: see `docs/internal/release-plans/release-checklist.yaml`, which adds six rows and marks one built-in as not applicable. The YAML config is optional; absent file = empty extension, defaults only.
 
 ## When the YAML file is malformed
 

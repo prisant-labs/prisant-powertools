@@ -17,7 +17,7 @@ Six design decisions (D1 to D6 in the WD-02 spec) were built on their own recomm
 
 ## 1.0.2 - 2026-10-15
 
-**Fixed: three findings from WD-01's (resolve open items) Phase 6 live trial,** recorded in the trial's results under "Findings for a later fix" and not yet released under any version.
+**Fixed: three findings from WD-01's (resolve open items) Phase 6 live trial,** recorded in the trial's results under "Findings for a later fix," where they had not yet been released under any version.
 
 1. **`walk-check.py` could not read a section the skill gathers from.** The trial's brief was headed `## 7. Open Questions & Decisions`; the skill gathered from it correctly, but the checker required `## Open Questions / Decisions` exactly and exited 2. `references/walk-format.md` now names, in one place, the exact heading variants this walk gathers from: an optional numbered prefix, and `&` or `and` standing in for the slash. `scripts/walk-check.py`'s `SECTION_RE` matches that same definition, so a heading the skill gathers from is a heading the checker can verify, and nothing wider than that is accepted.
 2. **One walk wrote two maintainer handles.** Where a document had no filled maintainer block to copy from, the session fell back to `git config user.name`, while other documents in the same walk used a different handle. `references/write-back.md` now chooses the handle once per walk, before the first write, from the first filled maintainer block found among the walk's gathered documents in gathering order, falling back to `git config user.name` only when none has one. `references/walk-record.md` gains `handle` and `handle-source` frontmatter fields recording the choice.

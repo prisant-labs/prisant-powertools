@@ -2,9 +2,9 @@
 
 The shape every `implementation-plan.md` in this tree shares, written down so it does not have to be re-derived from the exemplars each time.
 
-**Where this came from.** Not from a style preference. Three sections appear in all sixteen implementation plans currently tracked here, in the same order: `Completion Status`, `CI and Documentation Coverage`, and `Rollback`, with numbered phases between the first and the second. Everything below is that observed spine plus the phase-internal structure those sixteen also share.
+**Where this came from.** Not from a style preference. Three sections appear in all twenty implementation plans currently tracked here, in the same order: `Completion Status`, `CI and Documentation Coverage`, and `Rollback`, with numbered phases between the first and the second. Everything below is that observed spine plus the phase-internal structure those twenty also share.
 
-**What this is not.** It is not a skill and it does not generate anything. `/plab-spec` writes the spec that this plan implements, and `/plab-release-plan` gates the release that ships it. This stage is a template because the sixteen exemplars were written with no plan-authoring skill involved and passed every hygiene gate regardless, so machinery here would be solving a problem this repository does not have.
+**What this is not.** It is not a skill and it does not generate anything. `/plab-spec` writes the spec that this plan implements, and `/plab-release-plan` gates the release that ships it. This stage is a template because the exemplars were written with no plan-authoring skill involved and passed every hygiene gate regardless, so machinery here would be solving a problem this repository does not have.
 
 **The one rule that matters most.** A plan never introduces an acceptance criterion. Criteria live in the spec, where they are contract and where the maintainer promoted them deliberately. If executing a plan reveals a missing criterion, the spec is amended and its `ac-count` and Revisions table updated, and only then does the plan reference it. A plan that invents its own criteria is grading its own homework.
 
