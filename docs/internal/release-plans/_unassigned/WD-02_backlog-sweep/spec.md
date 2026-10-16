@@ -27,19 +27,19 @@ priority: P2
 
 ### Acceptance Criteria Fulfillment
 
-- [ ] AC-1: `--backlog` gathers from planning documents and the newest session log's Waiting on You, and from nothing else
-- [ ] AC-2: Only items whose status is `Open`, `Needs info` or the legacy `Proposed` are gathered
-- [ ] AC-3: Gathering is one script call that writes nothing and reports broken rather than empty
-- [ ] AC-4: Every item carries its home, its own id, its status and its age, or says its age is unknown
-- [ ] AC-5: Every item lands in exactly one of three tiers, and a moot item states its evidence
-- [ ] AC-6: Every non-empty sweep writes one dated backlog file that is never edited afterwards
-- [ ] AC-7: One backlog walk presents at most ten items, in tier order and oldest first
-- [ ] AC-8: Answers apply exactly as in the in-session walk, and the walk record names the backlog file
-- [ ] AC-9: A session log is never written; its items are answered in the walk record only
-- [ ] AC-10: An empty sweep says so in one sentence and writes nothing
-- [ ] AC-11: The description and argument hint name `--backlog` as built, within a fixed character budget
-- [ ] AC-12: A stdlib test script proves the gathering script against fixture repositories, with a canary
-- [ ] AC-13: A headless backlog walk on a fixture repository proves AC-4 to AC-10 by behaviour
+- [x] AC-1: `--backlog` gathers from planning documents and the newest session log's Waiting on You, and from nothing else
+- [x] AC-2: Only items whose status is `Open`, `Needs info` or the legacy `Proposed` are gathered
+- [x] AC-3: Gathering is one script call that writes nothing and reports broken rather than empty
+- [x] AC-4: Every item carries its home, its own id, its status and its age, or says its age is unknown
+- [x] AC-5: Every item lands in exactly one of three tiers, and a moot item states its evidence
+- [x] AC-6: Every non-empty sweep writes one dated backlog file that is never edited afterwards
+- [x] AC-7: One backlog walk presents at most ten items, in tier order and oldest first
+- [x] AC-8: Answers apply exactly as in the in-session walk, and the walk record names the backlog file
+- [x] AC-9: A session log is never written; its items are answered in the walk record only
+- [x] AC-10: An empty sweep says so in one sentence and writes nothing
+- [x] AC-11: The description and argument hint name `--backlog` as built, within a fixed character budget
+- [x] AC-12: A stdlib test script proves the gathering script against fixture repositories, with a canary
+- [x] AC-13: A headless backlog walk on a fixture repository proves AC-4 to AC-10 by behaviour
 
 ### Currently In Progress
 
