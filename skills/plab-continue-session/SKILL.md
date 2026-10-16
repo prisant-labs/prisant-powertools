@@ -61,10 +61,10 @@ If the log lacks a `## Continuation Prompt` section, report the log path and ask
 Before any of the log's content is presented as though it were still current, derive what has actually changed in the repository since the log was written. Run:
 
 ```bash
-python scripts/reconcile.py <project_root> <log_path>
+python <this skill's base directory>/scripts/reconcile.py <project_root> <log_path>
 ```
 
-`scripts/reconcile.py` resolves against this skill's own directory, wherever the plugin is installed, the same convention `organize-logs.py` documents for `plab-wrap-session`. `<project_root>` is the current working directory in the normal case; `<log_path>` is the log Phase 1 selected. Full invocation details, the output's three-state (`ok` / `finding` / `broken`) contract, and what each check covers: `references/reconciliation.md`.
+`<this skill's base directory>` is this skill's own installed location, not the project being resumed in; running the bare relative path `scripts/reconcile.py` from the project root fails, the same convention `plab-resolve-open-items` uses for `scripts/walk-check.py`. `<project_root>` is the current working directory in the normal case; `<log_path>` is the log Phase 1 selected. Full invocation details, the output's three-state (`ok` / `finding` / `broken`) contract, and what each check covers: `references/reconciliation.md`.
 
 Paste the script's Markdown output verbatim under the `### What changed since this log` heading in Phase 4's display. Do not re-summarize it: a broken check must stay visible by name, never be silently folded into a clean-sounding paraphrase.
 

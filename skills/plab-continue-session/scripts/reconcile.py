@@ -413,69 +413,157 @@ def check_remote_branches_without_local(cwd, timeout, commands_run):
             "branches": missing_locally}
 
 
-def check_commits_since(cwd, fm, commands_run):
-    """AC-3: count commits landed since the log, via commit-sha when present, via the
-    date fallback otherwise. Also returns the touched-files list check_next_action_overlap
-    needs, and the base ref actually used, so overlap and display stay consistent with
-    whichever path this check took."""
+def _commits_and_touched_by_sha(cwd, sha, ref, commands_run):
+    """Count commits and collect touched files in sha..ref. Returns (count, touched,
+    error_or_None); error is set (and the other two meaningless) when the git commands
+    themselves fail, never raised, so a caller can report a named broken reason."""
+    rc, out, err, _ = run_git(["rev-list", "--count", sha + ".." + ref], cwd, commands_run)
+    if rc != 0:
+        return None, None, "git rev-list --count %s..%s failed: %s" % (sha, ref, err.strip())
+    count = int(out.strip() or "0")
+    rc2, out2, err2, _ = run_git(["diff", "--name-only", sha + ".." + ref], cwd, commands_run)
+    if rc2 != 0:
+        return None, None, "git diff --name-only %s..%s failed: %s" % (sha, ref, err2.strip())
+    touched = [l.strip() for l in out2.splitlines() if l.strip()]
+    return count, touched, None
+
+
+def _commits_and_touched_by_date(cwd, log_date, ref, commands_run):
+    """Count commits on ref strictly after log_date, and collect their touched files.
+    Deliberately not `git log --since=<date>`: --since's boundary is inclusive in
+    practice, which double-counts the exact commit a wrap session logs against when the
+    log's date and that commit's date coincide to the second (the common case, since a
+    wrap is typically written immediately after the last commit). Each commit's own date
+    is compared to the log's date in Python instead, strictly greater-than, so the
+    boundary commit itself is correctly excluded. Returns (count, touched, error_or_None)."""
+    rc, out, err, _ = run_git(["log", "--pretty=format:%H %cI", ref], cwd, commands_run)
+    if rc != 0:
+        return None, None, "git log --pretty=format:%%H %%cI %s failed: %s" % (ref, err.strip())
+    since_shas = []
+    for line in out.splitlines():
+        line = line.strip()
+        if not line or " " not in line:
+            continue
+        commit_sha, iso = line.split(" ", 1)
+        commit_date = parse_log_date(iso)
+        if commit_date is not None and _comparable(commit_date, log_date) and commit_date > log_date:
+            since_shas.append(commit_sha)
+    touched_set = set()
+    for commit_sha in since_shas:
+        rc2, out2, _err2, _ = run_git(["diff-tree", "--no-commit-id", "--name-only", "-r", commit_sha], cwd, commands_run)
+        if rc2 == 0:
+            touched_set.update(l.strip() for l in out2.splitlines() if l.strip())
+    return len(since_shas), sorted(touched_set), None
+
+
+def check_commits_since(cwd, fm, fetch_state, commands_run):
+    """AC-3: count commits landed since the log, via commit-sha when present, via the date
+    fallback otherwise, measured separately against the log's branch LOCALLY and against
+    `origin/<branch>` REMOTELY, because this skill never pulls or merges (AC-9): a resuming
+    checkout's local branch can sit stale behind origin indefinitely, and commits that
+    landed there (another checkout's push, a PR merged through GitHub) would otherwise be
+    invisible. Verified against a fixture (test-reconcile.py) that reading only the local
+    ref reports a false-clean 'no commits landed' in exactly this shape; a live run against
+    the maintainer's real checkout hit it the same way (two PRs merged on origin/main while
+    the checkout sat on another branch).
+
+    Returns a combined report: 'count' and 'touched_files' cover the LOCAL half only (kept
+    for callers and tests written against the pre-remote-aware shape); 'remote_count' and
+    'remote_touched_files' cover the remote half when it could be verified. The state and
+    the detail string fold both halves together. When the remote half cannot be verified
+    (the fetch did not succeed, or the log names no branch, or no matching remote-tracking
+    ref exists), the whole check reports broken rather than a clean or finding result that
+    implicitly asserts a remote it never actually checked, mirroring check_release_cut's
+    fetch-state cascade."""
     sha = fm.get("commit-sha")
+    branch = fm.get("branch")
+
+    local_ref = "HEAD"
+    local_note = ""
+    if branch:
+        rc_b, out_b, _err_b, _ = run_git(["branch", "--list", branch], cwd, commands_run)
+        if rc_b == 0 and out_b.strip():
+            local_ref = branch
+        else:
+            local_note = " (the log's branch `%s` no longer exists locally; counted against HEAD instead)" % branch
+
+    log_date = None
+    if not sha:
+        log_date = parse_log_date(fm.get("date"))
+        if log_date is None:
+            return {"state": "broken", "detail": "log has neither commit-sha nor a parseable date field; cannot count commits since"}
+
     if sha:
         rc, _out, err, _ = run_git(["rev-parse", "--verify", sha + "^{commit}"], cwd, commands_run)
         if rc != 0:
             return {"state": "broken",
                     "detail": "commit-sha %s from the log was not found in this repository "
                               "(a different checkout, or history was rewritten): %s" % (sha, err.strip())}
-        rc, out, err, _ = run_git(["rev-list", "--count", sha + "..HEAD"], cwd, commands_run)
-        if rc != 0:
-            return {"state": "broken", "detail": "git rev-list --count %s..HEAD failed: %s" % (sha, err.strip())}
-        count = int(out.strip() or "0")
-        rc2, out2, err2, _ = run_git(["diff", "--name-only", sha + "..HEAD"], cwd, commands_run)
-        touched = [l.strip() for l in out2.splitlines() if l.strip()] if rc2 == 0 else []
-        base_desc = "commit-sha `%s`" % sha
+        local_count, local_touched, local_err = _commits_and_touched_by_sha(cwd, sha, local_ref, commands_run)
+        local_desc = "commit-sha `%s` on `%s`%s" % (sha, local_ref, local_note)
     else:
-        date = fm.get("date")
-        log_date = parse_log_date(date)
-        if log_date is None:
-            return {"state": "broken", "detail": "log has neither commit-sha nor a parseable date field; cannot count commits since"}
-        branch = fm.get("branch")
-        ref = branch if branch else "HEAD"
-        note = ""
-        if branch:
-            rc_b, out_b, _err_b, _ = run_git(["branch", "--list", branch], cwd, commands_run)
-            if rc_b != 0 or not out_b.strip():
-                ref = "HEAD"
-                note = " (the log's branch `%s` no longer exists locally; counted against HEAD instead)" % branch
-        # Deliberately not `git log --since=<date>`: --since's boundary is inclusive in
-        # practice, which double-counts the exact commit a wrap session logs against when
-        # the log's date and that commit's date coincide to the second (the common case,
-        # since a wrap is typically written immediately after the last commit). Each
-        # commit's own date is compared to the log's date in Python instead, strictly
-        # greater-than, so the boundary commit itself is correctly excluded.
-        rc, out, err, _ = run_git(["log", "--pretty=format:%H %cI", ref], cwd, commands_run)
-        if rc != 0:
-            return {"state": "broken", "detail": "git log --pretty=format:%%H %%cI %s failed: %s" % (ref, err.strip())}
-        since_shas = []
-        for line in out.splitlines():
-            line = line.strip()
-            if not line or " " not in line:
-                continue
-            sha, iso = line.split(" ", 1)
-            commit_date = parse_log_date(iso)
-            if commit_date is not None and _comparable(commit_date, log_date) and commit_date > log_date:
-                since_shas.append(sha)
-        count = len(since_shas)
-        touched_set = set()
-        for sha in since_shas:
-            rc2, out2, _err2, _ = run_git(["diff-tree", "--no-commit-id", "--name-only", "-r", sha], cwd, commands_run)
-            if rc2 == 0:
-                touched_set.update(l.strip() for l in out2.splitlines() if l.strip())
-        touched = sorted(touched_set)
-        base_desc = "the log's date (%s) on `%s`%s" % (date, ref, note)
+        local_count, local_touched, local_err = _commits_and_touched_by_date(cwd, log_date, local_ref, commands_run)
+        local_desc = "the log's date (%s) on `%s`%s" % (fm.get("date"), local_ref, local_note)
+    if local_err:
+        return {"state": "broken", "detail": local_err}
 
-    if count == 0:
-        return {"state": "ok", "detail": "no commits landed since %s" % base_desc, "count": 0, "touched_files": touched}
-    return {"state": "finding", "detail": "%d commit(s) landed since %s" % (count, base_desc),
-            "count": count, "touched_files": touched}
+    remote_ref = None
+    remote_broken_reason = None
+    if fetch_state != "ok":
+        remote_broken_reason = "the fetch did not succeed, so commits on origin/%s cannot be verified" % (branch or "<branch>")
+    elif not branch:
+        remote_broken_reason = "log has no branch field; cannot determine which remote-tracking ref to check"
+    else:
+        candidate = "origin/" + branch
+        rc_r, _out_r, _err_r, _ = run_git(["rev-parse", "--verify", candidate], cwd, commands_run)
+        if rc_r == 0:
+            remote_ref = candidate
+        else:
+            remote_broken_reason = "no remote-tracking ref `%s` exists; cannot verify commits on the remote" % candidate
+
+    remote_count, remote_touched = None, []
+    if remote_ref is not None:
+        if sha:
+            remote_count, remote_touched, remote_err = _commits_and_touched_by_sha(cwd, sha, remote_ref, commands_run)
+        else:
+            remote_count, remote_touched, remote_err = _commits_and_touched_by_date(cwd, log_date, remote_ref, commands_run)
+        if remote_err:
+            remote_broken_reason = remote_err
+            remote_count, remote_touched = None, []
+
+    behind = None
+    if remote_ref is not None and remote_broken_reason is None:
+        rc_bh, out_bh, _err_bh, _ = run_git(["rev-list", "--count", local_ref + ".." + remote_ref], cwd, commands_run)
+        if rc_bh == 0:
+            behind = int(out_bh.strip() or "0")
+
+    touched = sorted(set(local_touched) | set(remote_touched))
+
+    parts = []
+    if local_count == 0:
+        parts.append("no commits landed on the local branch since %s" % local_desc)
+    else:
+        parts.append("%d commit(s) landed on the local branch since %s" % (local_count, local_desc))
+    if remote_broken_reason:
+        parts.append("remote commits could not be verified: %s" % remote_broken_reason)
+    elif remote_count == 0:
+        parts.append("no additional commits on %s" % remote_ref)
+    else:
+        parts.append("%d commit(s) on %s not yet reflected in the local branch" % (remote_count, remote_ref))
+    if behind:
+        parts.append("local `%s` is %d commit(s) behind %s" % (local_ref, behind, remote_ref))
+    detail = "; ".join(parts) + "."
+
+    result = {"count": local_count, "touched_files": touched,
+              "remote_count": remote_count, "remote_touched_files": remote_touched}
+    if remote_broken_reason:
+        result["state"] = "broken"
+    elif local_count > 0 or (remote_count or 0) > 0:
+        result["state"] = "finding"
+    else:
+        result["state"] = "ok"
+    result["detail"] = detail
+    return result
 
 
 def check_release_cut(cwd, fm, fetch_state, commands_run):
@@ -655,7 +743,7 @@ def build_report(project_root, log_path, fetch_timeout):
     checks["remote_fetch"] = check_remote_fetch(project_root, fetch_timeout, commands_run)
     checks["ahead_behind"] = check_ahead_behind(project_root, checks["remote_fetch"]["state"], commands_run)
     checks["remote_branches"] = check_remote_branches_without_local(project_root, fetch_timeout, commands_run)
-    checks["commits_since"] = check_commits_since(project_root, fm, commands_run)
+    checks["commits_since"] = check_commits_since(project_root, fm, checks["remote_fetch"]["state"], commands_run)
     checks["release_cut"] = check_release_cut(project_root, fm, checks["remote_fetch"]["state"], commands_run)
     checks["branch_local"] = check_branch_local(project_root, fm, commands_run)
     checks["branch_remote"] = check_branch_remote(project_root, fm, fetch_timeout, commands_run)

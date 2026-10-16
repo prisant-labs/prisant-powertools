@@ -179,6 +179,17 @@ $ /plab-continue-session
 
 ## Resuming from: 2026-05-28_15-30_claude_v1.4.0-spec-sweep.md
 
+### What changed since this log
+- Remote fetch: [ok] fetched origin
+- Ahead/behind upstream: [ok] up to date with upstream
+- Remote branches without a local counterpart: [ok] every remote branch has a local counterpart (3 checked). Recent tags: v1.3.0, v1.4.0.
+- Commits since the log: [ok] no commits landed on the local branch since commit-sha `9c2a441` on `main`; no additional commits on origin/main.
+- Release cut since the log: [ok] no tag cut since the log's date
+- Log's branch, locally: [ok] branch `main` still exists locally
+- Log's branch, on origin: [ok] branch `main` still exists on origin
+- Continuation-prompt file paths: [ok] every cited path in the continuation prompt resolves (2 checked)
+- Next action vs. recent commits: [ok] no overlap between recently touched files and the continuation prompt
+
 **Last session:** 2026-05-28T15:30:00-07:00, claude opus 4.6, status `completed`
 **Summary:** Wrapped the v1.4.0 spec sweep; all decisions resolved
 **Branch:** `main`
@@ -186,11 +197,15 @@ $ /plab-continue-session
 ### Outstanding from last session
 - Draft the implementation plan for the S-09 spec
 
-### Continuation prompt
-[fenced prompt with full context]
+### Immediate next action
+Draft the implementation plan for the S-09 spec, covering the three phases the spec's Scope section names.
+
+Full continuation prompt: `_local/_session-logs/2026-05-28_15-30_claude_v1.4.0-spec-sweep.md` - say "show the prompt" to print it verbatim.
 
 Resume with the named immediate next action, or pick something else?
 ```
+
+The continuation prompt's immediate action renders as ordinary markdown, never as a fenced dump of the whole prompt. The full prompt prints verbatim only when asked ("show the prompt"); see Hard Constraints below and `SKILL.md`'s "Do not dump the prompt" for the rule and its rationale.
 
 ### Example 2: Stale Log Warning
 
@@ -233,7 +248,7 @@ Options:
 
 - Never modifies the session log being resumed from
 - Never auto-executes the continuation prompt without user confirmation
-- Always shows the prompt verbatim; never paraphrases
+- Never dumps the whole continuation prompt in a fenced block by default; renders its immediate action as ordinary markdown and gives the log path instead. When the user does ask to see it ("show the prompt"), reproduces it verbatim, never paraphrased
 - Refuses cross-repo resumption
 - Surfaces age warnings (7+ days) and branch mismatches before acting
 - Never blends multiple logs together; one log per invocation

@@ -234,6 +234,48 @@ def main() -> int:
               report_branch["checks"]["branch_remote"])
 
         # ---------------------------------------------------------------
+        # 8b. Regression: commits that landed on origin/<branch> must be visible even when
+        # the LOCAL branch ref is stale, because this checkout never pulls or merges. This
+        # is the exact shape the 2026-10-15 live run against the real checkout exposed:
+        # local `main` sat behind origin/main (two PRs merged there), and the unfixed code
+        # read only the local ref and reported a false-clean "no commits landed".
+        # ---------------------------------------------------------------
+        two_origin = init_bare_origin(tmp / "two-clone")
+        seed = init_repo(tmp / "two-clone")
+        git(seed, "remote", "add", "origin", str(two_origin))
+        remote_ahead_date = "2026-10-01T09:00:00-07:00"
+        commit(seed, "seed", remote_ahead_date, files={"seeded.md": "x\n"})
+        git(seed, "push", "-u", "origin", "main")
+
+        clone_stale = tmp / "two-clone" / "clone-stale"
+        clone_fresh = tmp / "two-clone" / "clone-fresh"
+        git(tmp / "two-clone", "clone", str(two_origin), str(clone_stale))
+        git(tmp / "two-clone", "clone", str(two_origin), str(clone_fresh))
+
+        # The second clone pushes a commit after the log date. The first clone's local
+        # `main` never moves: no pull, no merge, exactly how a resume-time checkout works.
+        # The touched file needs a path separator to be an in-scope citation under D-12's
+        # rule (AC-6/AC-7 share one citation set; a bare backtick-wrapped filename with no
+        # separator is branch (b), resolved silently, and never enters the overlap set).
+        commit(clone_fresh, "pushed after the log", "2026-10-02T09:00:00-07:00",
+               files={"remote/only.md": "pushed from elsewhere\n"})
+        git(clone_fresh, "push", "origin", "main")
+
+        log_remote_ahead = tmp / "two-clone" / "log.md"
+        write_log(log_remote_ahead, remote_ahead_date, "main",
+                  prompt_body="Finish the work. See `remote/only.md`.")
+
+        proc_ra = run_reconcile(clone_stale, log_remote_ahead, "--json")
+        report_ra = json.loads(proc_ra.stdout)
+        check("remote-ahead: commits_since is a finding, not a false-clean 'ok'",
+              report_ra["checks"]["commits_since"]["state"] == "finding",
+              report_ra["checks"]["commits_since"])
+        check("remote-ahead: next_action_overlap sees the remote-only touched file",
+              report_ra["checks"]["next_action_overlap"]["state"] == "finding"
+              and "remote/only.md" in report_ra["checks"]["next_action_overlap"].get("overlap", []),
+              report_ra["checks"]["next_action_overlap"])
+
+        # ---------------------------------------------------------------
         # 9. Fetch failure: origin points at a path that does not exist. Must be BROKEN,
         # never silently clean.
         # ---------------------------------------------------------------

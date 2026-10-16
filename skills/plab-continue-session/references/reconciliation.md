@@ -8,13 +8,13 @@ An earlier version of this effort's plan made reconciliation a rung-3 documented
 
 ## Invocation
 
-This script's own path resolves against this skill's own directory, wherever the plugin is installed, exactly the convention `organize-logs.py` documents in `skills/plab-wrap-session/SKILL.md`. Unlike that script's session-log store argument, both the project root and the log path are given explicitly here, since `plab-continue-session` has no single fixed path to resolve a log against the way the wrap skill's store is fixed.
+This script's own path resolves against this skill's own installed directory, not the project being resumed in; a bare relative `scripts/reconcile.py` run from the project root fails. The same placeholder convention `plab-resolve-open-items` uses for `scripts/walk-check.py` applies here:
 
 ```bash
-python scripts/reconcile.py <project_root> <log_path>
+python <this skill's base directory>/scripts/reconcile.py <project_root> <log_path>
 ```
 
-`<project_root>` is the repository being resumed in (the current working directory in the normal case). `<log_path>` is the log file Phase 1 selected. Pass `--fetch-timeout <seconds>` to override the default 20-second budget for the network checks (the fetch and all three `ls-remote` calls); see spec.md OQ3 for why 20 was chosen. Pass `--json` for the full structured report (used by `test-reconcile.py`); omit it for the Markdown rendering meant to be pasted directly under the `### What changed since this log` heading (see `references/handoff-display.md`).
+Unlike `organize-logs.py`'s single session-log store argument, both the project root and the log path are given explicitly here, since `plab-continue-session` has no one fixed path to resolve a log against the way the wrap skill's store is fixed. `<project_root>` is the repository being resumed in (the current working directory in the normal case). `<log_path>` is the log file Phase 1 selected. Pass `--fetch-timeout <seconds>` to override the default 20-second budget for the network checks (the fetch and all three `ls-remote` calls); see spec.md OQ3 for why 20 was chosen. Pass `--json` for the full structured report (used by `test-reconcile.py`); omit it for the Markdown rendering meant to be pasted directly under the `### What changed since this log` heading (see `references/handoff-display.md`).
 
 ## Reading the output
 
