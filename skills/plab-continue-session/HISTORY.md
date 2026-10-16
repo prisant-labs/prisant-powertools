@@ -2,11 +2,24 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.6.0 | 2026-10-15 | unreleased | added | A new Phase 3 reconciles the log's claims against live repository state before anything is displayed, and leads the resumption context with what changed. |
 | 1.5.0 | 2026-09-15 | v0.5.5 | changed | The continuation prompt is no longer dumped verbatim. Phase 3 renders the immediate action and gives the log path; verbatim is opt-in. |
 | 1.4.0 | 2026-08-25 | v0.4.0 | added | Capture-lite orientation on the no-log and stale-log paths. |
 | 1.3.0 | 2026-08-18 | v0.2.0 | added | Discovery reads `YYYY-MM/` month folders alongside the flat store. Empty-store message diagnoses version skew. |
 | 1.2.1 | 2026-08-18 | v0.1.2 | fixed | Body trigger list aligned with the narrowed description. Records the 2026-08-17 description change that shipped un-versioned. |
 | 1.2.0 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.2.0; prior history remains there. |
+
+## 1.6.0 - 2026-10-15
+
+**Added: a new Phase 3, "Reconcile against reality."** Before any of a session log's content is presented as though it were still current, the skill now derives live repository state and diffs it against what the log claimed, then leads the resumption display with that delta under a new "What changed since this log" section.
+
+The delta covers five categories of drift: commits landed since the log was written, a release cut elsewhere, the log's branch no longer existing (locally or on origin, distinct from the existing branch-mismatch warning), a continuation-prompt file path missing or renamed, and an advisory when recent commits touch the same files the continuation prompt's next action names. Each check reports one of three states, ok, finding, or broken, and a check that cannot complete names itself rather than being folded into a silently clean result.
+
+The mechanism is a script, `scripts/reconcile.py`, with a sibling test file, `scripts/test-reconcile.py`, on the same pattern `plab-wrap-session`'s `organize-logs.py` / `test-organize-logs.py` already use: stdlib-only, canary-tested, and run by the invoking agent rather than wired into CI.
+
+This closes a named asymmetry: `plab-wrap-session` has run a pre-wrap hygiene sweep checking remote divergence and release state before writing a log since its own 1.5.0, and the read side had never run the equivalent check before acting on one.
+
+Phases 3 through 5 of the prior workflow are renumbered 4 through 6 to make room; no other phase's content changed.
 
 ## 1.5.0 - 2026-09-15
 

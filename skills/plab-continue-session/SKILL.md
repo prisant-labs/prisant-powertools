@@ -56,12 +56,29 @@ If multiple logs share the same date+time prefix (rare; concurrent sessions by d
 
 If the log lacks a `## Continuation Prompt` section, report the log path and ask the user how to proceed without one.
 
-### Phase 3: Present the resumption context
+### Phase 3: Reconcile against reality
+
+Before any of the log's content is presented as though it were still current, derive what has actually changed in the repository since the log was written. Run:
+
+```bash
+python scripts/reconcile.py <project_root> <log_path>
+```
+
+`scripts/reconcile.py` resolves against this skill's own directory, wherever the plugin is installed, the same convention `organize-logs.py` documents for `plab-wrap-session`. `<project_root>` is the current working directory in the normal case; `<log_path>` is the log Phase 1 selected. Full invocation details, the output's three-state (`ok` / `finding` / `broken`) contract, and what each check covers: `references/reconciliation.md`.
+
+Paste the script's Markdown output verbatim under the `### What changed since this log` heading in Phase 4's display. Do not re-summarize it: a broken check must stay visible by name, never be silently folded into a clean-sounding paraphrase.
+
+This step is read-only. It runs a non-pruning fetch against the remote and nothing else that touches the working tree, the index, or HEAD; see `references/reconciliation.md` for the full list of commands it runs and does not run.
+
+### Phase 4: Present the resumption context
 
 Display, in this order, before doing anything else:
 
 ```markdown
 ## Resuming from: <log filename>
+
+### What changed since this log
+<the Markdown output of `reconcile.py`, pasted verbatim>
 
 **Last session:** <date>, <model>, status <status>
 **Summary:** <one-line summary>
@@ -103,7 +120,7 @@ So:
 
 **Everything above this section still displays in full.** Waiting on you, outstanding issues, declined proposals and what's next are short, they render as markdown, and they are the part the user is re-entering for.
 
-### Phase 4: Confirm before acting
+### Phase 5: Confirm before acting
 
 Ask the user: "Resume with the named immediate next action, or pick something else?"
 
@@ -113,7 +130,7 @@ Ask the user: "Resume with the named immediate next action, or pick something el
 
 Never auto-execute the continuation prompt without explicit user confirmation. The prompt is a recommendation, not a command.
 
-### Phase 5: Hand off
+### Phase 6: Hand off
 
 When the user confirms resumption, do not narrate "I'll continue from where we left off." Just start the named immediate next action. The continuation prompt was the handoff; processing it is acting on it.
 
@@ -123,12 +140,13 @@ Note the consumed log's filename: when this session is eventually wrapped, `/pla
 
 - Never modify the session log being resumed from
 - Never auto-execute the continuation prompt without user confirmation
-- Never dump the whole continuation prompt in a fenced block unless the user asks; render its immediate action and give the log path instead (Phase 3, "Do not dump the prompt")
+- Never dump the whole continuation prompt in a fenced block unless the user asks; render its immediate action and give the log path instead (Phase 4, "Do not dump the prompt")
 - When the user does ask to see it, reproduce it verbatim; never paraphrase the prompt itself
 - If the latest log is older than 7 days, surface "this log is N days old; are you sure?" before resuming
 - If the log's `branch` field doesn't match the current git branch, surface the mismatch and ask
 - If the log's `repo` field doesn't match the current repo, refuse and surface a cross-repo warning
 - Never blend multiple logs together; resume from exactly one log per invocation
+- The Phase 3 reconciliation step never mutates repository state: it runs no `pull`, `merge`, `checkout`, `reset`, or `push`, nor any equivalent, and `scripts/test-reconcile.py` asserts this against the script's own recorded command list at runtime
 
 ## Output
 
@@ -146,4 +164,5 @@ If a session you're resuming was wrapped poorly (missing prompt, vague prompt), 
 |------|---------|-----------|
 | `references/log-discovery.md` | How to find the latest log; newest-wins search across current and legacy locations; tie-breaking rules | Phase 1 |
 | `references/objection-detection.md` | How to detect and surface a stated objection that justifies a lighter-than-verbose continuation prompt | Phase 2 |
-| `references/handoff-display.md` | The resumption context display format; what to include and what to elide | Phase 3 |
+| `references/reconciliation.md` | How to invoke `scripts/reconcile.py`, read its three-state (`ok` / `finding` / `broken`) output, and what each check covers | Phase 3 |
+| `references/handoff-display.md` | The resumption context display format; what to include and what to elide | Phase 4 |
