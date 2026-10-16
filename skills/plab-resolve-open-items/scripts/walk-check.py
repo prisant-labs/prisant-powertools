@@ -25,7 +25,8 @@ RECORD MODE: WHAT IT CHECKS, AND WHICH ACCEPTANCE CRITERION EACH RULE CARRIES
 The format is `references/walk-record.md`. The criteria are WD-01's.
 
   R1  frontmatter: type walk-record, a YYYY-MM-DD date, a repo,     AC-10
-      and an integer rounds of at least 1
+      an integer rounds of at least 1, and a non-empty handle and   WD-01
+      handle-source (references/write-back.md's one-handle rule)    finding 2
   R2  an items table with exactly the seven documented columns,     AC-10
       and at least one row
   R3  every Walk ID is Q, D or T plus a number, and is unique       AC-2
@@ -43,6 +44,10 @@ It compares one document before and after a walk wrote to it. The format is
 `references/decisions-section.md` at the plugin root: a summary table, one
 "### <ID>: <Title> (<Status>)" subsection per item, and a maintainer block
 after a "---" rule. A walk may change three surfaces and nothing else (AC-8).
+SECTION_RE accepts the heading `## Open Questions / Decisions` plus exactly
+the variants `references/walk-format.md` says this skill gathers from: an
+optional numbered prefix ("## 7. ...") and "&" or "and" standing in for the
+slash. No other heading, punctuation or word order is a decisions section.
 
   W1  everything outside the "## Open Questions / Decisions"        AC-8
       section is identical, and so is the section's own text
@@ -170,6 +175,10 @@ def check_frontmatter(text, findings):
         findings.append("frontmatter date %r is not YYYY-MM-DD (R1, AC-10)" % fm.get("date"))
     if not fm.get("repo"):
         findings.append("frontmatter names no repo (R1, AC-10)")
+    if not fm.get("handle"):
+        findings.append("frontmatter names no handle (R1, WD-01 finding 2)")
+    if not fm.get("handle-source"):
+        findings.append("frontmatter names no handle-source (R1, WD-01 finding 2)")
     rounds = fm.get("rounds", "")
     if not rounds.isdigit() or int(rounds) < 1:
         findings.append("frontmatter rounds %r is not an integer of at least 1 (R1, AC-18)" % rounds)
@@ -271,7 +280,7 @@ def run_record_checks(text):
 # Writeback mode
 # ---------------------------------------------------------------------------
 
-SECTION_RE = re.compile(r"^##\s+Open Questions\s*/\s*Decisions\s*$")
+SECTION_RE = re.compile(r"^##\s+(?:\d+\.\s+)?Open Questions\s*(?:/|&|and)\s*Decisions\s*$")
 LEVEL2_RE = re.compile(r"^##\s")
 ITEM_RE = re.compile(r"^###\s+([A-Z]+\d+):\s+(.*?)\s*\(([^()]*)\)\s*$")
 BLOCK_START_RE = re.compile(r"^>\s*\*\*Maintainer decision:\*\*")
@@ -420,6 +429,8 @@ type: walk-record
 date: 2026-11-02
 repo: example/repo
 rounds: 2
+handle: jp
+handle-source: docs/spec.md D2's maintainer block
 ---
 
 # Walk record: sample
@@ -586,10 +597,23 @@ def self_test():
                          .replace('"A". The local copy', '"A, but I\'m not sure." The local copy'))
     provisional = _decide_d1(GOOD_BEFORE, provisional_block, "Provisional", "Provisional")
     expect_writeback("anti-canary, a provisional answer", GOOD_BEFORE, provisional, False)
+    # WD-01 finding 1: the live trial's brief was headed "## 7. Open Questions & Decisions",
+    # a heading the skill gathers from (references/walk-format.md) that the checker used to
+    # reject with Broken. Both the numbered "&" form and the unnumbered "and" form must be
+    # accepted, because walk-format.md names both as gathered variants.
+    numbered_before = GOOD_BEFORE.replace("## Open Questions / Decisions", "## 7. Open Questions & Decisions")
+    numbered_after = GOOD_AFTER.replace("## Open Questions / Decisions", "## 7. Open Questions & Decisions")
+    expect_writeback("anti-canary, a numbered '&' heading (WD-01 finding 1)", numbered_before, numbered_after, False)
+    and_before = GOOD_BEFORE.replace("## Open Questions / Decisions", "## Open Questions and Decisions")
+    and_after = GOOD_AFTER.replace("## Open Questions / Decisions", "## Open Questions and Decisions")
+    expect_writeback("anti-canary, an unnumbered 'and' heading", and_before, and_after, False)
 
     # R1 to R8
     expect_record("R1 wrong type", GOOD_RECORD.replace("type: walk-record", "type: session-log"), True, "R1")
     expect_record("R1 rounds missing", GOOD_RECORD.replace("rounds: 2\n", ""), True, "R1")
+    expect_record("R1 handle missing", GOOD_RECORD.replace("handle: jp\n", ""), True, "R1")
+    expect_record("R1 handle-source missing",
+                  GOOD_RECORD.replace("handle-source: docs/spec.md D2's maintainer block\n", ""), True, "R1")
     expect_record("R2 a column missing", GOOD_RECORD.replace("| Walk ID | Home | Answer | State | Round | Follow-up | Landed |",
                                                              "| Walk ID | Home | Answer | Round | Landed |"), True, "R2")
     expect_record("R3 a bad Walk ID", GOOD_RECORD.replace("| Q1 | none |", "| X1 | none |"), True, "R3")
@@ -632,8 +656,13 @@ def self_test():
                          "> * **Follow-up:** Build option A in phase 2 of the sync plan.\n", "")), True, "W5")
 
     # BROKEN, not FINDINGS.
+    # A heading this skill does NOT gather from, per walk-format.md, must still be
+    # rejected: a colon instead of a period after the number is outside the
+    # documented variants, so the checker must not widen past what the skill reads.
+    unsupported_heading = GOOD_BEFORE.replace("## Open Questions / Decisions", "## 7: Open Questions & Decisions")
     for label, text in (("no decisions section", "# A document\n\nNo section here.\n"),
-                        ("no summary table", "# A\n\n## Open Questions / Decisions\n\nNone at this time.\n")):
+                        ("no summary table", "# A\n\n## Open Questions / Decisions\n\nNone at this time.\n"),
+                        ("a heading variant the skill does not gather from", unsupported_heading)):
         try:
             run_writeback_checks(text, text)
             bad.append("  %s: expected Broken, got a normal return" % label)
@@ -688,9 +717,10 @@ def main():
         sys.stderr.write("\n".join(failures) + "\n")
         sys.exit(2)
     sys.stdout.write(
-        "gate self-test: PASS (8 record rules and 5 write-back rules proved against 24 canaries, "
-        "6 anti-canaries including a CRLF record, a pointer block and a provisional answer, "
-        "3 BROKEN cases, and two pipeline fixtures that must reach every record rule)\n")
+        "gate self-test: PASS (8 record rules and 5 write-back rules proved against 25 canaries, "
+        "8 anti-canaries including a CRLF record, a pointer block, a provisional answer and two "
+        "accepted heading variants, 4 BROKEN cases, and two pipeline fixtures that must reach "
+        "every record rule)\n")
 
     mode = argv[0]
     try:

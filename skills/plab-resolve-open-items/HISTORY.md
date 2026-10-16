@@ -2,8 +2,17 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.0.2 | 2026-10-15 | unreleased | fixed | Three defects recorded against WD-01's (resolve open items) Phase 6 live trial. `walk-check.py` now accepts the numbered and `&`/`and` heading variants the skill itself gathers from. One handle is chosen once per walk, from the first filled maintainer block in gathering order, and recorded in the walk record. An item omitted in one round can still be answered in a later round. |
 | 1.0.1 | 2026-10-12 | v0.7.1 | fixed | A walk in a session with nothing open listed `_local/` folders and read memory files, looking for items, instead of saying nothing was open. A document now counts as a source only if the session read or wrote it before the walk was requested, and gathering never searches. |
 | 1.0.0 | 2026-10-08 | v0.7.0 | added | First version. Walks the open questions, decisions and tasks of the current session, or of one named document, takes a one-line answer, writes each answer back to its one home, and writes a walk record that `walk-check.py` verifies. |
+
+## 1.0.2 - 2026-10-15
+
+**Fixed: three findings from WD-01's (resolve open items) Phase 6 live trial,** recorded in the trial's results under "Findings for a later fix" and not yet released under any version.
+
+1. **`walk-check.py` could not read a section the skill gathers from.** The trial's brief was headed `## 7. Open Questions & Decisions`; the skill gathered from it correctly, but the checker required `## Open Questions / Decisions` exactly and exited 2. `references/walk-format.md` now names, in one place, the exact heading variants this walk gathers from: an optional numbered prefix, and `&` or `and` standing in for the slash. `scripts/walk-check.py`'s `SECTION_RE` matches that same definition, so a heading the skill gathers from is a heading the checker can verify, and nothing wider than that is accepted.
+2. **One walk wrote two maintainer handles.** Where a document had no filled maintainer block to copy from, the session fell back to `git config user.name`, while other documents in the same walk used a different handle. `references/write-back.md` now chooses the handle once per walk, before the first write, from the first filled maintainer block found among the walk's gathered documents in gathering order, falling back to `git config user.name` only when none has one. `references/walk-record.md` gains `handle` and `handle-source` frontmatter fields recording the choice.
+3. **The answer rules were silent on a round-2 answer to a round-1 omission.** `references/answer-line.md`'s Skips section now states that an item omitted in an earlier round can be answered in any later round of the same walk, applied in the round it was given.
 
 ## 1.0.1 - 2026-10-12
 

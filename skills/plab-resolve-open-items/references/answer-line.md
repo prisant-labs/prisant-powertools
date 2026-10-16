@@ -50,6 +50,7 @@ Silence is an answer, and it is never acceptance.
 - An omitted **Q** item is `assumed`: the walk proceeds on its stated default, and the walk record marks the value as assumed, not decided. Its home document is not written.
 - An omitted **T** item stays `open`.
 - An item that was re-presented for more context and is then omitted again is asked about once more, by name, in the closing report. It is not re-presented a third time.
+- **An omission does not close the item.** An item omitted in an earlier round can be answered in any later round of the same walk, whether or not it was re-presented in that round; omitting it once does not forfeit the chance to answer it later. The answer is applied in the round it was given, and the walk record's `Round` column shows that round, not the round of first presentation.
 
 Explicit acceptance is different from silence. "Accept the rest" or "ok" makes each item it covers `decided` at its recommendation or default, and that Q item's default is recorded as decided, not assumed.
 
