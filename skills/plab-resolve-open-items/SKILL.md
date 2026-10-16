@@ -1,7 +1,7 @@
 ---
 name: plab-resolve-open-items
-description: "Walk the maintainer through every open question, decision and task in the current session, then write each answer back to the document it came from. Use when the user asks to go through what is pending: 'walk me through the pending questions and decisions', 'resolve open items', 'what do you need me to decide', 'decision sitting'. Presents items as Q, D and T, D items with lettered options and a recommendation, takes a one-line answer such as 'D1 A, Q1: the NAS', and writes a walk record. Can be pointed at one named document. Do NOT fire on a request to walk through code or a file, on a single standalone decision question, or on a status question like 'where are we' or 'what's next'; answer those directly. Not yet built: the --backlog sweep across every spec, plan and log."
-argument-hint: "[<document>]"
+description: "Walk the maintainer through every open question, decision and task in the current session, then write each answer back to the document it came from. Use when the user asks to go through what is pending: 'walk me through the pending questions and decisions', 'resolve open items', 'what do you need me to decide', 'decision sitting'. Presents items as Q, D and T, D items with lettered options and a recommendation, takes a one-line answer such as 'D1 A, Q1: the NAS', and writes a walk record. Can be pointed at one named document. Do NOT fire on a request to walk through code or a file, on a single standalone decision question, or on a status question like 'where are we' or 'what's next'; answer those directly. '--backlog' sweeps every spec, plan and the newest session log for pending items, triages them, and walks up to ten, oldest first, writing a dated backlog file."
+argument-hint: "[--backlog | <document>]"
 license: MIT
 metadata:
   version: "1.0.1"
@@ -30,9 +30,11 @@ An answer that lives only in the conversation is lost when the session ends. Thi
 
 ### 1. Gather
 
-Collect open items from exactly two sources, both fixed at the moment the maintainer asks for the walk: this conversation's own unresolved items, and the "Open Questions / Decisions" section of every document this session read or wrote before that request. Never list a folder, open a file, or read a memory file to look for items; a file read during gathering is not a source. When the maintainer names one document, gather from that document's section alone. Assign each item to the Q, D or T series, and give each item one home. Rules: `references/walk-format.md`.
+**With `--backlog`:** run `python <this skill's base directory>/scripts/gather-backlog.py --repo <project root> --json`. On exit 2, report the named source as broken and stop; do not retry with a narrower scope. Otherwise triage the result into the three tiers of `references/backlog.md`, write the dated backlog file it describes, and select the items the walk will present: at most ten, ready then moot then judgment, oldest first within a tier. When the script returns no items, say so in one sentence and write neither a backlog file nor a walk record. The two sources below are for the walk without `--backlog`; skip them.
 
-If nothing is open, say so in one sentence, note that the `--backlog` sweep is not built, offer to walk one document the maintainer names, and stop. Do not write a walk record for an empty walk.
+**Without `--backlog`:** collect open items from exactly two sources, both fixed at the moment the maintainer asks for the walk: this conversation's own unresolved items, and the "Open Questions / Decisions" section of every document this session read or wrote before that request. Never list a folder, open a file, or read a memory file to look for items; a file read during gathering is not a source. When the maintainer names one document, gather from that document's section alone. Assign each item to the Q, D or T series, and give each item one home. Rules: `references/walk-format.md`.
+
+If nothing is open, say so in one sentence, offer to run `--backlog` or to walk one document the maintainer names, and stop. Do not write a walk record for an empty walk.
 
 ### 2. Present
 
@@ -81,7 +83,6 @@ Close with a short report: what was written where, what was printed as text inst
 
 These are deferred or separate work, named here so their absence is not mistaken for an oversight:
 
-- **The `--backlog` mode.** A sweep across every spec, plan, session log and decision register in the repository at once, sorted by age and urgency into a standalone backlog file. This is slice 2 of this skill.
 - **Automatic GitHub filing.** The walk prints a `gh issue create` command; it never files an issue itself.
 - **A GitHub Projects board.** No item is placed on, or moved across, a board.
 - **Gathering across repositories.** A walk covers the current repository only.
@@ -106,6 +107,7 @@ These are deferred or separate work, named here so their absence is not mistaken
 | `references/answer-line.md` | The answer grammar, the answer states, skips, explicit acceptance, and worked examples | Steps 3 and 5 |
 | `references/write-back.md` | The three surfaces, `Provisional`, `Follow-up`, pointers, the branch guard, the self-check, and what needs confirmation | Steps 4 and 7 |
 | `references/walk-record.md` | Where the walk record goes, its table, its rounds, and an example | Step 6 |
+| `references/backlog.md` | The `--backlog` sources, the three tiers, the cap, the moot presentation and the backlog file | Step 1, `--backlog` only |
 | `references/decisions-section.md` (plugin root) | The decisions-section format and its seven statuses, which every write-back follows | Step 4 |
 
 `references/decisions-section.md` is shared by several skills and lives at the plugin root, two folders above this skill's base directory, not in this skill's own `references/` folder. In a checkout of the plugin's repository, it is `references/decisions-section.md` at the repository root.
