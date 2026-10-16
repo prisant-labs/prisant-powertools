@@ -3,6 +3,8 @@ type: walk-record
 date: 2026-10-07
 repo: prisant-labs/prisant-utilities
 rounds: 3
+handle: jp
+handle-source: chosen by hand; this walk predates the rule in references/write-back.md
 ---
 
 # Walk record: designing plab-resolve-open-items
