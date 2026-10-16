@@ -2,7 +2,7 @@
 
 Generated file. Regenerate with `python scripts/gen-release-index.py` from the repository root. Hand edits will be overwritten on the next regeneration.
 
-**Releases:** 5 **Efforts:** 19 (11 unassigned) **Source:** every `plan.md` and `spec.md` under `docs/internal/release-plans/`, including `_unassigned/`, plus each effort's `implementation-plan.md` where present
+**Releases:** 5 **Efforts:** 20 (12 unassigned) **Source:** every `plan.md` and `spec.md` under `docs/internal/release-plans/`, including `_unassigned/`, plus each effort's `implementation-plan.md` where present
 
 ---
 
@@ -53,6 +53,7 @@ Specs written before being assigned to a release: the documented default home `/
 | [W-03](_unassigned/W-03_waiting-on-escapes-gitignore/spec.md) | waiting on escapes gitignore | W (wrap-session roadmap item) | draft | draft | P2 | Yes |
 | [W-04](_unassigned/W-04_digest-mode/spec.md) | digest mode | W (wrap-session roadmap item) | draft | draft | P2 | Yes |
 | [WD-01](_unassigned/WD-01_resolve-open-items/spec.md) | resolve open items | WD (resolve-open-items roadmap item) | fulfilled | complete | P2 | Yes |
+| [WD-02](_unassigned/WD-02_backlog-sweep/spec.md) | backlog sweep | WD (resolve-open-items roadmap item) | committed | draft | P2 | Yes |
 
 ---
 
@@ -81,4 +82,5 @@ One row per effort, grouped by release in sequence order (see the Release column
 | [W-03](_unassigned/W-03_waiting-on-escapes-gitignore/spec.md) | waiting on escapes gitignore | W (wrap-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | Yes |
 | [W-04](_unassigned/W-04_digest-mode/spec.md) | digest mode | W (wrap-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | Yes |
 | [WD-01](_unassigned/WD-01_resolve-open-items/spec.md) | resolve open items | WD (resolve-open-items roadmap item) | fulfilled | complete | `_unassigned/` | - | P2 | Yes |
+| [WD-02](_unassigned/WD-02_backlog-sweep/spec.md) | backlog sweep | WD (resolve-open-items roadmap item) | committed | draft | `_unassigned/` | - | P2 | Yes |
 
