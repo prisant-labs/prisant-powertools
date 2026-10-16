@@ -2,7 +2,7 @@
 
 The current configuration of every skill in `prisant-utilities`, as declared in the repository. One row per skill, plus the setup each one needs and where its output lands.
 
-**Plugin version:** 0.7.1 **Skills:** 10 (8 auto-discoverable, 2 explicit-invocation only) **Verified against:** `library.json`, `manifest.generated.json`, and each `skills/*/SKILL.md` **As of:** 2026-10-13
+**Plugin version:** 0.7.1 **Skills:** 10 (8 auto-discoverable, 2 explicit-invocation only) **Verified against:** `library.json`, `manifest.generated.json`, and each `skills/*/SKILL.md` **As of:** 2026-10-15
 
 > This file describes what the repository declares, not what is installed on any given machine. To check a local install, read `~/.claude/plugins/installed_plugins.json`.
 
@@ -12,16 +12,16 @@ The current configuration of every skill in `prisant-utilities`, as declared in 
 
 | Skill | Version | Invocation | Argument hint | Output lands in |
 |---|---|---|---|---|
-| `plab-ai-review` | 1.2.1 | Auto + explicit | `<doc.md> [--reviewer codex\|gpt\|gemini] [--respond]` | Beside the source doc, plus `_archive/` on `--close` |
+| `plab-ai-review` | 1.3.0 | Auto + explicit | `<doc.md> [--reviewer codex\|gpt\|gemini] [--dispatch] [--respond] [--collect] [--close]` | Beside the source doc, plus `_archive/` on `--close` |
 | `plab-audit` | 1.1.0 | **Explicit only** | `<path> [--appraise\|--audit\|--roadmap] [--type ...] [--lens=docs] [--out <path>]` | `_output/plab-audit/<repo>_<YYYY-MM-DD>/` |
-| `plab-continue-session` | 1.5.0 | Auto + explicit | `[--log <path>]` | Nothing. Displays context only |
+| `plab-continue-session` | 1.6.0 | Auto + explicit | `[--log <path>]` | Nothing. Displays context only |
 | `plab-guide` | 2.2.2 | Auto + explicit | `<topic-or-repo-url> [--type repo-url\|tool\|concept] [--out <dir>] [--force]` | `_output/plab-guide/` |
 | `plab-init-project` | 1.3.0 | **Explicit only** | `[--profile minimal\|standard\|public] [--type ...] [--agents ...] [--dry-run]` | The target repository root |
 | `plab-release-plan` | 1.5.1 | Auto + explicit | `--create \| --promote \| --demote \| --update \| --gate` | `docs/internal/release-plans/plan_NN_<slug>/` |
-| `plab-resolve-open-items` | 1.0.1 | Auto + explicit | `[<document>]` | Each item's home document; the walk record in `_local/decisions/` |
+| `plab-resolve-open-items` | 1.1.0 | Auto + explicit | `[--backlog \| <document>]` | Each item's home document; the walk record and any backlog file in `_local/decisions/` |
 | `plab-spec` | 1.3.3 | Auto + explicit | `--effort <id> [--target-release vX.Y.Z] [--revise] [--dry-run]` | `docs/internal/release-plans/_unassigned/` by default |
 | `plab-strategy-brief` | 1.1.1 | Auto + explicit | `[paste raw thinking]` | `_output/plab-strategy-brief/` |
-| `plab-wrap-session` | 1.7.0 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
+| `plab-wrap-session` | 1.8.0 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
 
 **Explicit only** means the skill carries `disable-model-invocation: true`. It never fires on its own and is absent from the auto-loaded skill listing. It runs when you type its name and only then. **`plab-init-project` and `plab-audit` carry it now.** `plab-spec` and `plab-release-plan` carried it through 1.2.1 and 1.3.0 respectively; both are now auto-discoverable, using explicit do-NOT-fire clauses in their descriptions instead of the binary flag.
 
@@ -29,7 +29,7 @@ The current configuration of every skill in `prisant-utilities`, as declared in 
 
 ## Per-skill detail
 
-### `plab-wrap-session` 1.7.0
+### `plab-wrap-session` 1.8.0
 
 The most-used skill in the plugin. Writes a structured session log and hands off to `plab-continue-session`.
 
@@ -38,43 +38,43 @@ The most-used skill in the plugin. Writes a structured session log and hands off
 | Default mode | **deep**. Every wrap produces the full template unless the agent records a specific objection in the log justifying a lighter mode |
 | Modes | `deep` (default), `quick`, `final`, `blocked`, plus `--organize` |
 | Output | `_local/_session-logs/`, flat, archived into `YYYY-MM/` folders by `--organize` |
-| Scripts | `dash-check.py`, `organize-logs.py`, `path-citation-check.py`, `test-organize-logs.py` |
+| Scripts | `derive-log-facts.py`, `dash-check.py`, `organize-logs.py`, `path-citation-check.py`, plus `test-derive-log-facts.py` and `test-organize-logs.py` |
 | Setup required | Python 3 on PATH. `ripgrep` for the dash gate, which reports `broken` rather than `clean` if absent |
 | References | 4 files |
 | Paired with | `plab-continue-session`. A session-log format change in one requires a matching change in the other |
 
-Runs a pre-wrap hygiene sweep across five checks (remote divergence, working tree, release state, documentation drift, session-log store) under per-action confirmation, and a Log Self-Check gate before writing. Two of those gates are canary-proven and report three states: `clean`, `findings`, `broken`, where `broken` blocks exactly as `findings` does.
+One call to `derive-log-facts.py` gathers the frontmatter facts, the previous log's Waiting on You items, and the detection results of a pre-wrap hygiene sweep across five checks (remote divergence, working tree, release state, documentation drift, session-log store). The agent judges and proposes from that output under per-action confirmation, and runs a Log Self-Check gate before writing. Two of those gates are canary-proven and report three states: `clean`, `findings`, `broken`, where `broken` blocks exactly as `findings` does.
 
-### `plab-continue-session` 1.5.0
+### `plab-continue-session` 1.6.0
 
 Reads the newest session log and replays its recorded handoff.
 
 | Property | Value |
 |---|---|
-| Default behavior | Find newest log, display resumption context, confirm before acting |
+| Default behavior | Find newest log, reconcile it against the repository, display resumption context led by what changed, confirm before acting |
 | Output | **None.** The output is the displayed context and the act of starting the named next action |
-| Scripts | None |
-| Setup required | Nothing beyond a readable session-log store |
-| References | 3 files |
+| Scripts | `reconcile.py`, plus `test-reconcile.py` |
+| Setup required | Python 3 on PATH and a readable session-log store. Reconciliation runs one non-pruning fetch, with a 20-second timeout |
+| References | 4 files |
 | Discovery paths | `_local/_session-logs/` (current, including `YYYY-MM/` folders), `_agent-context/session-log/` (legacy), `AGENTS/session-log/` (legacy) |
 
 Deliberately does **not** fire on status questions ("where are we", "what's next"). Those get answered directly. Never auto-executes a continuation prompt without confirmation.
 
-### `plab-ai-review` 1.2.1
+### `plab-ai-review` 1.3.0
 
 Structured peer review of a document by a second model.
 
 | Property | Value |
 |---|---|
 | Default mode | `--review`, which generates a self-contained review request |
-| Modes | `--review` (default), `--respond`, `--close` |
+| Modes | `--review` (default, optionally with `--dispatch`), `--collect`, `--respond`, `--close` |
 | Output | A review request beside the source doc; `--close` archives the pair into `_archive/` and writes unresolved items to a backlog |
-| Scripts | None |
-| Setup required | **A second model reachable by you.** The handoff is manual: you paste the request into a reviewer and bring findings back |
-| References | 5 files, 1 example |
+| Scripts | `dispatch.py`, plus `test-dispatch.py`, which CI runs against a fake companion |
+| Setup required | **A second model reachable by you.** The handoff is manual by default: you paste the request into a reviewer and bring findings back. With `--dispatch`, the Codex plugin's `codex-companion` helper submits it as a background job, and `--collect` writes the findings back; submit and collect from the same directory |
+| References | 6 files, 1 example |
 | Reviewers named | `codex`, `gpt`, `gemini` |
 
-Known gap: `argument-hint` advertises only `--respond`, so a reader of the hint alone would not learn `--close` exists. The description documents all three.
+`argument-hint` now lists every mode, including `--close`, which it omitted through 1.2.1.
 
 ### `plab-guide` 2.2.2
 
@@ -136,7 +136,7 @@ Manages a version-scoped release plan folder.
 
 Auto-generates the aggregation table from folder contents and enforces hygiene gates plus a doc-update checklist that gates the tag. **Refuses to invent or modify acceptance criteria**; those live in specs, and the release plan only aggregates.
 
-### `plab-resolve-open-items` 1.0.1
+### `plab-resolve-open-items` 1.1.0
 
 Walks the maintainer through what a session has left open, and writes each answer back to where its question came from.
 
@@ -145,10 +145,11 @@ Walks the maintainer through what a session has left open, and writes each answe
 | Invocation | **Auto-discoverable from 1.0.0.** Fires on an explicit request to walk what is pending. Do-NOT-fire clauses cover a code walkthrough, a single standalone decision question, and a status question |
 | Default behavior | Gather open items from the conversation and from documents the session touched, present them as D, Q and T, read a one-line answer, write back, and write a walk record |
 | Named-document mode | `[<document>]` walks one document's "Open Questions / Decisions" section alone |
+| Backlog mode | `--backlog` gathers every pending item from the repository's specs, plans and release plans and the newest session log's Waiting on You list in one script call, sorts them into ready, moot and judgment tiers, writes a dated backlog file, and walks at most ten |
 | Output | Each answered item's home document, on the three surfaces of `references/decisions-section.md`; a pointer in every other copy; the walk record in `_local/decisions/` (gitignored) |
-| Scripts | `walk-check.py`, run by the skill after each write-back and walk record, and by CI against a committed sample. Eight record rules and five write-back rules |
+| Scripts | `walk-check.py`, run by the skill after each write-back and walk record, and by CI against a committed sample. Eight record rules and five write-back rules. `gather-backlog.py` for `--backlog`, with `test-gather-backlog.py` |
 | Setup required | Python 3 on PATH for the self-check. Without it, the walk still runs and reports its write-backs as unverified |
-| References | 4 files, plus the plugin-root `references/decisions-section.md` |
+| References | 5 files, plus the plugin-root `references/decisions-section.md` |
 
 **Silence is never acceptance.** An omitted decision is left exactly as found, an omitted question proceeds on its stated default and is recorded as assumed, and only an explicit "ok" or "accept the rest" applies recommendations. A document on another branch is never written; the intended edit is printed instead. Not built yet: the `--backlog` sweep across every spec, plan and log, automatic GitHub filing, a Projects board, cross-repository gathering, and a web-page rendering.
 

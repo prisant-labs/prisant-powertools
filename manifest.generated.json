@@ -7,7 +7,7 @@
     {
       "name": "plab-ai-review",
       "path": "skills/plab-ai-review/SKILL.md",
-      "description": "Run a structured peer review of a document with a second model, then synthesize the findings into decisions. Use when you need a second opinion on a plan, brief, spec, RFC, or design doc, or when the user says 'review this with codex', 'get a second opinion', 'peer review this', or 'close this review'. Three modes: --review generates a self-contained review request for another model; --respond adds requestor synthesis once findings come back; --close archives the pair, applies accepted changes, and writes unresolved decisions to a backlog."
+      "description": "Run a structured peer review of a document with a second model, then synthesize the findings into decisions. Use when you need a second opinion on a plan, brief, spec, RFC, or design doc, or when the user says 'review this with codex', 'get a second opinion', 'peer review this', or 'close this review'. Three modes: --review generates a self-contained review request for another model, or with --dispatch sends it to Codex in the background; --respond adds requestor synthesis once findings come back; --close archives the pair, applies accepted changes, and writes unresolved decisions to a backlog."
     },
     {
       "name": "plab-audit",
@@ -37,7 +37,7 @@
     {
       "name": "plab-resolve-open-items",
       "path": "skills/plab-resolve-open-items/SKILL.md",
-      "description": "Walk the maintainer through every open question, decision and task in the current session, then write each answer back to the document it came from. Use when the user asks to go through what is pending: 'walk me through the pending questions and decisions', 'resolve open items', 'what do you need me to decide', 'decision sitting'. Presents items as Q, D and T, D items with lettered options and a recommendation, takes a one-line answer such as 'D1 A, Q1: the NAS', and writes a walk record. Can be pointed at one named document. Do NOT fire on a request to walk through code or a file, on a single standalone decision question, or on a status question like 'where are we' or 'what's next'; answer those directly. Not yet built: the --backlog sweep across every spec, plan and log."
+      "description": "Walk the maintainer through every open question, decision and task in the current session, then write each answer back to the document it came from. Use when the user asks to go through what is pending: 'walk me through the pending questions and decisions', 'resolve open items', 'what do you need me to decide', 'decision sitting'. Presents items as Q, D and T, D items with lettered options and a recommendation, takes a one-line answer such as 'D1 A, Q1: the NAS', and writes a walk record. Can be pointed at one named document. Do NOT fire on a request to walk through code or a file, on a single standalone decision question, or on a status question like 'where are we' or 'what's next'; answer those directly. '--backlog' sweeps every spec, plan and the newest session log for pending items, triages them, and walks up to ten, oldest first, writing a dated backlog file."
     },
     {
       "name": "plab-spec",

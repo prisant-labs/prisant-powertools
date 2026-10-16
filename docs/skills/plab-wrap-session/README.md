@@ -1,6 +1,6 @@
 # plab-wrap-session
 
-**Version:** 1.7.0
+**Version:** 1.8.0
 **Source:** [`skills/plab-wrap-session/`](../../../skills/plab-wrap-session/)
 
 Document and close agentic coding sessions with structured session logs. Deep mode is the default: a full log with evidence index, a verbose copy-paste-ready continuation prompt, a pre-wrap hygiene sweep (remote divergence, release state, doc drift, working-tree reconciliation with per-action confirmation), and a mandatory Waiting on You section listing everything blocked on the maintainer, with links.

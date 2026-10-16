@@ -11,8 +11,8 @@ description: "Run a structured peer review of a document with a second model, th
 argument-hint: "<doc.md> [--reviewer codex|gpt|gemini] [--dispatch] [--respond] [--collect] [--close]"
 license: MIT
 metadata:
-  version: "1.2.1"
-  updated: 2026-07-04
+  version: "1.3.0"
+  updated: 2026-10-15
 ---
 
 # AI Review
