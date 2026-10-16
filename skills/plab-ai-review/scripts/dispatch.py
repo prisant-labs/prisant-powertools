@@ -338,7 +338,7 @@ def cmd_submit(doc_path, companion_override=None):
 
     prompt_fd, prompt_path = tempfile.mkstemp(suffix=".txt", prefix="plab-ai-review-dispatch-")
     try:
-        with os.fdopen(prompt_fd, "w", encoding="utf-8") as fh:
+        with os.fdopen(prompt_fd, "w", encoding="utf-8", newline="\n") as fh:
             fh.write(prompt)
         result = run_companion(
             companion,
