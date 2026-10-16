@@ -42,14 +42,14 @@ Specs written before being assigned to a release: the documented default home `/
 
 | Effort | Handle | Series | Spec Status | Implementation Plan Status | Priority | Human Review Required |
 |---|---|---|---|---|---|---|
-| [A-02](_unassigned/A-02_programmatic-review-dispatch/spec.md) | programmatic review dispatch | A (ai-review roadmap item) | committed | (no implementation plan yet) | P1 | No |
+| [A-02](_unassigned/A-02_programmatic-review-dispatch/spec.md) | programmatic review dispatch | A (ai-review roadmap item) | committed | complete | P1 | No |
 | [AU-01](_unassigned/AU-01_audit-skill/spec.md) | audit skill | AU (audit-skill roadmap item) | committed | draft | P1 | No |
-| [C-02](_unassigned/C-02_reconcile-at-resume/spec.md) | reconcile at resume | C (continue-session roadmap item) | draft | draft | P1 | Yes |
+| [C-02](_unassigned/C-02_reconcile-at-resume/spec.md) | reconcile at resume | C (continue-session roadmap item) | committed | draft | P1 | Yes |
 | [C-03](_unassigned/C-03_cold-repo-degradation/spec.md) | cold repo degradation | C (continue-session roadmap item) | draft | draft | P2 | Yes |
 | [C-04](_unassigned/C-04_consumption-disposition/spec.md) | consumption disposition | C (continue-session roadmap item) | draft | draft | P2 | No |
 | [C-05](_unassigned/C-05_arc-resume/spec.md) | arc resume | C (continue-session roadmap item) | draft | draft | P2 | No |
 | [D-10](_unassigned/D-10_log-format-contract/spec.md) | log format contract | D (defect in the wrap and continue pair) | draft | draft | P2 | No |
-| [W-02](_unassigned/W-02_derived-log-facts/spec.md) | derived log facts | W (wrap-session roadmap item) | draft | draft | P1 | No |
+| [W-02](_unassigned/W-02_derived-log-facts/spec.md) | derived log facts | W (wrap-session roadmap item) | committed | in-progress | P1 | No |
 | [W-03](_unassigned/W-03_waiting-on-escapes-gitignore/spec.md) | waiting on escapes gitignore | W (wrap-session roadmap item) | draft | draft | P2 | Yes |
 | [W-04](_unassigned/W-04_digest-mode/spec.md) | digest mode | W (wrap-session roadmap item) | draft | draft | P2 | Yes |
 | [WD-01](_unassigned/WD-01_resolve-open-items/spec.md) | resolve open items | WD (resolve-open-items roadmap item) | fulfilled | complete | P2 | Yes |
@@ -71,14 +71,14 @@ One row per effort, grouped by release in sequence order (see the Release column
 | [D-07](plan_04_gates-that-cannot-fail-open/D-07_waiting-on-blocker-contract/spec.md) | waiting on blocker contract | D (defect in the wrap and continue pair) | fulfilled | complete | [plan_04_gates-that-cannot-fail-open](plan_04_gates-that-cannot-fail-open/plan.md) | v0.4.0 | P1 | Yes |
 | [D-11](plan_04_gates-that-cannot-fail-open/D-11_three-state-gate-canaries/spec.md) | three state gate canaries | D (defect in the wrap and continue pair) | fulfilled | complete | [plan_04_gates-that-cannot-fail-open](plan_04_gates-that-cannot-fail-open/plan.md) | v0.4.0 | P1 | Yes |
 | [D-12](plan_04_gates-that-cannot-fail-open/D-12_path-citation-precision/spec.md) | path citation precision | D (defect in the wrap and continue pair) | fulfilled | complete | [plan_04_gates-that-cannot-fail-open](plan_04_gates-that-cannot-fail-open/plan.md) | v0.4.0 | P2 | Yes |
-| [A-02](_unassigned/A-02_programmatic-review-dispatch/spec.md) | programmatic review dispatch | A (ai-review roadmap item) | committed | (no implementation plan yet) | `_unassigned/` | - | P1 | No |
+| [A-02](_unassigned/A-02_programmatic-review-dispatch/spec.md) | programmatic review dispatch | A (ai-review roadmap item) | committed | complete | `_unassigned/` | - | P1 | No |
 | [AU-01](_unassigned/AU-01_audit-skill/spec.md) | audit skill | AU (audit-skill roadmap item) | committed | draft | `_unassigned/` | - | P1 | No |
-| [C-02](_unassigned/C-02_reconcile-at-resume/spec.md) | reconcile at resume | C (continue-session roadmap item) | draft | draft | `_unassigned/` | - | P1 | Yes |
+| [C-02](_unassigned/C-02_reconcile-at-resume/spec.md) | reconcile at resume | C (continue-session roadmap item) | committed | draft | `_unassigned/` | - | P1 | Yes |
 | [C-03](_unassigned/C-03_cold-repo-degradation/spec.md) | cold repo degradation | C (continue-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | Yes |
 | [C-04](_unassigned/C-04_consumption-disposition/spec.md) | consumption disposition | C (continue-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | No |
 | [C-05](_unassigned/C-05_arc-resume/spec.md) | arc resume | C (continue-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | No |
 | [D-10](_unassigned/D-10_log-format-contract/spec.md) | log format contract | D (defect in the wrap and continue pair) | draft | draft | `_unassigned/` | - | P2 | No |
-| [W-02](_unassigned/W-02_derived-log-facts/spec.md) | derived log facts | W (wrap-session roadmap item) | draft | draft | `_unassigned/` | - | P1 | No |
+| [W-02](_unassigned/W-02_derived-log-facts/spec.md) | derived log facts | W (wrap-session roadmap item) | committed | in-progress | `_unassigned/` | - | P1 | No |
 | [W-03](_unassigned/W-03_waiting-on-escapes-gitignore/spec.md) | waiting on escapes gitignore | W (wrap-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | Yes |
 | [W-04](_unassigned/W-04_digest-mode/spec.md) | digest mode | W (wrap-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | Yes |
 | [WD-01](_unassigned/WD-01_resolve-open-items/spec.md) | resolve open items | WD (resolve-open-items roadmap item) | fulfilled | complete | `_unassigned/` | - | P2 | Yes |

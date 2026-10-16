@@ -35,32 +35,36 @@ Valid downgrade objections mirror the verbosity rule: "trivial typo fix, clean t
 
 ## Evidence Gathering
 
-Before writing the log, gather facts:
+Before writing the log, run `derive-log-facts.py` once and use its output for everything it returns. Add `--fetch` in deep and final modes, where the Pre-Wrap Hygiene Sweep's remote facts need to be current; omit it in quick and blocked modes.
 
-1. Run `git status` and `git diff --stat` to ground file changes in reality
-2. Count decisions made during the session
-3. Identify what was verified vs. assumed - never conflate "completed" with "tested"
-4. Check for blockers, outstanding issues, and risks introduced
-5. Inventory work products in gitignored locations (`_local/` and kin) - git-derived file lists cannot see them
-6. List skills invoked this session and any multi-agent workflow runs (run IDs, agent counts, token totals) for the frontmatter and Evidence Index
+```bash
+python <skill-dir>/scripts/derive-log-facts.py <project-root> --json            # quick, blocked
+python <skill-dir>/scripts/derive-log-facts.py <project-root> --fetch --json    # deep, final
+```
 
-7. In deep and final modes, when `_local/_session-logs/_capture/` exists, read its `.jsonl` files (there may be more than one) and filter to records with a non-null `session_id` and a `ts` after the newest existing log's filename timestamp (see `plab-continue-session/references/log-discovery.md` for the newest-wins sort; if no existing log exists, every qualifying record counts). If any remain, note the count and the earliest-to-latest `head` for Outstanding Issues below. Say nothing if the directory is absent or nothing qualifies.
+`<skill-dir>` resolves relative to this skill's own installed directory, the same rule `organize-logs.py` already follows (see Organize Mode below); `<project-root>` is the project being wrapped, never assumed to share a root with the skill. The output supplies: the frontmatter's environment fields and `files-changed`; `commit-range` and `latest-tag`; the newest existing log's filename and its Waiting on You list verbatim, each item keeping its original `(blocked since YYYY-MM-DD)` date; any qualifying capture-lite records' count and earliest-to-latest `head`; and the gitignored-file inventory that starts step 4 below. Run no further git or shell command to obtain any fact this output already contains. Without `--base`, the script defaults to the commit on `HEAD` just before this session started; if the agent knows where the session's own work actually began and the default `base` the output reports looks wrong, pass `--base <ref>` explicitly instead of trusting the default.
 
-8. In deep and final modes, determine the newest existing log in `_local/_session-logs/` (see `plab-continue-session/references/log-discovery.md` for the newest-wins sort across the flat store and any `YYYY-MM/` folders) and judge whether it covers the same arc as this session. If it does, prepare one archive proposal under the same per-action confirmation protocol the hygiene sweep uses (see `references/hygiene-sweep.md`): propose moving the older file to `_local/_session-logs/_superseded/`, execute only on explicit approval, and record the disposition, declared plus archived-or-not, in the new log's Summary.
+From that output, the agent still:
 
-9. Locate the previous session log using `plab-continue-session`'s newest-log selection rule (`references/log-discovery.md` in that skill) and read its Waiting on You section. Carry every still-unresolved item forward into this log with its original `(blocked since YYYY-MM-DD)` date, never today's, so a blocker's age survives across wraps instead of resetting. If no previous log exists, or it has no Waiting on You section, start fresh and say nothing.
+1. Counts decisions made during the session.
+2. Identifies what was verified vs. assumed - never conflate "completed" with "tested". When the script's `verification` field found a record, treat it as a starting point, never a substitute for the agent's own read of what the record shows; when it reports no record, verification stays fully agent-authored as before.
+3. Checks for blockers, outstanding issues, and risks introduced.
+4. Inventories work products in gitignored locations (`_local/` and kin), starting from the script's gitignored-modified list - git-derived file lists cannot otherwise see them.
+5. Lists skills invoked this session and any multi-agent workflow runs (run IDs, agent counts, token totals) for the frontmatter and Evidence Index.
+6. In deep and final modes, judges whether the script's reported newest existing log covers the same arc as this session. If it does, prepares one archive proposal under the same per-action confirmation protocol the hygiene sweep uses (see `references/hygiene-sweep.md`): propose moving the older file to `_local/_session-logs/_superseded/`, execute only on explicit approval, and record the disposition, declared plus archived-or-not, in the new log's Summary.
+7. Carries every still-unresolved Waiting on You item from the script's output forward into this log with its original date, never today's, so a blocker's age survives across wraps instead of resetting. If the script reports no newest log, start fresh and say nothing.
 
-If git is unavailable, note that and proceed with session context only.
+If the script reports git as unavailable, note that and proceed with session context only.
 
 ## Pre-Wrap Hygiene Sweep (deep and final modes)
 
-Run before writing the log; record findings in the log's Hygiene Sweep section. Check catalog, commands, and the confirmation protocol live in `references/hygiene-sweep.md`.
+Run before writing the log; record findings in the log's Hygiene Sweep section. The same `derive-log-facts.py --fetch` invocation from Evidence Gathering above already carries every check's detection result; this section judges and proposes from that output rather than re-gathering it. Check catalog, the output field each check reads, and the confirmation protocol live in `references/hygiene-sweep.md`.
 
-1. **Remote reconciliation.** `git fetch origin`, then compare: local branch vs its remote (ahead/behind), remote tags vs local, other remote branches. Parallel work from another checkout must surface at wrap time, not at the next release.
-2. **Working-tree and worktree state.** Uncommitted changes, untracked files, stashes, `git worktree list`, unpushed commits.
-3. **Release and repo hygiene.** Un-released CHANGELOG content, version fields vs the latest tag, and the repo's own CI validation scripts run locally when it has them (report results; never fix silently).
-4. **Documentation drift, both directions.** User or technical docs this session made stale: version tables, skill or feature READMEs vs source of truth, missing CHANGELOG entries. And the inverse, which is the direction that actually shipped here: a skill whose content changed since the last tag while its `metadata.version` did not move, or whose `HISTORY.md` has no entry for the version it currently ships. `references/hygiene-sweep.md` carries the recipe.
-5. **Session-log store.** Logs from closed months sitting unfiled in `_local/_session-logs/`. Offer to file them into `YYYY-MM/` folders (see Organize Mode below). Read-only until confirmed; silent when there is nothing to file.
+1. **Remote reconciliation**, from the script's `check1-remote` field: local branch vs its remote (ahead/behind), unpushed commits, remote branches, remote tags vs local. Parallel work from another checkout must surface at wrap time, not at the next release.
+2. **Working-tree and worktree state**, from `check2-worktree`: uncommitted changes, untracked files, stashes, worktrees.
+3. **Release and repo hygiene**, from `check3-release`: un-released CHANGELOG content and version fields vs the latest tag. The repo's own CI validation scripts, when it has them, are still run locally as a separate step and their results reported (never fixed silently) - the script has no way to know what those scripts are.
+4. **Documentation drift, both directions.** User or technical docs this session made stale: version tables, skill or feature READMEs vs source of truth, missing CHANGELOG entries. And the inverse, which is the direction that actually shipped here: a skill whose content changed since the last tag while its `metadata.version` did not move, or whose `HISTORY.md` has no entry for the version it currently ships, from the script's `check4-doc-drift` field. `references/hygiene-sweep.md` carries the recipe the field mirrors.
+5. **Session-log store**, from `check5-log-store`: logs from closed months sitting unfiled in `_local/_session-logs/`. Offer to file them into `YYYY-MM/` folders (see Organize Mode below). Read-only until confirmed; silent when there is nothing to file.
 
 **Resolution protocol: propose, then per-action confirmation.** For each finding, propose one concrete action (commit these files with this message, push, prune this worktree, apply this doc update) and execute only what the user approves, action by action. Declined or unanswered proposals are recorded in the log and carried into the continuation prompt. The sweep itself changes nothing; only confirmed actions do.
 
@@ -119,23 +123,25 @@ Store layout, and why discovery reads both the flat store and month folders, are
 
 ### Frontmatter
 
-Include all Tier 1 fields. Add Tier 2 and Tier 3 when available. See `references/frontmatter-schema.md` for the complete field reference.
+Include all Tier 1 fields. Add Tier 2 and Tier 3 when available. See `references/frontmatter-schema.md` for the complete field reference. `date`, `type`, `machine`, `repo`, `branch`, and `files-changed` come from the Evidence Gathering run of `derive-log-facts.py` above, as do the two fields it adds, `commit-range` and `latest-tag`. `decisions-count` comes from the same script's `--count-decisions` mode, run once the Decisions Made section below is drafted - never a model estimate. Everything else in this block is agent-filled.
 
 ```yaml
 ---
-date: # ISO 8601 datetime
+date: # ISO 8601 datetime - from derive-log-facts.py
 type: # always session-log
-machine: # hostname - which checkout wrote this log; logs are machine-local and cannot cross checkouts
-repo: # from git remote
-branch: # from git branch
+machine: # hostname - from derive-log-facts.py; which checkout wrote this log; logs are machine-local and cannot cross checkouts
+repo: # from derive-log-facts.py
+branch: # from derive-log-facts.py
 summary: # max 120 chars, human-scannable
-files-changed: # list from git diff --name-only
+files-changed: # from derive-log-facts.py
+commit-range: # from derive-log-facts.py; the base..HEAD short-SHA range it diffed
+latest-tag: # from derive-log-facts.py; nearest reachable tag - distinct from the tags: topic-keyword field
 session-type: # bugfix|feature|refactor|research|planning|review|docs|autonomous|exploration
 model: # full model name, e.g. "claude opus 4.6"
 model-settings: # key settings, e.g. "extended-thinking max"
 agent: # claude-code|codex-cli|other
 status: # completed|interrupted|blocked
-decisions-count: # integer
+decisions-count: # integer - from derive-log-facts.py --count-decisions, run after the Decisions Made section is drafted
 skills-used: # skills invoked this session, e.g. [plab-guide, plab-ai-review] - feeds usage telemetry
 resumed-from: # written only by an in-session /plab-continue-session resume; never back-filled from memory. See references/frontmatter-schema.md.
 ---

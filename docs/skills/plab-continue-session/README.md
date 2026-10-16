@@ -86,12 +86,30 @@ If two logs share the same timestamp prefix (rare; concurrent sessions), the ski
 
 Extracts from frontmatter: `date`, `repo`, `branch`, `summary`, `status`, `session-type`, `model`, `agent`. Extracts from body: the `## Continuation Prompt` section, `## Waiting on You`, any objection recorded for a lighter-than-verbose prompt, plus `## Outstanding Issues`, `## What's Next`, and any proposals declined at wrap time in `## Hygiene Sweep`.
 
-### Phase 3: Present resumption context
+### Phase 3: Reconcile against reality
+
+Before any of the log's content is shown as though it were still current, the skill runs `scripts/reconcile.py` against the project root and the selected log, and pastes its output as the leading "What changed since this log" section of the display. This closes a gap `plab-wrap-session` closed on the write side years earlier: a pre-wrap hygiene sweep checks remote divergence and release state before a log is written, and nothing had checked the equivalent on the read side before a log's claims were acted on.
+
+The script runs nine checks: a non-pruning fetch, ahead/behind counts against the upstream, remote branches with no local counterpart (plus the last five tags), commits landed since the log's date (via its `commit-sha` frontmatter field when present, a date comparison otherwise), a release tag cut since then, the log's branch no longer existing locally or on origin, a continuation-prompt file path that no longer resolves (with a rename-hint attempt), and an advisory when recent commits touch the same files the continuation prompt's next action names. Each check reports `ok`, a `finding`, or `broken`; a check that cannot complete (a dead remote, a timed-out fetch) names itself rather than being silently folded into a clean-looking result. The step is read-only beyond the fetch itself: no `pull`, `merge`, `checkout`, `reset`, or `push` ever runs here.
+
+### Phase 4: Present resumption context
 
 Standard display:
 
 ```markdown
 ## Resuming from: `2026-05-28_15-30_claude_<title>.md`
+
+### What changed since this log
+- Remote fetch: [ok] fetched origin
+- Ahead/behind upstream: [ok] up to date with upstream
+- Remote branches without a local counterpart: [finding] 2 remote branch(es) with no local counterpart: feat/x, fix/y. Recent tags: v0.6.0, v0.6.1, v0.7.0.
+- Commits since the log: [finding] 3 commit(s) landed since commit-sha `a1b2c3d`
+- Release cut since the log: [ok] no tag cut since the log's date
+- Log's branch, locally: [ok] branch `main` still exists locally
+- Log's branch, on origin: [ok] branch `main` still exists on origin
+- Continuation-prompt file paths: [finding] 1 of 4 cited path(s) do not resolve
+  - `docs/skills/plab-guide/README.md` is missing; possibly renamed to `docs/skills/plab-guide/README.md.bak`
+- Next action vs. recent commits: [ok] no overlap between recently touched files and the continuation prompt
 
 **Last session:** 2026-05-28T15:30:00-07:00, claude opus 4.6, status `completed`
 **Summary:** Wrapped the v1.4.0 spec sweep
@@ -113,7 +131,7 @@ Standard display:
 Full continuation prompt: `_local/_session-logs/<the log>.md` - say "show the prompt" to print it verbatim.
 ```
 
-### Phase 4: Ask before acting
+### Phase 5: Ask before acting
 
 Always asks: "Resume with the named immediate next action, or pick something else?"
 
@@ -161,6 +179,17 @@ $ /plab-continue-session
 
 ## Resuming from: 2026-05-28_15-30_claude_v1.4.0-spec-sweep.md
 
+### What changed since this log
+- Remote fetch: [ok] fetched origin
+- Ahead/behind upstream: [ok] up to date with upstream
+- Remote branches without a local counterpart: [ok] every remote branch has a local counterpart (3 checked). Recent tags: v1.3.0, v1.4.0.
+- Commits since the log: [ok] no commits landed on the local branch since commit-sha `9c2a441` on `main`; no additional commits on origin/main.
+- Release cut since the log: [ok] no tag cut since the log's date
+- Log's branch, locally: [ok] branch `main` still exists locally
+- Log's branch, on origin: [ok] branch `main` still exists on origin
+- Continuation-prompt file paths: [ok] every cited path in the continuation prompt resolves (2 checked)
+- Next action vs. recent commits: [ok] no overlap between recently touched files and the continuation prompt
+
 **Last session:** 2026-05-28T15:30:00-07:00, claude opus 4.6, status `completed`
 **Summary:** Wrapped the v1.4.0 spec sweep; all decisions resolved
 **Branch:** `main`
@@ -168,11 +197,15 @@ $ /plab-continue-session
 ### Outstanding from last session
 - Draft the implementation plan for the S-09 spec
 
-### Continuation prompt
-[fenced prompt with full context]
+### Immediate next action
+Draft the implementation plan for the S-09 spec, covering the three phases the spec's Scope section names.
+
+Full continuation prompt: `_local/_session-logs/2026-05-28_15-30_claude_v1.4.0-spec-sweep.md` - say "show the prompt" to print it verbatim.
 
 Resume with the named immediate next action, or pick something else?
 ```
+
+The continuation prompt's immediate action renders as ordinary markdown, never as a fenced dump of the whole prompt. The full prompt prints verbatim only when asked ("show the prompt"); see Hard Constraints below and `SKILL.md`'s "Do not dump the prompt" for the rule and its rationale.
 
 ### Example 2: Stale Log Warning
 
@@ -206,6 +239,7 @@ Options:
 |------|---------|
 | [`references/log-discovery.md`](../../../skills/plab-continue-session/references/log-discovery.md) | How to find the latest log, tie-breaking, newest-wins search across current and legacy locations |
 | [`references/objection-detection.md`](../../../skills/plab-continue-session/references/objection-detection.md) | Detecting and surfacing lighter-than-verbose continuation prompts |
+| [`references/reconciliation.md`](../../../skills/plab-continue-session/references/reconciliation.md) | How to invoke `scripts/reconcile.py`, read its `ok` / `finding` / `broken` output, and what each check covers |
 | [`references/handoff-display.md`](../../../skills/plab-continue-session/references/handoff-display.md) | The standard resumption display format |
 
 ---
@@ -214,10 +248,11 @@ Options:
 
 - Never modifies the session log being resumed from
 - Never auto-executes the continuation prompt without user confirmation
-- Always shows the prompt verbatim; never paraphrases
+- Never dumps the whole continuation prompt in a fenced block by default; renders its immediate action as ordinary markdown and gives the log path instead. When the user does ask to see it ("show the prompt"), reproduces it verbatim, never paraphrased
 - Refuses cross-repo resumption
 - Surfaces age warnings (7+ days) and branch mismatches before acting
 - Never blends multiple logs together; one log per invocation
+- The reconciliation step (Phase 3) never mutates repository state: no `pull`, `merge`, `checkout`, `reset`, or `push` runs there, only a non-pruning fetch and read-only log/status/diff commands
 
 ---
 

@@ -82,7 +82,7 @@ Generate a paired guide bundle for any topic: a standard Markdown guide, an ADHD
 
 ### plab-ai-review
 
-Generate and synthesise structured peer reviews across models. Three modes: `--review` produces a self-contained review request for a second LLM, `--respond` adds requestor synthesis once the reviewer has filed findings, and `--close` archives the source and review, applies accepted changes, and writes unresolved decisions to a backlog. Designed to be run in a different harness from the one that produced the document under review.
+Generate and synthesise structured peer reviews across models. Three modes: `--review` produces a self-contained review request for a second LLM, optionally dispatching it to Codex in the background with `--dispatch` instead of waiting for a manual paste; `--respond` adds requestor synthesis once the reviewer has filed findings; and `--close` archives the source and review, applies accepted changes, and writes unresolved decisions to a backlog. `--collect` fetches a dispatched job's findings into the document, by itself or through the no-flag auto-detect. Designed to be run in a different harness from the one that produced the document under review.
 
 **Trigger:** `/plab-ai-review`, "review this with a second model", "get a second opinion", "peer review this"
 
