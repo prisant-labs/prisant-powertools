@@ -4,11 +4,30 @@
 # every row listed here. Rows are added, never substituted: if an entry names the same `doc` as a
 # built-in, the built-in wins and this entry is ignored.
 #
-# Why these five exist. The built-in defaults were written for a repo with a single plugin manifest
+# Why these six exist. The built-in defaults were written for a repo with a single plugin manifest
 # and a `docs/skills/README.md` index. This repo has two manifests that must agree (release hygiene
-# gate (f) fails the tag when they do not), a generated manifest downstream of `library.json`, and
-# per-skill usage docs with no index above them. Every row below corresponds to a file that has
-# actually gone stale in a shipped release at least once.
+# gate (f) fails the tag when they do not), a generated manifest downstream of `library.json`, a
+# per-skill status page, and per-skill usage docs with no index above them. Every row below
+# corresponds to a file that has actually gone stale in a shipped release at least once.
+#
+# What this checklist does NOT cover, because the schema below is doc-to-update rows and these are
+# not documents in THIS repository: running the eval suite locally before tagging (`evals/README.md`,
+# not run in CI); repinning `.claude-plugin/marketplace.json`'s `ref` and `version` in the separate
+# `prisant-labs/agent-plugins` repository through a PR there; and, after `claude plugin marketplace
+# update prisant-labs` and `claude plugin update prisant-utilities@prisant-labs` and a restart,
+# verifying the Claude Code install against a behaviour only the new version has.
+#
+# Codex reads the same `prisant-labs` marketplace and needs its own, separate upgrade step:
+# `codex plugin marketplace upgrade prisant-labs`, followed by a check that `codex plugin list`
+# reports `prisant-utilities@prisant-labs installed, enabled` at the new version. The v0.8.0 release
+# missed this step: the Codex install stayed at 0.7.1 until the orchestrator ran the upgrade by hand
+# on 2026-10-16. Post-release verification should name both "Claude Code install upgraded" and
+# "Codex install upgraded" as separate checks, not only the one this repository happened to remember
+# first.
+#
+# None of the above leaves a file in THIS repository for a checklist row to check off, which is why
+# these steps are recorded here in prose rather than as `add:` rows, and why nothing here enforces
+# that an operator actually ran them.
 #
 # Note on a built-in that does not apply: `docs/skills/README.md` does not exist in this repo; the
 # per-skill READMEs sit directly under `docs/skills/<skill>/`. Check that built-in row off as
@@ -46,6 +65,14 @@ add:
     update: >-
       Bump the version line in the usage doc of every affected skill. These drifted by as much as
       three minor versions before the 2026-08-23 parity sweep caught them.
+
+  - doc: "docs/status-skills.md"
+    update: >-
+      Bump the "Plugin version" line, the At a glance table's Version column, and the per-skill
+      "### plab-<skill> X.Y.Z" heading for every affected skill. scripts/version-parity-check.py
+      checks the plugin-version line and the At a glance table against SKILL.md and library.json;
+      it does not check the per-skill section headings, so a heading left behind after a version
+      bump is caught only by reading this file, not by CI.
 
   - doc: "README.md skill table"
     update: >-

@@ -5,7 +5,7 @@ title: "Release plan 06: Derived facts"
 type: release-plan
 status: draft
 created: 2026-08-23
-updated: 2026-10-06
+updated: 2026-10-16
 theme: "Derived facts"
 includes: []
 spec-count: 0
@@ -206,6 +206,8 @@ different, and collapsing them is the defect.
 * **Option B:** Renumber this plan and its efforts to a later version. This contradicts the ruling, and it would have to be repeated each time a release arrives outside the plan sequence, as v0.6.0 and v0.6.1 both did.
 
 **Recommendation.** Option A, carried out on 2026-10-06. This plan's own `target-version` still reads v0.7.0 with nothing in it. No invariant compares a release plan's version to the tag list, so the field is stale but harmless to CI. One side effect remains: `/plab-release-plan --create v0.7.0` refuses while this plan holds that number. What a release plan should carry in `target-version` before it ships is a separate open question, because the release-plan schema requires a semantic version there.
+
+> **Update, 2026-10-16.** The side effect above is no longer hypothetical. `v0.7.0` shipped on 2026-10-09, carrying WD-01 (resolve-open-items) and `plab-audit` 1.1.0, neither of which belong to this plan, followed by the v0.7.1 patch on 2026-10-13. `target-version: v0.7.0` in this plan's frontmatter now names an already-tagged version whose content is unrelated to the efforts listed here. This is the same gate gap recorded in release plan 07's D3 (plan_07_aggregation): no invariant in `scripts/doc-lifecycle-check.py` compares a release plan's `target-version` against `git tag -l`. This plan needs a new `target-version` before it can be created or executed; picking its replacement is not ruled on here.
 
 ---
 

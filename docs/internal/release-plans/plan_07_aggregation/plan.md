@@ -5,7 +5,7 @@ title: "Release plan 07: Aggregation"
 type: release-plan
 status: draft
 created: 2026-08-23
-updated: 2026-10-06
+updated: 2026-10-16
 theme: "Aggregation"
 includes: []
 spec-count: 0
@@ -223,6 +223,8 @@ applied everywhere else in this portfolio.
 * **Option B:** Renumber this plan and its efforts to a later version. This contradicts the ruling, and it would have to be repeated each time a release arrives outside the plan sequence, as v0.6.0 and v0.6.1 both did.
 
 **Recommendation.** Option A, carried out on 2026-10-06. This plan's own `target-version` still reads v0.8.0 with nothing in it. No invariant compares a release plan's version to the tag list, so the field is stale but harmless to CI. One side effect remains: `/plab-release-plan --create v0.8.0` refuses while this plan holds that number. What a release plan should carry in `target-version` before it ships is a separate open question, because the release-plan schema requires a semantic version there.
+
+> **Update, 2026-10-16.** The side effect above is no longer hypothetical. `v0.8.0` has shipped, tagged on merge commit `e1513ac`, carrying W-02 (derived log facts), C-02 (reconcile at resume), A-02 (programmatic review dispatch), WD-02 (backlog sweep) and R5 (review 17's eval suite), none of which belong to this plan. `target-version: v0.8.0` in this plan's frontmatter now names an already-tagged version whose content is unrelated to the efforts listed here, and no invariant in `scripts/doc-lifecycle-check.py` compares a release plan's `target-version` against `git tag -l` (that script's invariant 4 checks a spec's `target-release` against the tag list, never a release plan's `target-version`), so this collision passed every gate silently. This plan needs a new `target-version` before it can be created or executed; the next unclaimed slot is not ruled on here, since this document's recommendation does not extend to picking its own replacement number.
 
 ---
 

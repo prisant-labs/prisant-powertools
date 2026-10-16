@@ -19,7 +19,7 @@ How three documents - the **spec**, the **implementation plan**, and the **relea
 
 > **Provenance.** This document was written in `jp-library` between 2026-05-27 and 2026-06-17 and recovered into this repository on 2026-09-11, because two shipped skills here cite it four times and it had never been migrated. The three decisions in section 9 are the originals and their dates are unchanged; what was amended on recovery is every path, name and layout that described `jp-library` rather than this repository. Those amendments are listed in the recovery note at the end.
 
-> **One stage is a template here, not a skill.** The original model paired each stage with a skill, including `/jp-implementation-plan` for the HOW stage. **This repository has no implementation-plan skill and is not waiting for one.** The HOW stage is served by `docs/internal/release-plans/implementation-plan-template.md`, distilled from sixteen implementation plans that were written with no plan-authoring skill involved and shipped through every hygiene gate. Wherever the original named that skill, this copy names the template.
+> **One stage is a template here, not a skill.** The original model paired each stage with a skill, including `/jp-implementation-plan` for the HOW stage. **This repository has no implementation-plan skill and is not waiting for one.** The HOW stage is served by `docs/internal/release-plans/implementation-plan-template.md`, distilled from twenty implementation plans that were written with no plan-authoring skill involved and shipped through every hygiene gate. Wherever the original named that skill, this copy names the template.
 
 ---
 
