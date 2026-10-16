@@ -44,7 +44,7 @@ Specs written before being assigned to a release: the documented default home `/
 |---|---|---|---|---|---|---|
 | [A-02](_unassigned/A-02_programmatic-review-dispatch/spec.md) | programmatic review dispatch | A (ai-review roadmap item) | committed | (no implementation plan yet) | P1 | No |
 | [AU-01](_unassigned/AU-01_audit-skill/spec.md) | audit skill | AU (audit-skill roadmap item) | committed | draft | P1 | No |
-| [C-02](_unassigned/C-02_reconcile-at-resume/spec.md) | reconcile at resume | C (continue-session roadmap item) | draft | draft | P1 | Yes |
+| [C-02](_unassigned/C-02_reconcile-at-resume/spec.md) | reconcile at resume | C (continue-session roadmap item) | committed | draft | P1 | Yes |
 | [C-03](_unassigned/C-03_cold-repo-degradation/spec.md) | cold repo degradation | C (continue-session roadmap item) | draft | draft | P2 | Yes |
 | [C-04](_unassigned/C-04_consumption-disposition/spec.md) | consumption disposition | C (continue-session roadmap item) | draft | draft | P2 | No |
 | [C-05](_unassigned/C-05_arc-resume/spec.md) | arc resume | C (continue-session roadmap item) | draft | draft | P2 | No |
@@ -72,7 +72,7 @@ One row per effort, grouped by release in sequence order (see the Release column
 | [D-12](plan_04_gates-that-cannot-fail-open/D-12_path-citation-precision/spec.md) | path citation precision | D (defect in the wrap and continue pair) | fulfilled | complete | [plan_04_gates-that-cannot-fail-open](plan_04_gates-that-cannot-fail-open/plan.md) | v0.4.0 | P2 | Yes |
 | [A-02](_unassigned/A-02_programmatic-review-dispatch/spec.md) | programmatic review dispatch | A (ai-review roadmap item) | committed | (no implementation plan yet) | `_unassigned/` | - | P1 | No |
 | [AU-01](_unassigned/AU-01_audit-skill/spec.md) | audit skill | AU (audit-skill roadmap item) | committed | draft | `_unassigned/` | - | P1 | No |
-| [C-02](_unassigned/C-02_reconcile-at-resume/spec.md) | reconcile at resume | C (continue-session roadmap item) | draft | draft | `_unassigned/` | - | P1 | Yes |
+| [C-02](_unassigned/C-02_reconcile-at-resume/spec.md) | reconcile at resume | C (continue-session roadmap item) | committed | draft | `_unassigned/` | - | P1 | Yes |
 | [C-03](_unassigned/C-03_cold-repo-degradation/spec.md) | cold repo degradation | C (continue-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | Yes |
 | [C-04](_unassigned/C-04_consumption-disposition/spec.md) | consumption disposition | C (continue-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | No |
 | [C-05](_unassigned/C-05_arc-resume/spec.md) | arc resume | C (continue-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | No |

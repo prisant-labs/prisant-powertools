@@ -4,7 +4,7 @@ title: "Implementation plan: Reconcile the Session Log Against Repo Reality at R
 type: implementation-plan
 status: draft
 created: 2026-08-23
-updated: 2026-10-05
+updated: 2026-10-15
 linked-spec: spec.md
 linked-release: null
 ac-coverage: complete
@@ -17,10 +17,10 @@ phase-count: 3
 
 **Goal:** Make `plab-continue-session` check the session log's claims against the repository's current state before replaying them, and lead the resumption display with what changed.
 
-**Architecture:** A new reconciliation step sits between reading the log (current Phase 2) and displaying it (current Phase 3), backed by a new reference file that reuses `plab-wrap-session`'s hygiene-sweep Check 1 commands for remote and tag state and adds four checks of its own (commit count, tag-date release detection, branch existence, file existence) plus an explicit broken-state path for when any check cannot complete. No change touches `plab-wrap-session` or the session-log write format; this is a pure read-side addition.
+**Architecture (revised 2026-10-15; see spec.md Revisions and OQ4):** A new reconciliation step sits between reading the log (current Phase 2) and displaying it (current Phase 3). The mechanism itself lives in `skills/plab-continue-session/scripts/reconcile.py`, a canary-tested stdlib script with a sibling `test-reconcile.py`, on the same pattern `plab-wrap-session` already uses for `organize-logs.py` and `path-citation-check.py`. It reuses the same remote-and-tag commands `plab-wrap-session`'s hygiene-sweep Check 1 defines (with one documented deviation, `--no-prune` on the fetch) and adds the checks of its own that AC-3 through AC-9 need (commit count, tag-date release detection, branch existence, continuation-prompt path existence with a rename hint, next-action overlap) plus an explicit broken-state path for when any check cannot complete. A short reference file documents how to invoke the script and read its output; it does not restate the mechanism the script already implements and tests. No change touches `plab-wrap-session` or the session-log write format; this is a pure read-side addition.
 
 **Spec:** `spec.md`
-**Target versions:** `plab-continue-session` 1.4.0 to 1.5.0. `plab-wrap-session` remains at 1.6.0 (the version it reaches when v0.4.0 ships) and is not touched by this effort.
+**Target versions:** `plab-continue-session` 1.5.0 to 1.6.0 (this effort's `HISTORY.md` row; the shared release bookkeeping, including the `metadata.version` bump itself, is done by whichever change ships this effort). `plab-wrap-session` is not touched by this effort.
 
 **Global constraints:**
 
@@ -28,7 +28,7 @@ phase-count: 3
 - State a contract once, in one named file, and have everything else cite it. The reconciliation mechanism belongs entirely in `references/reconciliation.md`; SKILL.md points at it rather than restating it.
 - Never grow the always-on `description`. All new instruction content goes in the SKILL.md body and the new reference file.
 - Archive, never delete. This effort adds no deletion capability; the reconciliation step is read-only by design (AC-9).
-- This effort ships together with C-03 (cold-repo degradation) as a single `plab-continue-session` 1.5.0 release. Coordinate the version bump and the shared `HISTORY.md` entry so neither effort's execution overwrites the other's half; see Phase 3, Step 1.
+- C-03 (cold-repo degradation) is a separate, still-unbuilt effort in `_unassigned/`; the two no longer share a planned release or a version bump (that coordination note was written when both were expected to ship together in one release; versions are now assigned only at ship time, decision register entry 21 (versions assigned at ship time)). Whichever of C-02 or C-03 ships first takes `plab-continue-session` to 1.6.0; the other then bumps from 1.6.0 at its own ship time. This plan's Phase 3 covers only this effort's own `HISTORY.md` row.
 
 ---
 
@@ -36,31 +36,32 @@ phase-count: 3
 
 | Phase | Goal | Fulfills AC | Owner | Status |
 |---|---|---|---|---|
-| P1 | Design and document the reconciliation mechanism | AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-9 | agent | Not started |
-| P2 | Wire the reconciliation step into the workflow and display | AC-1, AC-5 | agent | Not started |
-| P3 | Version, HISTORY, and surrounding documentation | N/A | agent | Not started |
+| P1 | Build the reconciliation script, its tests, and its reference file | AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-9 | agent | Done |
+| P2 | Wire the reconciliation step into the workflow and display | AC-1, AC-5 | agent | Done |
+| P3 | HISTORY row and usage-README body | N/A | agent | Done |
 
 ---
 
-## Phase 1: Design and document the reconciliation mechanism
+## Phase 1: Build the reconciliation script, its tests, and its reference file (revised 2026-10-15; see OQ4)
 
-**Goal:** Produce a single reference file that fully specifies the reconciliation delta: what it checks, the exact commands for each check, the fallback logic, and the broken-state contract.
+**Goal:** Implement the reconciliation delta as a canary-tested script, with a reference file documenting how to invoke it and read its output, rather than a rung-3 documented convention. The original Phase 1 made reconciliation a documented convention on the grounds that `plab-continue-session` "has no independent execution runtime ... so there is no standalone script for a canary to test against." That no longer holds: `plab-wrap-session` already ships agent-run scripts with sibling tests (`organize-logs.py` / `test-organize-logs.py`, `path-citation-check.py`), and a 2026-10-01 measurement found tool-call count, not text length, drives wrap/resume cost. See spec.md OQ4.
 
-**Files:** Create `skills/plab-continue-session/references/reconciliation.md`
+**Files:** Create `skills/plab-continue-session/scripts/reconcile.py`, `skills/plab-continue-session/scripts/test-reconcile.py`, `skills/plab-continue-session/references/reconciliation.md`
 
 **Fulfills:** AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-9
 
 **Steps:**
-- [ ] Step 1: Write the remote-and-tag command catalog, citing `hygiene-sweep.md` Check 1 by name and reproducing its exact commands (`git fetch origin --tags`, `git status -sb`, `git log --oneline HEAD..@{u}`, `git log --oneline @{u}..HEAD`, `git ls-remote --heads origin`, `git tag -l | tail -5`). State explicitly that this is the same command set, not a rewritten equivalent (AC-2).
-- [ ] Step 2: Write the commit-counting logic: `git rev-list --count <sha>..HEAD` when the log's `commit-sha` frontmatter field is present, `git log --since=<log date> --oneline` on the log's branch when it is absent (AC-3).
-- [ ] Step 3: Write the tag-date release-detection logic: `git for-each-ref refs/tags --sort=-creatordate --format='%(refname:short) %(creatordate:short)'`, comparing each tag's creation date against the log's `date` field (AC-4).
-- [ ] Step 4: Write the branch-existence check: `git branch --list <branch>` locally, `git ls-remote --heads origin <branch>` remotely. State explicitly that this is additive to the existing branch-mismatch warning in `references/handoff-display.md`, not a replacement for it (AC-5).
-- [ ] Step 5: Write the continuation-prompt file-existence check, restating D-12's (path-citation precision) exact three-way scoping rule inline so this file is self-contained: a path-separator citation is checked and, if missing, gets the rename-hint fallback `git log --follow --diff-filter=R -- <path>`; a backtick-wrapped citation with no separator is resolved against the repo root and produces no finding either way (never reported as missing, never rename-hinted); a bare prose word with a file extension is excluded from checking entirely. Cite `docs/internal/release-plans/plan_04_gates-that-cannot-fail-open/D-12_path-citation-precision/spec.md` directly rather than re-deriving the rule from the underlying roadmap entry (AC-6).
-- [ ] Step 6: Write the next-action-already-done heuristic: when files touched by commits since the log overlap with files or names mentioned in the continuation prompt's immediate next action, state the possibility and ask for verification. Frame this explicitly as advisory, never a hard assertion (AC-7).
-- [ ] Step 7: Write the three-state (clean, findings, broken) reporting contract: name each check that can fail, and the exact wording pattern for reporting it broken (which check, why, what could still be verified). State explicitly that this is a documented convention the invoking agent follows each run, not a canary-tested script, because `plab-continue-session` has no independent execution runtime beyond an agent reading and following its SKILL.md (AC-8).
-- [ ] Step 8: Add an explicit statement that no command in this file mutates repository state, and list the mutating verbs that must never appear here (`pull`, `merge`, `checkout`, `reset`, `push`) as a self-check for whoever edits this file later (AC-9).
+- [x] Step 1: Implement the remote-and-tag commands, citing `hygiene-sweep.md` Check 1 by name: `git fetch --no-prune origin --tags` (the one documented deviation from Check 1's plain fetch; see spec.md AC-2), `git status -sb`, `git log --oneline HEAD..@{u}`, `git log --oneline @{u}..HEAD`, `git ls-remote --heads origin` (unscoped; used to flag remote branches with no local counterpart, Check 1's own named flag), `git tag -l` with the last five taken in Python. All six run; a check that the fetch itself failed makes the ahead/behind reading broken rather than a stale-data pass (AC-2, AC-8).
+- [x] Step 2: Implement the commit-counting logic: `git rev-list --count <sha>..HEAD` when the log's `commit-sha` frontmatter field is present; otherwise compare each commit's own date against the log's `date` field in Python (not `git log --since=`, whose boundary proved inclusive against a fixture; see spec.md AC-3) (AC-3).
+- [x] Step 3: Implement the tag-date release-detection logic: `git for-each-ref refs/tags --sort=-creatordate --format='%(refname:short) %(creatordate:iso-strict)'` (not the date-only `:short` form; see spec.md AC-4), comparing each tag's creation date against the log's `date` field (AC-4).
+- [x] Step 4: Implement the branch-existence check: `git branch --list <branch>` locally, `git ls-remote --heads origin <branch>` remotely. State explicitly that this is additive to the existing branch-mismatch warning in `references/handoff-display.md`, not a replacement for it (AC-5).
+- [x] Step 5: Implement the continuation-prompt file-existence check, mirroring D-12's (path-citation precision) three-way scoping rule from `path-citation-check.py` with a comment naming that file as the rule's source, per D-12's spec at `docs/internal/release-plans/plan_04_gates-that-cannot-fail-open/D-12_path-citation-precision/spec.md`: a path-separator citation is checked and, if missing, gets a rename-hint attempt; a backtick-wrapped citation with no separator is resolved against the repo root and produces no finding either way; a bare prose word with a file extension is excluded entirely. The rename-hint command deviates from the literal `git log --follow --diff-filter=R -- <path>` this spec originally proposed, because that command finds nothing for a path missing at HEAD; see spec.md AC-6 (AC-6).
+- [x] Step 6: Implement the next-action-overlap heuristic: when files touched since the log (reusing Step 2's result) overlap with path citations found in the continuation prompt, report the possibility and ask for verification. Advisory only; never a hard assertion (AC-7).
+- [x] Step 7: Implement the three-state (ok, finding, broken) contract per check, mirroring the exit-code convention `path-citation-check.py` / `scripts/doc-lifecycle-check.py` / `scripts/version-parity-check.py` already use (0 ok, 1 findings, 2 broken), with a network timeout (`--fetch-timeout`, default 20 seconds per spec.md OQ3) producing broken, never a hang or a silently clean result (AC-8).
+- [x] Step 8: Write `test-reconcile.py` on the `test-organize-logs.py` pattern: throwaway git fixtures in a temp directory, covering commit count by both commit-sha and date fallback, a tag cut after the log date, a branch deleted locally and remotely, a renamed file with a rename hint, a missing path with none, the file-overlap advisory, a fetch failure, a timeout, a no-mutation assertion against the actual recorded command list, and a canary that disables one rule and restores it (AC-2 through AC-9).
+- [x] Step 9: Write `references/reconciliation.md`: how to invoke the script (the project root and log path as explicit arguments, the script's own path resolving against this skill's directory per the `organize-logs.py` convention), how to read `ok` / `finding` / `broken` per check, and a note that the mechanism itself lives in the script and its tests, not in this file (AC-8).
 
-**Verification:** Read the finished file top to bottom. Confirm every one of AC-2 through AC-9 has a corresponding, findable subsection. Grep the file for `pull`, `merge`, `checkout -`, `reset`, and `push`; each hit must be inside a sentence explaining that the verb is forbidden, never inside a command to run.
+**Verification:** Run `python skills/plab-continue-session/scripts/test-reconcile.py` and confirm every check passes, including the canary. Grep `reconcile.py` for `pull`, `merge`, `checkout -`, `reset`, and `push`; no hit may appear as a command this script runs.
 
 ---
 
@@ -73,34 +74,29 @@ phase-count: 3
 **Fulfills:** AC-1, AC-5
 
 **Steps:**
-- [ ] Step 1: In `SKILL.md`, insert a new phase between the current Phase 2 (Read and parse) and Phase 3 (Present the resumption context), titled "Phase 3: Reconcile against reality," directing the agent to `references/reconciliation.md`. Renumber the current Phase 3, 4, and 5 to Phase 4, 5, and 6.
-- [ ] Step 2: Update the References table at the bottom of `SKILL.md` to add `references/reconciliation.md`, loaded at the new Phase 3.
-- [ ] Step 3: In `handoff-display.md`, add a `### What changed since this log` section to the Required structure block, positioned immediately after the `## Resuming from` header and before the `**Last session:**` line (AC-1).
-- [ ] Step 4: Update `handoff-display.md`'s "What to include" list with a bullet for the delta section, in the same style as the existing "Waiting on you" bullet, and add a one-line note in "What to elide" clarifying that the delta reports drift, not a full re-derivation of every fact in the log (so the section stays a header, not a re-read).
-- [ ] Step 5: Add a sentence to the new delta section's description in `handoff-display.md` cross-referencing the existing branch-mismatch warning ("Mismatch warnings" section) and stating that the AC-5 branch-existence check is additive to it, not a replacement, so a future reader does not treat the two as duplicates and delete one.
+- [x] Step 1: In `SKILL.md`, insert a new phase between the current Phase 2 (Read and parse) and Phase 3 (Present the resumption context), titled "Phase 3: Reconcile against reality," directing the agent to `references/reconciliation.md`. Renumber the current Phase 3, 4, and 5 to Phase 4, 5, and 6.
+- [x] Step 2: Update the References table at the bottom of `SKILL.md` to add `references/reconciliation.md`, loaded at the new Phase 3.
+- [x] Step 3: In `handoff-display.md`, add a `### What changed since this log` section to the Required structure block, positioned immediately after the `## Resuming from` header and before the `**Last session:**` line (AC-1).
+- [x] Step 4: Update `handoff-display.md`'s "What to include" list with a bullet for the delta section, in the same style as the existing "Waiting on you" bullet, and add a one-line note in "What to elide" clarifying that the delta reports drift, not a full re-derivation of every fact in the log (so the section stays a header, not a re-read).
+- [x] Step 5: Add a sentence to the new delta section's description in `handoff-display.md` cross-referencing the existing branch-mismatch warning ("Mismatch warnings" section) and stating that the AC-5 branch-existence check is additive to it, not a replacement, so a future reader does not treat the two as duplicates and delete one.
 
 **Verification:** Read `SKILL.md`'s Workflow section top to bottom; confirm phases are numbered consecutively 1 through 6 with no gap or duplicate, and that Phase 3 is the only new one. Read `handoff-display.md`'s Required structure block; confirm `### What changed since this log` appears in exactly the position AC-1 specifies, between the header and the facts line.
 
 ---
 
-## Phase 3: Version, HISTORY, and surrounding documentation
+## Phase 3: HISTORY row and usage-README body (revised 2026-10-15: scope narrowed to this PR's own files)
 
-**Goal:** Ship the version bump and bring every document that describes this skill's behavior into agreement with it.
+**Goal:** Record this effort's behavior change in the one file this PR owns the version history for, and describe the new behavior in the skill's usage README body. Everything else version-and-release-shaped (the `metadata.version` bump itself, `CHANGELOG.md`, `AGENTS.md`, `library.json`, both plugin manifests, `manifest.generated.json`, and the root `README.md` skill table) is shared release bookkeeping that the change shipping this effort does in one place, not per-effort; see the implementation-defined report for this effort for the exact `AGENTS.md` wording proposed for that closing change.
 
-**Files:** Modify `skills/plab-continue-session/SKILL.md` frontmatter (`metadata.version`), `skills/plab-continue-session/HISTORY.md`, `CHANGELOG.md`, `docs/skills/plab-continue-session/README.md`, `AGENTS.md`, `library.json`, `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, `manifest.generated.json`, root `README.md` (skill version table)
+**Files:** Modify `skills/plab-continue-session/HISTORY.md`, `docs/skills/plab-continue-session/README.md` (body only, not the `**Version:**` line)
 
-**Fulfills:** N/A (documentation and release housekeeping; no new capability introduced in this phase)
+**Fulfills:** N/A (documentation; no new capability introduced in this phase)
 
 **Steps:**
-- [ ] Step 1: Bump `skills/plab-continue-session/SKILL.md` `metadata.version` to `1.5.0` and `updated` to the ship date. This version is shared with C-03 (cold-repo degradation). If C-03's implementation runs first and has already made this bump, skip it here and proceed; do not bump twice.
-- [ ] Step 2: Add a single `1.5.0` entry to `skills/plab-continue-session/HISTORY.md`, in the same format as the existing `1.3.0` entry, covering this effort's half (the reconciliation delta). If C-03 has already started this entry, extend it rather than creating a second `1.5.0` heading.
-- [ ] Step 3: Add this effort's change to `CHANGELOG.md`, in the current `[Unreleased]` section or a new `[0.5.0]` section depending on repository convention at execution time, in the same plain-English "what changes for you / what does not change" style already used for the `[0.2.0]` entry.
-- [ ] Step 4: Update `docs/skills/plab-continue-session/README.md`: bump the Version line to `1.5.0`, add a subsection under "How It Works" for the new Phase 3 in the same per-phase style already used there, and add a worked example under "Examples" showing the delta block from a real drift scenario.
-- [ ] Step 5: Add one clause to `AGENTS.md`'s `plab-continue-session` blurb noting that resumption now reconciles the log against current repository state before presenting it. Coordinate with C-03 if both efforts touch this blurb in the same session; land as one combined edit rather than two conflicting ones.
-- [ ] Step 6: Bump the `plab-continue-session` component version to `1.5.0` in `library.json`, and the top-level version in `library.json`, `.claude-plugin/plugin.json`, and `.codex-plugin/plugin.json` to `0.5.0`. Regenerate `manifest.generated.json` and the two plugin manifests from `library.json` using the command named in `AGENTS.md` ("Build and validate") where the generator is available in this environment; never hand-edit `manifest.generated.json` directly, since it embeds skill descriptions verbatim and a hand-edit that skips regeneration ships a manifest contradicting the skill, per `release-checklist.yaml`'s own stated reason for this row. If the generator cannot be run in this environment, hand-edit `library.json` only and say so explicitly.
-- [ ] Step 7: Bump the Version column for `plab-continue-session` in the root `README.md` skill table (the table starting near line 9, per `release-checklist.yaml`), distinct from any prose version mention the built-in doc-update checklist already covers.
+- [x] Step 1: Add a single `1.6.0` entry to `skills/plab-continue-session/HISTORY.md`, in the same format as the existing `1.5.0` entry, with release column `unreleased` (this effort's `metadata.version` bump itself is deferred to the change that ships it; see Goal above).
+- [x] Step 2: Update `docs/skills/plab-continue-session/README.md`'s body: add a subsection under "How It Works" for the new reconciliation phase, in the same per-phase style already used there, and a worked example showing the delta block from a real drift scenario. Do not touch the `**Version:**` line at the top; that bump belongs to the same shared release change as Goal above describes.
 
-**Verification:** `git diff --stat` shows every file listed above touched, including `manifest.generated.json` and the root `README.md` skill table. Grep `skills/plab-continue-session/` and `docs/skills/plab-continue-session/` for `1.5.0` to confirm the bump landed everywhere the version string appears; grep `library.json`, `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and `manifest.generated.json` for `0.5.0`. If the toolkit is available locally, run `node <agent-skills-toolkit>/scripts/check.mjs .` and confirm it reports `0 error(s)`.
+**Verification:** `git diff --stat` shows exactly `skills/plab-continue-session/HISTORY.md` and `docs/skills/plab-continue-session/README.md` touched by this phase. Confirm the README's `**Version:**` line is unchanged from before this phase ran.
 
 ---
 
@@ -108,24 +104,23 @@ phase-count: 3
 
 ### CI
 
-No CI change. This repository has no `.github/` directory yet; CI-01 bootstraps it in v0.4.0, which ships before this release. This effort adds no rung-1 (CI or hook) check. The clean, findings, broken discipline in AC-8 is a rung-3 documented convention, written into `references/reconciliation.md` and followed by whichever agent invokes the skill each time it runs, not a rung-1 canary-tested script: `plab-continue-session` has no independent execution runtime beyond an agent reading and following its SKILL.md, so there is no standalone script for a canary to test against. Once CI-01's toolkit action is live, the existing conformance gate (`check.mjs`) validates SKILL.md structure and frontmatter automatically; this effort introduces no new frontmatter field or schema element, so the gate needs no change to cover it.
+No CI change. CI already exists at `.github/workflows/gate.yml` (the implementation plan's original claim that "this repository has no `.github/` directory yet" was false even when drafted). This effort adds no rung-1 (CI-enforced) check. The ok / finding / broken discipline in AC-8 is implemented in `reconcile.py` and proven by its sibling `test-reconcile.py` (see Phase 1, revised 2026-10-15, and spec.md OQ4), on the same rung `organize-logs.py` / `test-organize-logs.py` occupies: canary-tested, but run by the invoking agent at skill-invocation time, never wired into `gate.yml`. The existing conformance gate (`check.mjs`) validates SKILL.md structure and frontmatter automatically; this effort introduces no new frontmatter field or schema element, so the gate needs no change to cover it.
 
 ### Agent-facing documentation
 
-- `skills/plab-continue-session/SKILL.md`: new Phase 3 (Reconcile against reality), Phases 4 through 6 renumbered, References table entry, version bump.
-- `skills/plab-continue-session/references/reconciliation.md`: new file, the complete mechanism (AC-2 through AC-9).
+- `skills/plab-continue-session/SKILL.md`: new phase directing the agent to run `reconcile.py` and paste its output under the delta heading, later phases renumbered, References table entry.
+- `skills/plab-continue-session/scripts/reconcile.py` and `skills/plab-continue-session/scripts/test-reconcile.py`: new files, the complete mechanism and its proof (AC-2 through AC-9).
+- `skills/plab-continue-session/references/reconciliation.md`: new file, documenting invocation and output interpretation; it does not restate the mechanism the script and its tests already own.
 - `skills/plab-continue-session/references/handoff-display.md`: new leading section in the required structure and the "What to include" / "What to elide" lists.
-- `AGENTS.md`: the `plab-continue-session` blurb gains one clause describing the reconciliation behavior.
+- `AGENTS.md`: the closing release change, not this PR, adds the `plab-continue-session` blurb's new clause (see this effort's report for the proposed wording).
 
 These are runtime configuration read by an agent every time the skill fires; a stale line here poisons every future resumption, so precision matters more than prose polish.
 
 ### Human-facing documentation
 
-- `docs/skills/plab-continue-session/README.md`: version line, a new "Reconcile against reality" subsection under How It Works, and a worked delta example under Examples.
-- `CHANGELOG.md`: an entry in the established "what changes for you / what does not change" style, written for a reader who has not seen this plan.
-- `skills/plab-continue-session/HISTORY.md`: the shared `1.5.0` entry, co-written with C-03's half.
-- Root `README.md`: the skill version table's `plab-continue-session` row.
-- `manifest.generated.json`: regenerated, never hand-edited, per `release-checklist.yaml`'s explicit row for this file. Listed here rather than under Agent-facing documentation because it is a build artifact, not an authored source; the authored source is `library.json`.
+- `docs/skills/plab-continue-session/README.md`: a new subsection under How It Works and a worked delta example under Examples (this PR); the `**Version:**` line (the closing release change, not this PR).
+- `CHANGELOG.md`, root `README.md`'s skill table, `library.json`, both plugin manifests, and `manifest.generated.json`: the closing release change, not this PR.
+- `skills/plab-continue-session/HISTORY.md`: the `1.6.0` entry, release column `unreleased` (this PR).
 
 A reader returning after three months should be able to read the README's new subsection alone and understand that resuming now tells them what changed since the log was written, without needing to read this plan or the source roadmap.
 
@@ -133,4 +128,4 @@ A reader returning after three months should be able to read the README's new su
 
 ## Rollback
 
-Revert `SKILL.md`, `references/reconciliation.md`, `references/handoff-display.md`, and the version and documentation changes in a single commit revert. The effort touches no schema, no other skill, and (at this release) no CI, so reverting is a pure file-content rollback with no data migration. The delta is computed at resume time from live git state and is never written into the log itself, so no log produced during this version needs any change if the effort is rolled back.
+Revert `SKILL.md`, `scripts/reconcile.py`, `scripts/test-reconcile.py`, `references/reconciliation.md`, `references/handoff-display.md`, `HISTORY.md`, and the README body change in a single commit revert. The effort touches no schema, no other skill, and no CI workflow, so reverting is a pure file-content rollback with no data migration. The delta is computed at resume time from live git state and is never written into the log itself, so no log produced while this effort is live needs any change if the effort is rolled back.
