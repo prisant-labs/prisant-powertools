@@ -1,6 +1,6 @@
 # plab-continue-session
 
-**Version:** 1.5.0
+**Version:** 1.6.0
 **Source:** [`skills/plab-continue-session/`](../../../skills/plab-continue-session/)
 
 Resume an interrupted work session by replaying its recorded handoff. Reads the most recent session log, reports what is blocked on you and what the named next action is, then confirms before acting. The read-side companion to `/plab-wrap-session`, which writes the log this reads.

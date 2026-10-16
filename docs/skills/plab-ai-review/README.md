@@ -1,6 +1,6 @@
 # plab-ai-review
 
-**Version:** 1.2.1
+**Version:** 1.3.0
 **Source:** [`skills/plab-ai-review/`](../../../skills/plab-ai-review/)
 
 Generate and synthesize structured AI peer reviews. Create a self-contained review request for a second LLM, add requestor synthesis once the reviewer files findings, then close the review: archive the pair, apply the accepted changes, and send unresolved decisions to a backlog.
