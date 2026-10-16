@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 1.6.0 | 2026-10-15 | unreleased | added | A new Phase 3 reconciles the log's claims against live repository state before anything is displayed, and leads the resumption context with what changed. |
+| 1.6.0 | 2026-10-15 | v0.8.0 | added | A new Phase 3 reconciles the log's claims against live repository state before anything is displayed, and leads the resumption context with what changed. |
 | 1.5.0 | 2026-09-15 | v0.5.5 | changed | The continuation prompt is no longer dumped verbatim. Phase 3 renders the immediate action and gives the log path; verbatim is opt-in. |
 | 1.4.0 | 2026-08-25 | v0.4.0 | added | Capture-lite orientation on the no-log and stale-log paths. |
 | 1.3.0 | 2026-08-18 | v0.2.0 | added | Discovery reads `YYYY-MM/` month folders alongside the flat store. Empty-store message diagnoses version skew. |

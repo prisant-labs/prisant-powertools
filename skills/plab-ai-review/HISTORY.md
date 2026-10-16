@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 1.3.0 | 2026-10-15 | unreleased | added | Programmatic review dispatch (A-02): an opt-in `--dispatch` flag on `--review` submits the generated request to Codex as a background job through the `codex-companion` helper, and a new `--collect` mode (also reachable through the no-flag auto-detect) fetches the findings back into the same placeholders a manual paste would have filled. `argument-hint` now documents `--close`, which the skill already implemented but never advertised. |
+| 1.3.0 | 2026-10-15 | v0.8.0 | added | Programmatic review dispatch (A-02): an opt-in `--dispatch` flag on `--review` submits the generated request to Codex as a background job through the `codex-companion` helper, and a new `--collect` mode (also reachable through the no-flag auto-detect) fetches the findings back into the same placeholders a manual paste would have filled. `argument-hint` now documents `--close`, which the skill already implemented but never advertised. |
 | 1.2.1 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.2.1; prior history remains there. |
 
 ## 1.3.0 - 2026-10-15

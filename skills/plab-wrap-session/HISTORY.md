@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 1.8.0 | 2026-10-15 | unreleased | added | `derive-log-facts.py` derives frontmatter facts, the Evidence Gathering inputs, and the hygiene sweep's detection results from git and the environment, in place of model recall and one-at-a-time commands. |
+| 1.8.0 | 2026-10-15 | v0.8.0 | added | `derive-log-facts.py` derives frontmatter facts, the Evidence Gathering inputs, and the hygiene sweep's detection results from git and the environment, in place of model recall and one-at-a-time commands. |
 | 1.7.0 | 2026-09-13 | v0.5.4 | added | Deep-mode logs carry an Uncertainty Ledger and a What You May Not Realize section. |
 | 1.6.2 | 2026-08-28 | v0.5.2 | fixed | Path-citation gate: three false-positive classes removed, a line-anchor shape brought into scope, and the proof corpus grown from 11 entries to 40. |
 | 1.6.1 | 2026-08-25 | v0.4.1 | fixed | Session-log body prose is not hard-wrapped. CI pin moved to the toolkit release that fixed the Action. |

@@ -5,7 +5,7 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.8.0] - 2026-10-15
 
 Six efforts, built on 2026-10-15 under the maintainer's instruction to complete them. Design choices the maintainer had not made were built on their written recommendations and stay `Open` in each spec's decisions section, marked as working defaults, so a walk can ratify or overturn them.
 
@@ -20,6 +20,12 @@ Six efforts, built on 2026-10-15 under the maintainer's instruction to complete 
 ### Fixed
 
 - **`plab-resolve-open-items` 1.0.2: three findings from the Phase 6 live walk.** `walk-check.py` now accepts the numbered and `&` or `and` heading variants the skill itself gathers from, so a section the walk reads is a section the checker can verify. One maintainer handle is chosen per walk and recorded in the walk record, where one trial walk had written two. An item skipped in one round can be answered in a later round.
+
+### Not yet verified
+
+- **W-02's claim that a wrap now takes half the steps.** Its AC-11 needs at least ten completed wraps on this version, measured against the 2026-10-01 baseline median of 12 calls. Until then the W-02 spec stays `committed`.
+- **`--respond` on a dispatched review.** A-02 checked that a collected document has the same structure as a hand-pasted one, but no `--respond` pass has run on one yet.
+- **The working defaults.** W-02, C-02, A-02 and WD-02 each hold design choices built on a recommendation and still `Open` for the maintainer to ratify. `/plab-resolve-open-items --backlog` lists them.
 
 ## [0.7.1] - 2026-10-13
 
