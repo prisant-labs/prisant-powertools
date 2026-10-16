@@ -68,6 +68,7 @@ EXIT CODES
 from __future__ import annotations
 
 import argparse
+import collections
 import datetime as dt
 import json
 import os
@@ -82,7 +83,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 LOG_NAME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}_[^_]+_.+\.md$")
 MONTH_DIR_RE = re.compile(r"^\d{4}-\d{2}$")
 LEGACY_LOG_DIRS = ("_agent-context/session-log", "AGENTS/session-log")
-DECISION_ITEM_RE = re.compile(r"^\d+\.\s")
+DECISION_LIST_ITEM_RE = re.compile(r"^(?:\d+\.|[-*])\s")
+DECISION_SUBHEADING_RE = re.compile(r"^### \S")
 VERIFICATION_COMMAND_RE = re.compile(r"\b(test|check|gate|lint|verify)\b", re.IGNORECASE)
 MAX_VERIFICATION_FACTS = 50
 
@@ -153,13 +155,24 @@ def get_date() -> str:
 # Base ref, files-changed, commit-range, latest-tag (AC-2, AC-3)
 # ---------------------------------------------------------------------------
 
-def resolve_base(project_root: Path, base_arg: str | None) -> tuple[str | None, str]:
+def resolve_base(
+    project_root: Path, base_arg: str | None, session_start_ts: str | None = None
+) -> tuple[str | None, str]:
     """Open decision D7 (spec Open Questions / Decisions): default base order when
-    the caller does not supply --base. Explicit argument wins outright; otherwise the
-    upstream tracking ref, then the latest reachable tag, then no base at all."""
+    the caller does not supply --base. Explicit argument wins outright. Otherwise,
+    when the current session's transcript gives a start timestamp, the commit on
+    HEAD immediately before that moment - this is what makes files-changed show a
+    session's own work rather than nothing, for the common case of a session that
+    already committed and pushed before wrapping, where the upstream tracking ref
+    points at HEAD itself. Falls back to the upstream tracking ref, then the latest
+    reachable tag, then no base at all."""
     if base_arg:
         rc, _, _ = run_git(["rev-parse", "--verify", base_arg], project_root)
         return (base_arg, "explicit") if rc == 0 else (None, "explicit-unresolved")
+    if session_start_ts:
+        rc, out, _ = run_git(["rev-list", "-1", f"--before={session_start_ts}", "HEAD"], project_root)
+        if rc == 0 and out:
+            return out, "session-start"
     rc, out, _ = run_git(
         ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], project_root
     )
@@ -261,10 +274,19 @@ def extract_waiting_on_you(text: str) -> list[str] | None:
 
 
 def count_decisions(text: str) -> int:
+    """Mechanical count of the Decisions Made section's own entries (AC-4). Top-level
+    list items, numbered or bulleted (`-` or `*`), with no leading indentation, so a
+    nested sub-bullet elaborating on a decision is never counted as its own decision.
+    If the section has no top-level list items at all, falls back to counting
+    `### ` subheadings, since an architectural decision is sometimes written that
+    way instead of as a list (spec Example 2)."""
     body = extract_section(text, "Decisions Made")
     if body is None:
         return 0
-    return sum(1 for line in body if DECISION_ITEM_RE.match(line))
+    items = sum(1 for line in body if DECISION_LIST_ITEM_RE.match(line))
+    if items:
+        return items
+    return sum(1 for line in body if DECISION_SUBHEADING_RE.match(line))
 
 
 def log_cutoff_utc(log_path: Path | None) -> dt.datetime | None:
@@ -513,22 +535,56 @@ def check5_log_store(project_root: Path) -> dict:
 # Verification derivation (AC-5), from the current session's own transcript only
 # ---------------------------------------------------------------------------
 
-def derive_verification(session_id: str | None, transcript_dir: Path | None) -> dict:
+def locate_transcript(session_id: str | None, transcript_dir: Path | None) -> tuple[Path | None, str | None]:
+    """Resolve CLAUDE_CODE_SESSION_ID (or an override) to its transcript file.
+    Returns (path, None) on success, or (None, reason) naming why there is none -
+    shared by verification derivation and the session-start base resolution so
+    both agree on what "this session's transcript" means."""
     session_id = session_id or os.environ.get("CLAUDE_CODE_SESSION_ID")
     if not session_id:
-        return {"available": False, "reason": "no-session-id"}
+        return None, "no-session-id"
     base_dir = transcript_dir or (Path.home() / ".claude" / "projects")
     if not base_dir.is_dir():
-        return {"available": False, "reason": "no-transcript-dir"}
+        return None, "no-transcript-dir"
     matches = sorted(base_dir.glob(f"*/{session_id}.jsonl"))
     if not matches:
-        return {"available": False, "reason": "no-transcript-file"}
-    transcript_path = matches[0]
+        return None, "no-transcript-file"
+    return matches[0], None
+
+
+def get_session_start_ts(transcript_path: Path | None) -> str | None:
+    """The transcript's first `timestamp` field (ISO 8601, UTC), used as the
+    session-start default base (spec Open Questions item D7). Not every line
+    carries one (metadata-only lines do not), so this scans forward to the first
+    that does rather than assuming line 1."""
+    if transcript_path is None:
+        return None
+    try:
+        with transcript_path.open("r", encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                ts = entry.get("timestamp")
+                if ts:
+                    return ts
+    except OSError:
+        return None
+    return None
+
+
+def derive_verification(transcript_path: Path | None, unavailable_reason: str | None) -> dict:
+    if transcript_path is None:
+        return {"available": False, "reason": unavailable_reason or "no-transcript-file"}
 
     tool_uses: dict[str, tuple[str, str]] = {}
-    facts: list[dict] = []
+    facts: "collections.deque[dict]" = collections.deque(maxlen=MAX_VERIFICATION_FACTS)
     malformed = 0
-    fact_overflow = 0
+    total_matches = 0
 
     try:
         with transcript_path.open("r", encoding="utf-8", errors="replace") as fh:
@@ -558,9 +614,10 @@ def derive_verification(session_id: str | None, transcript_dir: Path | None) -> 
                         name, command = tool_uses.get(tool_use_id, ("", ""))
                         if name != "Bash" or not VERIFICATION_COMMAND_RE.search(command):
                             continue
-                        if len(facts) >= MAX_VERIFICATION_FACTS:
-                            fact_overflow += 1
-                            continue
+                        total_matches += 1
+                        # deque(maxlen=...) keeps the most recent entries: the ones
+                        # that matter at wrap time are the latest commands, not the
+                        # earliest, which are stale by the time a long session wraps.
                         facts.append(
                             {
                                 "command": command[:200],
@@ -574,8 +631,9 @@ def derive_verification(session_id: str | None, transcript_dir: Path | None) -> 
         "available": True,
         "source": "claude-code-transcript",
         "transcript": str(transcript_path),
-        "facts": facts,
-        "fact-overflow": fact_overflow,
+        "facts": list(facts),
+        "facts-are": "most recent" if total_matches else "none",
+        "fact-overflow": max(0, total_matches - len(facts)),
         "malformed-lines": malformed,
     }
 
@@ -671,7 +729,11 @@ def main(argv: list[str] | None = None) -> int:
 
     fetch_info = do_fetch(project_root) if args.fetch else {"ran": False}
 
-    base, base_resolution = resolve_base(project_root, args.base)
+    transcript_dir = Path(args.transcript_dir) if args.transcript_dir else None
+    transcript_path, transcript_unavailable_reason = locate_transcript(args.session_id, transcript_dir)
+    session_start_ts = get_session_start_ts(transcript_path)
+
+    base, base_resolution = resolve_base(project_root, args.base, session_start_ts)
     files_flat, files_grouped = get_files_changed(project_root, base)
     log_path = newest_log(project_root)
     cutoff = log_cutoff_utc(log_path)
@@ -701,9 +763,7 @@ def main(argv: list[str] | None = None) -> int:
             "check4-doc-drift": check4_doc_drift(project_root),
             "check5-log-store": check5_log_store(project_root),
         },
-        "verification": derive_verification(
-            args.session_id, Path(args.transcript_dir) if args.transcript_dir else None
-        ),
+        "verification": derive_verification(transcript_path, transcript_unavailable_reason),
     }
 
     if args.json:

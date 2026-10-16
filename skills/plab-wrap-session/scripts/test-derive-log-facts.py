@@ -43,7 +43,7 @@ def run_script(*args: str, timeout: float = 20, no_session_env: bool = False) ->
     )
 
 
-def git(repo: Path, *args: str, check_rc: bool = True) -> subprocess.CompletedProcess:
+def git(repo: Path, *args: str, check_rc: bool = True, extra_env: dict | None = None) -> subprocess.CompletedProcess:
     env = os.environ.copy()
     env.update(
         {
@@ -55,6 +55,8 @@ def git(repo: Path, *args: str, check_rc: bool = True) -> subprocess.CompletedPr
             "GIT_TERMINAL_PROMPT": "0",
         }
     )
+    if extra_env:
+        env.update(extra_env)
     proc = subprocess.run(
         ["git", *args], cwd=str(repo), capture_output=True, text=True, env=env
     )
@@ -164,6 +166,47 @@ def main() -> int:
         check("tag but no upstream: base resolution is latest-tag",
               data["base"]["resolution"] == "latest-tag", str(data["base"]))
 
+        # Session-start resolution (spec D7, revised 2026-10-15): when a transcript
+        # gives a start timestamp, the default base is the commit on HEAD just
+        # before it, even when an upstream tracking ref exists and points at HEAD
+        # itself (the exact case that made files-changed empty for a pushed session).
+        session_start_repo = init_repo(root / "session-start")
+        d0 = "2026-10-12T09:00:00+00:00"
+        git(session_start_repo, "commit", "--amend", "--date", d0,
+            extra_env={"GIT_AUTHOR_DATE": d0, "GIT_COMMITTER_DATE": d0})
+        # Push to a bare remote so an upstream tracking ref exists and, after the
+        # second commit below, points at HEAD itself - the exact shape that made
+        # Option B (upstream-only) resolve to an empty files-changed.
+        bare = root / "session-start-bare.git"
+        git(root, "init", "--bare", str(bare))
+        git(session_start_repo, "remote", "add", "origin", str(bare))
+        git(session_start_repo, "push", "-u", "origin", "main")
+
+        # The session's own work: a second commit, after the transcript's start
+        # timestamp, also pushed - so the upstream tracking ref points at it too.
+        (session_start_repo / "work.txt").write_text("session work\n", encoding="utf-8")
+        git(session_start_repo, "add", "work.txt")
+        d1 = "2026-10-12T20:00:00+00:00"
+        git(session_start_repo, "commit", "-m", "session work",
+            extra_env={"GIT_AUTHOR_DATE": d1, "GIT_COMMITTER_DATE": d1})
+        git(session_start_repo, "push", "origin", "main")
+
+        ss_transcripts = root / "ss-transcripts" / "proj"
+        ss_transcripts.mkdir(parents=True)
+        ss_transcript_path = ss_transcripts / "ss-session.jsonl"
+        ss_transcript_path.write_text(
+            json.dumps({"type": "attachment", "timestamp": "2026-10-12T17:00:00.000Z"}) + "\n",
+            encoding="utf-8",
+        )
+
+        proc = run_script(str(session_start_repo), "--json", "--session-id", "ss-session",
+                           "--transcript-dir", str(ss_transcripts.parent))
+        data = json.loads(proc.stdout)
+        check("session-start: base resolution is session-start, not upstream",
+              data["base"]["resolution"] == "session-start", str(data["base"]))
+        check("session-start: files-changed shows the session's own pushed work",
+              data["files-changed"] == ["work.txt"], str(data["files-changed"]))
+
         # ------------------------------------------------------------------
         # 3. decisions-count: mechanical count of '## Decisions Made' entries
         # ------------------------------------------------------------------
@@ -176,6 +219,55 @@ def main() -> int:
 
         proc = run_script("--count-decisions", str(root / "does-not-exist.md"))
         check("decisions-count on missing file exits non-zero", proc.returncode != 0)
+
+        bullet_log = make_log(log_dir, "bullets.md", (
+            "## Decisions Made\n\n"
+            "- **Decision one.** Reasoning.\n"
+            "- **Decision two.** Reasoning.\n\n"
+            "## Files Changed\n"
+        ))
+        proc = run_script("--count-decisions", str(bullet_log), "--json")
+        parsed = json.loads(proc.stdout)
+        check("decisions-count counts '-' bullets: 2",
+              parsed.get("decisions-count") == 2, proc.stdout)
+
+        star_log = make_log(log_dir, "stars.md", (
+            "## Decisions Made\n\n"
+            "* Decision one.\n"
+            "* Decision two.\n"
+            "* Decision three.\n\n"
+            "## Files Changed\n"
+        ))
+        proc = run_script("--count-decisions", str(star_log), "--json")
+        parsed = json.loads(proc.stdout)
+        check("decisions-count counts '*' bullets: 3",
+              parsed.get("decisions-count") == 3, proc.stdout)
+
+        nested_log = make_log(log_dir, "nested.md", (
+            "## Decisions Made\n\n"
+            "1. **Decision one.** Top-level reasoning.\n"
+            "   - A nested sub-bullet elaborating, not a decision of its own.\n"
+            "   - Another nested sub-bullet.\n"
+            "2. **Decision two.**\n\n"
+            "## Files Changed\n"
+        ))
+        proc = run_script("--count-decisions", str(nested_log), "--json")
+        parsed = json.loads(proc.stdout)
+        check("decisions-count excludes indented nested sub-bullets: 2, not 4",
+              parsed.get("decisions-count") == 2, proc.stdout)
+
+        h3_log = make_log(log_dir, "h3.md", (
+            "## Decisions Made\n\n"
+            "### Chose option B over option A\n\n"
+            "Full alternatives-considered analysis for an architectural decision.\n\n"
+            "### Kept the existing retry policy\n\n"
+            "More analysis.\n\n"
+            "## Files Changed\n"
+        ))
+        proc = run_script("--count-decisions", str(h3_log), "--json")
+        parsed = json.loads(proc.stdout)
+        check("decisions-count falls back to '### ' subheadings when no list items: 2",
+              parsed.get("decisions-count") == 2, proc.stdout)
 
         # ------------------------------------------------------------------
         # 4. Waiting on You extraction preserves blocked-since dates verbatim
@@ -361,6 +453,38 @@ def main() -> int:
         check("real transcript: the failing gate is captured with is_error true",
               any(f["is_error"] for f in facts), str(facts))
         check("real transcript: malformed line counted, not fatal", ver.get("malformed-lines") == 1, str(ver))
+
+        # Overflow keeps the most recent facts, not the first ones (the orchestrator's
+        # review finding): build 60 matching Bash calls, numbered in order, and assert
+        # the kept 50 are calls 11 through 60, the latest, not 1 through 50.
+        overflow_transcripts = root / "overflow-transcripts" / "proj"
+        overflow_transcripts.mkdir(parents=True)
+        overflow_lines = []
+        for i in range(60):
+            overflow_lines.append({"message": {"content": [
+                {"type": "tool_use", "id": f"o{i}", "name": "Bash",
+                 "input": {"command": f"python scripts/check-dashes.py --call {i}"}}
+            ]}})
+            overflow_lines.append({"message": {"content": [
+                {"type": "tool_result", "tool_use_id": f"o{i}", "is_error": False}
+            ]}})
+        overflow_path = overflow_transcripts / "overflow-session.jsonl"
+        with overflow_path.open("w", encoding="utf-8") as fh:
+            for entry in overflow_lines:
+                fh.write(json.dumps(entry))
+                fh.write("\n")
+        proc = run_script(str(ver_project), "--json", "--session-id", "overflow-session",
+                           "--transcript-dir", str(overflow_transcripts.parent))
+        data = json.loads(proc.stdout)
+        ver = data["verification"]
+        overflow_facts = ver.get("facts", [])
+        check("overflow: exactly 50 facts kept", len(overflow_facts) == 50, str(len(overflow_facts)))
+        check("overflow: fact-overflow counts the 10 dropped earlier calls",
+              ver.get("fact-overflow") == 10, str(ver.get("fact-overflow")))
+        check("overflow: the kept facts are the most recent (calls 10 through 59), not the earliest",
+              overflow_facts[0]["command"].endswith("--call 10")
+              and overflow_facts[-1]["command"].endswith("--call 59"),
+              str(overflow_facts[0]) + " / " + str(overflow_facts[-1]))
 
         # Capture-lite present, but no transcript at all: must still be unavailable.
         # D3 (spec Open Questions / Decisions): capture-lite never grounds the

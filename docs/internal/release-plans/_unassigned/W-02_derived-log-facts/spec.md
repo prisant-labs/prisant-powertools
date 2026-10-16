@@ -249,17 +249,18 @@ None.
 
 **Summary.** When the caller passes no `--base`, what should the script compare against?
 
-**Context.** Neither the spec nor the implementation plan names a default; Phase 1 step 3 only says "a sensible upstream ref". Evidence Gathering needs a working default so the agent is not required to supply `--base` on every invocation.
+**Context.** Neither the spec nor the implementation plan names a default; Phase 1 step 3 only says "a sensible upstream ref". Evidence Gathering needs a working default so the agent is not required to supply `--base` on every invocation. **Revised 2026-10-15, same day as the first build:** the orchestrator's review ran the first build against the real checkout on a branch that had already been committed and pushed, where Option B's upstream ref resolved to `HEAD` itself, so `files-changed` was empty although that session had done real work. Most wraps in this repository happen after a commit and a push, so that was not an edge case; it was the common case, and the most visible derived field would have routinely claimed nothing changed.
 
-**Desired outcome.** A default that resolves to something meaningful in the common cases (a branch tracking a remote; a tagged release with no tracking branch) and degrades to "no base" rather than erroring when neither is available.
+**Desired outcome.** A default that resolves to something meaningful in the common cases (a branch tracking a remote; a tagged release with no tracking branch) and degrades to "no base" rather than erroring when neither is available, without going empty for the specific common case of a session that already committed and pushed its own work before wrapping.
 
 **Options / approaches.**
 
 * **Option A:** Always require `--base` explicitly; error otherwise. Simplest, but reintroduces a manual step Evidence Gathering is trying to remove.
-* **Option B:** Try the upstream tracking ref (`@{u}`) first, then the latest reachable tag (`git describe --tags --abbrev=0`), then report no base available. Covers the common cases without guessing at an arbitrary ref.
+* **Option B:** Try the upstream tracking ref (`@{u}`) first, then the latest reachable tag (`git describe --tags --abbrev=0`), then report no base available. Covers the common cases without guessing at an arbitrary ref, but resolves to `HEAD` itself, and therefore an empty `files-changed`, whenever the session already pushed before the script runs.
 * **Option C:** Default to `HEAD~1`. Cheap but meaningless for a multi-commit session; would understate files-changed for any session with more than one commit.
+* **Option D:** When the current session's transcript gives a start timestamp (via `CLAUDE_CODE_SESSION_ID`), use `git rev-list -1 --before=<that timestamp> HEAD` as the base - the commit on `HEAD` immediately before the session began - falling back to Option B's order (upstream, then latest tag, then none) when no transcript is available or no commit predates it.
 
-**Recommendation.** Option B, implemented in `resolve_base()`. The resolved base and how it was chosen are both included in the script's output, so the agent can see what was actually compared against. Working default: built on this recommendation on 2026-10-15 under the maintainer's go-ahead; not yet ratified.
+**Recommendation.** Option D, falling back to Option B, implemented in `resolve_base()`. The resolved base and how it was chosen (`session-start`, `upstream`, `latest-tag`, or `none`) are both included in the script's output, so the agent can see what was actually compared against, and SKILL.md's Evidence Gathering now says to pass `--base <ref>` explicitly when the agent knows where the session's work began and the reported default looks wrong. Working default: built on this recommendation on 2026-10-15 under the maintainer's go-ahead; not yet ratified.
 
 ---
 
