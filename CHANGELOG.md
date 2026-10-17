@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Three CI drift gates, after documentation reviews found drift no gate caught.** `scripts/version-parity-check.py` now reads six claim locations instead of four, adding the per-skill section headings in `docs/status-skills.md` and `library.json`'s `components.skills[].version`. New `scripts/skill-drift-check.py` runs the hygiene sweep's documentation-drift recipe in CI: a skill whose folder changed since the latest tag, other than its `HISTORY.md`, must bump its own version and record that version in its `HISTORY.md`. It only advises while `library.json`'s version is unchanged since the tag, because effort pull requests here land without version bumps, and it enforces once that version moves, which is the closing release pull request; `--strict` enforces on demand. `scripts/doc-lifecycle-check.py` gains invariant 10: a release plan still `draft` or `in-progress` whose `target-version` is already tagged. Plans 05, 06 and 07 are baselined as known violations until the maintainer decides how to retire version-named plans now that versions are assigned at ship time; any new violation fails.
+
 ### Fixed
 
 - **`plab-wrap-session` 1.8.1: an indented sub-bullet under a Waiting on You item was counted as its own item** (W-02 follow-up, derived log facts). `derive-log-facts.py`'s `extract_waiting_on_you()` matched any line whose stripped text started with `- `, so a top-level item's own indented sub-bullets, prose elaborating on what the item would do, were extracted as separate, undated items and handed straight to the next wrap's carry-forward. Found on a real log where one item carried six such sub-bullets. Now requires a top-level list item, `-` or `*`, with no leading indentation, the same rule `count_decisions()` already applies to Decisions Made; `check-log.py`'s Waiting on You gate inherits the fix.
