@@ -5,6 +5,16 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **`plab-wrap-session` 1.8.1: the Log Self-Check becomes one call instead of several** (W-02, derived log facts). `scripts/check-log.py` runs the two existing canary-proven detectors (`path-citation-check.py`, `dash-check.py`) exactly as they are, plus a mechanical decisions-count comparison, summary length, Tier 1 frontmatter completeness, and the Waiting on You rules, and in deep mode the Uncertainty Ledger and What You May Not Realize presence checks, all in one invocation run after the log is written. `references/frontmatter-schema.md` now documents the two fields 1.8.0 added, `commit-range` and `latest-tag`. The hygiene sweep's own-validation-scripts step now chains into one shell command instead of one call per script, and `derive-log-facts.py --help` now describes the `--base` default the shipped code actually uses.
+
+### Documentation
+
+- **Two review passes landed after v0.8.0.** PR #38 (user and agent onboarding review) added Codex install and update commands to the README, described `derive-log-facts.py` in the wrap-session usage README, and corrected status-page and count errors. PR #39 (technical review) brought the release checklist in line with the real release procedure, including the eval suite, the marketplace repin, and the Claude Code and Codex install-upgrade steps, and fixed stale counts.
+
 ## [0.8.0] - 2026-10-15
 
 Six efforts, built on 2026-10-15 under the maintainer's instruction to complete them. Design choices the maintainer had not made were built on their written recommendations and stay `Open` in each spec's decisions section, marked as working defaults, so a walk can ratify or overturn them.

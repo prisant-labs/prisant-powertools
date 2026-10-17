@@ -689,7 +689,11 @@ def build_parser() -> argparse.ArgumentParser:
         "project_root", nargs="?", default=".",
         help="project to inspect (default: current directory); never the plugin's own install location",
     )
-    parser.add_argument("--base", help="diff base ref (default: upstream, then latest tag, then none)")
+    parser.add_argument(
+        "--base",
+        help="diff base ref (default: the current session's start commit from its transcript, "
+        "then upstream, then latest tag, then none)",
+    )
     parser.add_argument(
         "--fetch", action="store_true",
         help="run 'git fetch --no-prune origin --tags' first; the script's only write path",

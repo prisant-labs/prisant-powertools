@@ -2,6 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.8.1 | 2026-10-16 | unreleased | fixed | `scripts/check-log.py` collapses the whole Log Self-Check into one post-write call, `frontmatter-schema.md` catches up with the two fields 1.8.0 added, and the hygiene sweep's own-validation-scripts step chains into one command. |
 | 1.8.0 | 2026-10-15 | v0.8.0 | added | `derive-log-facts.py` derives frontmatter facts, the Evidence Gathering inputs, and the hygiene sweep's detection results from git and the environment, in place of model recall and one-at-a-time commands. |
 | 1.7.0 | 2026-09-13 | v0.5.4 | added | Deep-mode logs carry an Uncertainty Ledger and a What You May Not Realize section. |
 | 1.6.2 | 2026-08-28 | v0.5.2 | fixed | Path-citation gate: three false-positive classes removed, a line-anchor shape brought into scope, and the proof corpus grown from 11 entries to 40. |
@@ -10,6 +11,16 @@
 | 1.5.0 | 2026-08-18 | v0.2.0 | added | `--organize` files old logs into `YYYY-MM/` folders. Hygiene sweep gained Check 5. |
 | 1.4.1 | 2026-08-18 | v0.1.2 | fixed | Dropped the "what did we do" trigger. Added `type:` to the frontmatter block and `machine:` to the Quick and Blocked templates. |
 | 1.4.0 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.4.0; prior history remains there. |
+
+## 1.8.1 - 2026-10-16
+
+**Added: `scripts/check-log.py`, one post-write call for the whole Log Self-Check.** A clean 1.8.0 wrap still ran `derive-log-facts.py`, the repository's own validation scripts one at a time, the write, `--count-decisions`, and then `path-citation-check.py` and `dash-check.py` as two more separate calls, six to nine calls before any fix. `check-log.py` runs the two existing detector scripts exactly as they are, keeping their own canaries and three-state contracts, compares `decisions-count` against a mechanical count of the Decisions Made section by importing `derive-log-facts.py`'s own counting function rather than copying it, checks summary length, Tier 1 frontmatter completeness including `machine:`, every Waiting on You rule, and, in deep mode, that the Uncertainty Ledger and What You May Not Realize sections are present. A broken detector makes the whole result broken. `scripts/test-check-log.py` proves it against 36 fixture checks, including a canary removed and restored to confirm it actually fails when its rule is gone (quoted in this release's pull request, not restated here). `SKILL.md`'s Log Self-Check section now runs this one command after writing the log, rather than listing each gate as its own step before writing; `--count-decisions` keeps working directly for compatibility, but is no longer the step a wrap takes on its own.
+
+**Fixed: `references/frontmatter-schema.md` never caught up with 1.8.0's two new fields.** `commit-range` and `latest-tag` joined Tier 1 in `SKILL.md`'s own frontmatter block when 1.8.0 shipped, but the schema reference, the one document meant to be the complete field-by-field specification, still listed only the original seven. Both fields are now documented in Tier 1, with the same non-collision note `derive-log-facts.py`'s docstring already carries.
+
+**Fixed: the hygiene sweep's Check 3 ran the repository's own validation scripts one call per script.** `SKILL.md` now says to chain them into one shell command and read the combined output, the same step-reduction principle 1.8.0 already applied to Evidence Gathering and the other four checks.
+
+**Fixed: `derive-log-facts.py --help` described `--base`'s default as "upstream, then latest tag, then none", which was the pre-1.8.0 D7 decision.** The shipped code tries the current session's transcript-derived start commit first (spec D7's revision, same day as the first build), and the help text had never been updated to say so.
 
 ## 1.8.0 - 2026-10-15
 

@@ -4,7 +4,7 @@ title: Derive session-log facts from git instead of model recall
 type: spec
 status: committed
 created: 2026-08-23
-updated: 2026-10-15
+updated: 2026-10-16
 linked-effort: the maintainer's private plab-wrap-session evolution roadmap, 2026-08-16
 linked-plan: implementation-plan.md
 ac-count: 11
@@ -20,10 +20,10 @@ priority: P1
 ## Task Summary
 
 **Status:** Committed. Phases P1 to P6 built and verified 2026-10-15; P7 (AC-11's re-measurement) needs calendar time and has not run.
-**Last updated:** 2026-10-15
+**Last updated:** 2026-10-16
 **Linked plan:** `implementation-plan.md`, updated for the 2026-10-15 build (status `in-progress`)
 **Open questions:** see Open Questions / Decisions below for the full set and their status
-**Revisions:** 3 (initial draft 2026-08-23; widened to one-step evidence gathering 2026-10-04; built and committed 2026-10-15; see Revisions)
+**Revisions:** 4 (initial draft 2026-08-23; widened to one-step evidence gathering 2026-10-04; built and committed 2026-10-15; a 1.8.1 follow-up patch 2026-10-16; see Revisions)
 
 ### Acceptance Criteria Fulfillment
 
@@ -179,6 +179,7 @@ Today a deep wrap runs Evidence Gathering's commands, reads the previous log, sc
 | 2026-10-04 | Widened from derived facts to one-step evidence gathering, after a measurement (S9) showed that a wrap's cost is driven by its number of steps. Added Requirements 10 to 12, AC-10 and AC-11, In Scope item 6, Non-Goals 6 to 8, Example 4, decisions D4 and D5, and sources S8 to S10. Narrowed Requirement 8 and AC-8 to allow an explicit fetch that never prunes. Corrected stale references: wrap shipped 1.7.0 in the meantime, so the bump now targets the next minor version; `SKILL.md:143` became `SKILL.md:155`, `SKILL.md:91` became `SKILL.md:103`, `frontmatter-schema.md:49` and `:50` became `:57` and `:58`, `AGENTS.md:73` became `AGENTS.md:117`, and Non-Goal 5's release version became v0.7.0. The implementation plan has not yet been updated to match. Same day, before publication: AC-11 and Requirement 12 now count only completed wraps, those that wrote their log before any user prompt. The measurement window ends at the first prompt, so a wrap that stopped to ask for confirmation looked cheap without having finished; the completed-wrap baseline is a median of 12 calls, not 10. Requirement 10 now names the newest-wins rule the script mirrors from `log-discovery.md`. | agent |
 | 2026-10-05 | Requirement 11 and AC-8 now specify `git fetch --no-prune origin --tags`. The earlier `git fetch origin --tags` would prune whenever `fetch.prune` is set in git configuration; checked on 2026-10-05 with a fixture clone holding a stale branch ref and `fetch.prune=true`, where the plain fetch deleted the ref and the `--no-prune` fetch kept it. The implementation plan's P3 step 1, P4 step 6 and P4 verification were changed to match, and the no-prune test case now sets `fetch.prune=true` so it exercises the configuration path. | agent |
 | 2026-10-15 | Status moved from `draft` to `committed` under the maintainer's go-ahead ("Go ahead and complete the work", 2026-10-15). Phases P1 to P6 of the implementation plan were built: `scripts/derive-log-facts.py` and `scripts/test-derive-log-facts.py` added, `SKILL.md` and `references/hygiene-sweep.md` rewired, and `HISTORY.md` given a 1.8.0 entry. AC-1 through AC-10 ticked above, each against the test suite and a live run against the maintainer's real checkout. AC-11 stays unticked; P7's re-measurement needs at least ten completed wraps on the shipped version, which needs calendar time this session does not have. D1 decided (see below); D6 to D9 added as open decisions taken under the maintainer's go-ahead but not yet ratified, covering choices the spec left to implementation without naming them. Non-Goal 5 and implementation-plan.md line 26 corrected from a hardcoded v0.7.0 to "the release that ships it", per decision register item 21 (versions assigned at ship time). Implementation-plan.md Phase 7 rewritten: the spec stays `committed` until AC-11 settles, and whether to tag before that measurement is a maintainer ruling, not one this revision makes (precedent: AU-01 and WD-01 shipped before their own trials by maintainer ruling). `metadata.version` in `SKILL.md` was deliberately NOT bumped to 1.8.0 in this change: shared release bookkeeping (version bumps, CHANGELOG, manifests) is owned by a separate closing pull request for this release, not by this effort's build. | agent |
+| 2026-10-16 | A 1.8.1 patch, approved by the maintainer, shipped before AC-11's measurement window opens, so every wrap AC-11 counts is measured against this shape rather than the 1.8.0 shape it would otherwise mix with. `scripts/check-log.py` (plus `scripts/test-check-log.py`) collapses the Log Self-Check's remaining one-at-a-time steps, the decisions-count check, the two detector scripts, and four more agent-judged gates, into one post-write call; `SKILL.md`'s Log Self-Check section is rewritten to run it. `references/frontmatter-schema.md` is corrected to document the two Tier 1 fields this effort added, `commit-range` and `latest-tag`, which it had never caught up with. The hygiene sweep's Check 3 wording in `SKILL.md` now tells the agent to chain the repository's own validation scripts into one shell command rather than one call per script. `derive-log-facts.py --help`'s description of the `--base` default is corrected to match D7's revision (session-start first, then upstream, then latest tag, then none), which the code already implemented but the help text never caught up with. AC-11 stays unticked; this revision changes what AC-11 will measure, not whether it has been measured yet. | agent |
 
 ## Sources & Evidence
 

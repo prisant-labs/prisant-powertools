@@ -2,7 +2,7 @@
 
 The current configuration of every skill in `prisant-utilities`, as declared in the repository. One row per skill, plus the setup each one needs and where its output lands.
 
-**Plugin version:** 0.8.0 **Skills:** 10 (8 auto-discoverable, 2 explicit-invocation only) **Verified against:** `library.json`, `manifest.generated.json`, and each `skills/*/SKILL.md` **As of:** 2026-10-15
+**Plugin version:** 0.8.0 **Skills:** 10 (8 auto-discoverable, 2 explicit-invocation only) **Verified against:** `library.json`, `manifest.generated.json`, and each `skills/*/SKILL.md` **As of:** 2026-10-16
 
 > This file describes what the repository declares, not what is installed on any given machine. To check a local install, read `~/.claude/plugins/installed_plugins.json`.
 
@@ -21,7 +21,7 @@ The current configuration of every skill in `prisant-utilities`, as declared in 
 | `plab-resolve-open-items` | 1.1.0 | Auto + explicit | `[--backlog \| <document>]` | Each item's home document; the walk record and any backlog file in `_local/decisions/` |
 | `plab-spec` | 1.3.3 | Auto + explicit | `--effort <id> [--target-release vX.Y.Z] [--revise] [--dry-run]` | `docs/internal/release-plans/_unassigned/` by default |
 | `plab-strategy-brief` | 1.1.1 | Auto + explicit | `[paste raw thinking]` | `_output/plab-strategy-brief/` |
-| `plab-wrap-session` | 1.8.0 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
+| `plab-wrap-session` | 1.8.1 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
 
 **Explicit only** means the skill carries `disable-model-invocation: true`. It never fires on its own and is absent from the auto-loaded skill listing. It runs when you type its name and only then. **`plab-init-project` and `plab-audit` carry it now.** `plab-spec` and `plab-release-plan` carried it through 1.2.1 and 1.3.0 respectively; both are now auto-discoverable, using explicit do-NOT-fire clauses in their descriptions instead of the binary flag.
 
@@ -29,7 +29,7 @@ The current configuration of every skill in `prisant-utilities`, as declared in 
 
 ## Per-skill detail
 
-### `plab-wrap-session` 1.8.0
+### `plab-wrap-session` 1.8.1
 
 The most-used skill in the plugin. Writes a structured session log and hands off to `plab-continue-session`.
 
@@ -38,12 +38,12 @@ The most-used skill in the plugin. Writes a structured session log and hands off
 | Default mode | **deep**. Every wrap produces the full template unless the agent records a specific objection in the log justifying a lighter mode |
 | Modes | `deep` (default), `quick`, `final`, `blocked`, plus `--organize` |
 | Output | `_local/_session-logs/`, flat, archived into `YYYY-MM/` folders by `--organize` |
-| Scripts | `derive-log-facts.py`, `dash-check.py`, `organize-logs.py`, `path-citation-check.py`, plus `test-derive-log-facts.py` and `test-organize-logs.py` |
-| Setup required | Python 3 on PATH. `ripgrep` for the dash gate, which reports `broken` rather than `clean` if absent |
+| Scripts | `derive-log-facts.py`, `check-log.py`, `dash-check.py`, `organize-logs.py`, `path-citation-check.py`, plus `test-derive-log-facts.py`, `test-check-log.py`, and `test-organize-logs.py` |
+| Setup required | Python 3 on PATH. No other dependency; the dash gate is pure-Python regex, with no `ripgrep` requirement (that applies only to the repository-wide `scripts/check-dashes.py`, a different script) |
 | References | 4 files |
 | Paired with | `plab-continue-session`. A session-log format change in one requires a matching change in the other |
 
-One call to `derive-log-facts.py` gathers the frontmatter facts, the previous log's Waiting on You items, and the detection results of a pre-wrap hygiene sweep across five checks (remote divergence, working tree, release state, documentation drift, session-log store). The agent judges and proposes from that output under per-action confirmation, and runs a Log Self-Check gate before writing. Two of those gates are canary-proven and report three states: `clean`, `findings`, `broken`, where `broken` blocks exactly as `findings` does.
+One call to `derive-log-facts.py` gathers the frontmatter facts, the previous log's Waiting on You items, and the detection results of a pre-wrap hygiene sweep across five checks (remote divergence, working tree, release state, documentation drift, session-log store). The agent judges and proposes from that output under per-action confirmation, writes the log, then runs one call to `check-log.py` as the Log Self-Check. It runs the two existing canary-proven detector gates (path citations, dashes) exactly as before, plus the decisions-count comparison, summary length, Tier 1 frontmatter completeness, and the Waiting on You rules, and in deep mode the Uncertainty Ledger and What You May Not Realize presence checks. It reports the same three states as the detectors it calls: `clean`, `findings`, `broken`, where `broken` blocks exactly as `findings` does.
 
 ### `plab-continue-session` 1.6.0
 
