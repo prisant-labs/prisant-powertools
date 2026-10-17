@@ -94,7 +94,18 @@ MAX_VERIFICATION_FACTS = 50
 # ---------------------------------------------------------------------------
 
 def run_git(args: list[str], cwd: Path, timeout: float = 10) -> tuple[int, str, str]:
-    """Run one git command. Never raises; a failure is a (returncode, "", stderr)."""
+    """Run one git command. Never raises; a failure is a (returncode, "", stderr).
+
+    `encoding="utf-8", errors="replace"` is explicit, not left to `text=True`'s
+    default. Without it, `subprocess.run` decodes git's UTF-8 stdout and stderr
+    using `locale.getpreferredencoding(False)`, which is cp1252 on this
+    maintainer's Windows machine. A commit message (or any other git output)
+    containing a UTF-8 byte sequence that lands on one of cp1252's undefined
+    code points (0x81, 0x8D, 0x8F, 0x90, 0x9D) crashes the background reader
+    thread `capture_output=True` spawns with an uncaught `UnicodeDecodeError`,
+    which this function's own `try/except` around `subprocess.run` cannot
+    catch, because the exception happens in a different thread. Reproduced
+    live during a real wrap on 2026-10-16."""
     env = os.environ.copy()
     env["GIT_OPTIONAL_LOCKS"] = "0"
     env["GIT_TERMINAL_PROMPT"] = "0"
@@ -104,6 +115,8 @@ def run_git(args: list[str], cwd: Path, timeout: float = 10) -> tuple[int, str, 
             cwd=str(cwd),
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             env=env,
         )
@@ -500,9 +513,21 @@ def check4_doc_drift(project_root: Path) -> dict:
         rc, _, _ = run_git(["cat-file", "-e", f"{last_tag}:{skill_path}/SKILL.md"], project_root)
         if rc != 0:
             continue  # new since last tag
-        rc, _, _ = run_git(["diff", "--quiet", last_tag, "HEAD", "--", skill_path], project_root)
+        # HISTORY.md is excluded from this diff via pathspec, matching the
+        # CI gate scripts/skill-drift-check.py (PR #41). Without the
+        # exclusion, a skill whose only change since the tag is its own
+        # HISTORY.md (adding a row, annotating one, fixing a typo) counted
+        # as "this skill changed", which then compared an unmoved
+        # metadata.version against itself and flagged a false "changed but
+        # not bumped" finding. Found live on this repository's own main
+        # branch: plab-resolve-open-items changed only HISTORY.md since
+        # v0.8.0 and was flagged on 2026-10-16.
+        rc, _, _ = run_git(
+            ["diff", "--quiet", last_tag, "HEAD", "--", skill_path, f":(exclude){skill_path}/HISTORY.md"],
+            project_root,
+        )
         if rc == 0:
-            continue  # unchanged since last tag
+            continue  # unchanged since last tag, HISTORY.md aside
         head_version = None
         if skill_file.is_file():
             m = re.search(r'version:\s*"([^"]+)"', skill_file.read_text(encoding="utf-8", errors="replace"))
@@ -531,6 +556,8 @@ def check5_log_store(project_root: Path) -> dict:
             [sys.executable, str(organize_script), str(store), "--json"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=15,
         )
     except subprocess.TimeoutExpired:
@@ -651,39 +678,196 @@ def derive_verification(transcript_path: Path | None, unavailable_reason: str | 
 # ---------------------------------------------------------------------------
 # Rendering
 # ---------------------------------------------------------------------------
+# The text digest (the default, non-`--json` output) is read once and used
+# for everything it returns, per SKILL.md's Evidence Gathering: no
+# redirecting it to a file, no re-reading it in pieces, no re-running git or
+# re-inventorying `_local/` for anything it already reports. Two real wraps
+# measured on 2026-10-16 (14 and 15 assistant API calls, against a baseline
+# of 12 and AC-11's target of 6) redirected this output to a file and sliced
+# it with `python -c`, because the old text digest was a set of one-line
+# counts with no actual content, and the full `--json` output is 34,320
+# characters on this repository, over Claude Code's shell output limit.
+# This digest instead carries everything the Frontmatter block and the five
+# sweep checks need, readably rendered rather than as Python dict reprs, and
+# holds the whole thing under a stated budget by capping only the lists a
+# session log does not copy verbatim.
+#
+# NEVER CAPPED: `files-changed` (copied verbatim into the frontmatter's own
+# `files-changed:` list) and `waiting-on-you` (copied verbatim into the new
+# log's carried-forward Waiting on You section, with its dates). Capping
+# either would hand the agent a frontmatter field or a blocked-since date
+# that silently disagrees with the real log.
+#
+# CAPPED, WITH AN EXPLICIT OVERFLOW LINE: everything else that can grow
+# without bound on a large or long-lived repository (gitignored-modified
+# paths, check1's commit and branch lists, check2's dirty/stash/worktree
+# lists, check4's findings, check5's planned moves, verification facts).
+# None of these are copied into the log verbatim; the agent reads them,
+# judges, and writes its own prose or proposal. A capped list never goes
+# silent about what it dropped: `TEXT_LIST_CAP` lines, then one line naming
+# how many more exist and that `--json` has them all.
+
+TEXT_LIST_CAP = 40
+
+
+def render_verbatim(items: list[str]) -> list[str]:
+    """One line per item, never capped. Only for a field the log itself
+    reproduces verbatim (files-changed, waiting-on-you)."""
+    if not items:
+        return ["    (none)"]
+    return [f"    {item}" for item in items]
+
+
+def render_capped(items: list[str], cap: int = TEXT_LIST_CAP) -> list[str]:
+    """One line per item, capped at `cap` with an explicit overflow line.
+    For every list the log does not reproduce verbatim."""
+    if not items:
+        return ["    (none)"]
+    lines = [f"    {item}" for item in items[:cap]]
+    if len(items) > cap:
+        lines.append(f"    ... {len(items) - cap} more, see --json")
+    return lines
+
+
+def render_check3(check3: dict) -> list[str]:
+    lines = []
+    changelog = check3.get("changelog", {})
+    if not changelog.get("available"):
+        lines.append(f"    CHANGELOG.md: {changelog.get('reason', 'unavailable')}")
+    elif not changelog.get("has-unreleased-heading"):
+        lines.append("    CHANGELOG.md: no [Unreleased] heading")
+    else:
+        lines.append(f"    CHANGELOG.md: [Unreleased] heading present, has-content={changelog.get('has-content')}")
+    vvt = check3.get("version-vs-tag", {})
+    lines.append(
+        f"    version-vs-tag: latest-tag={vvt.get('latest-tag')} "
+        f"library.json={vvt.get('library-json-version')} consistent={vvt.get('consistent')}"
+    )
+    return lines
+
+
+def render_check4(check4: dict) -> list[str]:
+    if not check4.get("available"):
+        return [f"    {check4.get('reason', 'unavailable')}"]
+    findings = check4.get("findings", [])
+    lines = [f"    last-tag: {check4.get('last-tag')}"]
+    lines.append(f"    findings ({len(findings)}):")
+    lines.extend(render_capped(findings))
+    return lines
+
+
+def render_check5(check5: dict) -> list[str]:
+    if not check5.get("available"):
+        return [f"    {check5.get('reason', 'unavailable')}"]
+    plan = check5.get("plan", {})
+    moves = plan.get("moves", [])
+    collisions = plan.get("collisions", [])
+    lines = [f"    moves: {len(moves)}  collisions: {len(collisions)}"]
+    if moves:
+        lines.append("    would file:")
+        lines.extend(render_capped([f"{m['from']} -> {m['to']}" for m in moves]))
+    if collisions:
+        lines.append("    collisions (anomaly, not a routine proposal):")
+        lines.extend(render_capped(collisions))
+    return lines
+
+
+def render_verification(ver: dict) -> list[str]:
+    if not ver.get("available"):
+        return [f"    available: false ({ver.get('reason')})"]
+    lines = [f"    available: true (source: {ver.get('source')})"]
+    facts = ver.get("facts", [])
+    lines.append(
+        f"    facts ({len(facts)}, {ver.get('facts-are')}, "
+        f"{ver.get('fact-overflow', 0)} dropped beyond the 50 the script itself keeps):"
+    )
+    fact_lines = [f"[{'ERROR' if f.get('is_error') else 'ok'}] {f.get('command')}" for f in facts]
+    lines.extend(render_capped(fact_lines))
+    lines.append(f"    malformed-lines: {ver.get('malformed-lines', 0)}")
+    return lines
+
 
 def render(data: dict) -> str:
-    lines = [
-        f"machine: {data['machine']}",
-        f"repo: {data['repo']}",
-        f"branch: {data['branch']}",
-        f"date: {data['date']}",
-        f"base: {data['base']['ref']} (resolution: {data['base']['resolution']})",
-        f"commit-range: {data['commit-range']}",
-        f"latest-tag: {data['latest-tag']}",
-        f"files-changed ({len(data['files-changed'])}):",
-    ]
-    lines.extend(f"  {f}" for f in data["files-changed"])
+    lines = ["Frontmatter fields"]
+    lines.append(f"  machine: {data['machine']}")
+    lines.append(f"  repo: {data['repo']}")
+    lines.append(f"  branch: {data['branch']}")
+    lines.append(f"  date: {data['date']}")
+    lines.append(f"  commit-range: {data['commit-range']}")
+    lines.append(f"  latest-tag: {data['latest-tag']}")
+    lines.append(f"  base: {data['base']['ref']} (resolution: {data['base']['resolution']})")
+    files = data["files-changed"]
+    lines.append(f"  files-changed ({len(files)}), copy verbatim into the frontmatter, never capped:")
+    lines.extend(render_verbatim(files))
+
     eg = data["evidence-gathering"]
-    lines.append(f"newest-log: {eg['newest-log']}")
-    cap = eg["capture-records"]
-    if cap.get("available"):
-        lines.append(f"capture-records: {cap['count']} ({cap['earliest-head']} .. {cap['latest-head']})")
+    lines.append("")
+    lines.append("Evidence Gathering")
+    lines.append(f"  newest-log: {eg['newest-log']}")
+    cap_rec = eg["capture-records"]
+    if cap_rec.get("available"):
+        lines.append(f"  capture-records: {cap_rec['count']} ({cap_rec['earliest-head']} .. {cap_rec['latest-head']})")
     else:
-        lines.append(f"capture-records: none ({cap.get('reason')})")
+        lines.append(f"  capture-records: none ({cap_rec.get('reason')})")
     woy = eg["waiting-on-you"]
-    lines.append(f"waiting-on-you: {len(woy) if woy is not None else 'n/a'} item(s)")
+    if woy is None:
+        lines.append("  waiting-on-you: n/a (no existing log to carry forward)")
+    else:
+        lines.append(f"  waiting-on-you ({len(woy)} item(s), verbatim with their dates, never capped):")
+        lines.extend(render_verbatim(woy))
     gm = eg["gitignored-modified"]
-    lines.append(f"gitignored-modified: {len(gm['files'])} file(s), {gm['overflow']} overflow")
+    lines.append(
+        f"  gitignored-modified ({len(gm['files'])} file(s), "
+        f"{gm['overflow']} beyond the script's own --gitignored-limit):"
+    )
+    lines.extend(render_capped(gm["files"]))
+
     hs = data["hygiene-sweep"]
-    lines.append(f"check1-remote: ahead={hs['check1-remote'].get('ahead')} behind={hs['check1-remote'].get('behind')}")
-    lines.append(f"check2-worktree: dirty={len(hs['check2-worktree']['dirty'])} stashes={len(hs['check2-worktree']['stashes'])}")
-    lines.append(f"check3-release: {hs['check3-release']}")
-    lines.append(f"check4-doc-drift: {hs['check4-doc-drift']}")
-    lines.append(f"check5-log-store: {hs['check5-log-store'].get('available')}")
-    ver = data["verification"]
-    lines.append(f"verification: available={ver['available']} ({ver.get('reason', ver.get('source'))})")
-    lines.append(f"fetch: {data['fetch']}")
+    lines.append("")
+    lines.append("Hygiene Sweep")
+    c1 = hs["check1-remote"]
+    lines.append(f"  Check 1, remote reconciliation ({c1.get('as-of')}): ahead={c1.get('ahead')} behind={c1.get('behind')}")
+    lines.append(f"    unpushed-commits ({len(c1.get('unpushed-commits', []))}):")
+    lines.extend(render_capped(c1.get("unpushed-commits", [])))
+    lines.append(f"    commits-behind ({len(c1.get('commits-behind', []))}):")
+    lines.extend(render_capped(c1.get("commits-behind", [])))
+    lines.append(f"    remote-branches ({len(c1.get('remote-branches', []))}):")
+    lines.extend(render_capped(c1.get("remote-branches", [])))
+    lines.append(f"    tags-tail: {', '.join(c1.get('tags-tail', [])) or '(none)'}")
+
+    c2 = hs["check2-worktree"]
+    lines.append(
+        f"  Check 2, working tree and worktrees: dirty={len(c2['dirty'])} "
+        f"stashes={len(c2['stashes'])} worktrees={len(c2['worktrees'])}"
+    )
+    lines.append("    dirty:")
+    lines.extend(render_capped(c2["dirty"]))
+    lines.append("    stashes:")
+    lines.extend(render_capped(c2["stashes"]))
+    lines.append("    worktrees:")
+    lines.extend(render_capped(c2["worktrees"]))
+
+    lines.append("  Check 3, release and repo hygiene:")
+    lines.extend(render_check3(hs["check3-release"]))
+
+    lines.append("  Check 4, documentation drift:")
+    lines.extend(render_check4(hs["check4-doc-drift"]))
+
+    lines.append("  Check 5, session-log store:")
+    lines.extend(render_check5(hs["check5-log-store"]))
+
+    lines.append("")
+    lines.append("Verification")
+    lines.extend(render_verification(data["verification"]))
+
+    lines.append("")
+    fetch = data["fetch"]
+    if not fetch.get("ran"):
+        lines.append("fetch: not run (pass --fetch in deep and final modes for current remote state)")
+    else:
+        suffix = f" ({fetch['stderr']})" if fetch.get("stderr") else ""
+        lines.append(f"fetch: ran, ok={fetch.get('ok')}{suffix}")
+
     return "\n".join(lines)
 
 
@@ -720,6 +904,16 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Write-side guard, mirroring the read-side fix above: a commit message,
+    # file path, or Waiting on You item can carry a character this
+    # interpreter's default stdout/stderr encoding cannot represent (the
+    # same cp1252-on-Windows gap `run_git()` now guards on the read side).
+    # Without this, printing such a character raises UnicodeEncodeError
+    # instead of reporting the fact it was trying to print.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
     parser = build_parser()
     args = parser.parse_args(argv)
 

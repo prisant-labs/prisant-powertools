@@ -21,6 +21,10 @@ from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parent / "derive-log-facts.py"
 
+# Never the literal glyph in a committed file: U+274C, the cross mark, built
+# from chr() so this file does not itself become a canary for anything.
+CROSS = chr(0x274C)
+
 results: list[tuple[str, bool, str]] = []
 
 
@@ -30,14 +34,24 @@ def check(name: str, ok: bool, detail: str = "") -> None:
     print(f"{'PASS' if ok else 'FAIL'}  {name}{suffix}")
 
 
-def run_script(*args: str, timeout: float = 20, no_session_env: bool = False) -> subprocess.CompletedProcess:
+def run_script(
+    *args: str,
+    timeout: float = 20,
+    no_session_env: bool = False,
+    python_args: list[str] | None = None,
+    extra_env: dict | None = None,
+) -> subprocess.CompletedProcess:
     env = os.environ.copy()
     if no_session_env:
         env.pop("CLAUDE_CODE_SESSION_ID", None)
+    if extra_env:
+        env.update(extra_env)
     return subprocess.run(
-        [sys.executable, str(SCRIPT), *args],
+        [sys.executable, *(python_args or []), str(SCRIPT), *args],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=timeout,
         env=env,
     )
@@ -58,7 +72,8 @@ def git(repo: Path, *args: str, check_rc: bool = True, extra_env: dict | None = 
     if extra_env:
         env.update(extra_env)
     proc = subprocess.run(
-        ["git", *args], cwd=str(repo), capture_output=True, text=True, env=env
+        ["git", *args], cwd=str(repo), capture_output=True, text=True,
+        encoding="utf-8", errors="replace", env=env,
     )
     if check_rc and proc.returncode != 0:
         raise RuntimeError(f"git {args} failed in {repo}: {proc.stderr}")
@@ -567,6 +582,257 @@ def main() -> int:
         after_refs = git(clone, "for-each-ref", "--format=%(refname)", "refs/remotes/origin").stdout
         check("no-prune: the stale remote-tracking ref survives --fetch with fetch.prune=true",
               "refs/remotes/origin/feature-to-prune" in after_refs, after_refs)
+
+        # ------------------------------------------------------------------
+        # 10. Encoding robustness: a non-UTF-8-safe byte in git's own output
+        #     must not crash run_git()'s reader thread. A real wrap crashed
+        #     on this exact shape: an unpushed commit's message containing a
+        #     non-ASCII character, read by check1_remote()'s
+        #     `git log --oneline @{u}..HEAD`, decoded with no explicit
+        #     encoding, which on this machine (and under a forced non-UTF-8
+        #     mode, which is what makes this reproducible on any machine)
+        #     is not UTF-8 and cannot represent some of the bytes the UTF-8
+        #     commit message actually contains.
+        #     -X utf8=0, PYTHONUTF8=0 and LC_ALL=C force Python out of UTF-8
+        #     mode (PEP 540) so the test does not depend on ambient locale
+        #     state; without the explicit -X flag, PEP 538's locale
+        #     coercion can turn UTF-8 mode back on under a C locale and hide
+        #     the bug.
+        # ------------------------------------------------------------------
+        enc_bare = root / "encoding-upstream.git"
+        git(root, "init", "--bare", str(enc_bare))
+        enc_repo = init_repo(root / "encoding-repo")
+        git(enc_repo, "remote", "add", "origin", str(enc_bare))
+        git(enc_repo, "push", "-u", "origin", "main")
+        (enc_repo / "b.txt").write_text("world\n", encoding="utf-8")
+        git(enc_repo, "add", "b.txt")
+        git(enc_repo, "commit", "-m", f"fix: broke things {CROSS} badly")
+
+        proc = run_script(
+            str(enc_repo), "--json",
+            python_args=["-X", "utf8=0"],
+            extra_env={"PYTHONUTF8": "0", "LC_ALL": "C"},
+        )
+        check(
+            "a non-ASCII byte in an unpushed commit message does not crash the reader thread",
+            proc.returncode == 0,
+            (proc.stdout[-300:] + "\n" + proc.stderr[-1200:]),
+        )
+        if proc.returncode == 0:
+            data = json.loads(proc.stdout)
+            unpushed = data["hygiene-sweep"]["check1-remote"].get("unpushed-commits", [])
+            check(
+                "the unpushed commit's message, cross mark included, is captured intact",
+                any(CROSS in line for line in unpushed),
+                str(unpushed),
+            )
+
+        # ------------------------------------------------------------------
+        # 11. check4_doc_drift: a change to only HISTORY.md is not drift.
+        #     Found on this repository's own main branch: plab-resolve-open-
+        #     items changed only its HISTORY.md since v0.8.0 (verified with
+        #     `git diff --name-only v0.8.0..HEAD -- skills/`), and the old
+        #     `git diff --quiet <tag> HEAD -- <skill>` call, with no pathspec
+        #     exclusion, counted that alone as "this skill changed" and then
+        #     flagged a stale metadata.version that was never actually stale.
+        #     An anti-canary alongside it proves the fix does not blind the
+        #     check entirely: a real SKILL.md change with a genuinely unbumped
+        #     version must still be flagged.
+        # ------------------------------------------------------------------
+        drift_project = root / "drift-project"
+        drift_repo = init_repo(drift_project)
+
+        def write_skill(name: str, version: str, history_rows: str) -> Path:
+            skill_dir = drift_repo / "skills" / name
+            skill_dir.mkdir(parents=True)
+            (skill_dir / "SKILL.md").write_text(
+                f'---\nmetadata:\n  version: "{version}"\n---\n# {name}\n', encoding="utf-8"
+            )
+            (skill_dir / "HISTORY.md").write_text(
+                f"| Version |\n|---|\n{history_rows}", encoding="utf-8"
+            )
+            return skill_dir
+
+        history_only_dir = write_skill("plab-history-only", "1.0.0", "| 1.0.0 |\n")
+        real_drift_dir = write_skill("plab-real-drift", "1.0.0", "| 1.0.0 |\n")
+        git(drift_repo, "add", "skills")
+        git(drift_repo, "commit", "-m", "add two skills")
+        git(drift_repo, "tag", "v1.0.0")
+
+        # plab-history-only: HISTORY.md gets an annotation, SKILL.md untouched.
+        (history_only_dir / "HISTORY.md").write_text(
+            "| Version |\n|---|\n| 1.0.0 |\n| (clarifying note added later) |\n", encoding="utf-8"
+        )
+        # plab-real-drift: SKILL.md itself changes, version left unbumped on purpose.
+        (real_drift_dir / "SKILL.md").write_text(
+            '---\nmetadata:\n  version: "1.0.0"\n---\n# plab-real-drift\n\nNew content.\n',
+            encoding="utf-8",
+        )
+        git(drift_repo, "add", "skills")
+        git(drift_repo, "commit", "-m", "annotate history; also change real-drift content")
+
+        proc = run_script(str(drift_repo), "--json")
+        data = json.loads(proc.stdout)
+        findings = data["hygiene-sweep"]["check4-doc-drift"]["findings"]
+        check(
+            "a HISTORY.md-only change is not reported as drift",
+            not any("plab-history-only" in f for f in findings),
+            str(findings),
+        )
+        check(
+            "a genuine SKILL.md change with an unbumped version is still flagged",
+            any("plab-real-drift" in f and "metadata.version" in f for f in findings),
+            str(findings),
+        )
+
+        # ------------------------------------------------------------------
+        # 12. The text digest (no --json) stays under the 20,000-character
+        #     budget on a large fixture, and every field the Frontmatter
+        #     block and the five sweep checks need is still present. Two
+        #     real wraps that ran long (14 and 15 assistant calls, against a
+        #     12-call baseline) both redirected --json to a file and sliced
+        #     it, because the old text mode (6,384 chars on this repo) left
+        #     out the Waiting on You text, the gitignored paths, and the
+        #     verification facts, and rendered check3/check4 as Python dict
+        #     reprs. This fixture is deliberately larger than any real wrap
+        #     on this repository: every list capable of growing without
+        #     bound (unpushed commits, remote branches, dirty files,
+        #     gitignored-modified paths) is pushed past the render cap of
+        #     40, to prove the cap engages with an explicit "N more, see
+        #     --json" line rather than either silently dropping entries or
+        #     letting the digest grow unbounded. The two fields a log
+        #     copies verbatim (files-changed, waiting-on-you) are pushed
+        #     past that same cap too, to prove they are never capped even
+        #     once a list is larger than every other list here allows.
+        #     Ground truth for every assertion comes from this fixture's
+        #     own --json run, never a hand-derived count, so a change to
+        #     how any one list is built cannot desync the test from what
+        #     the script actually produced.
+        # ------------------------------------------------------------------
+        stress_repo = init_repo(root / "stress-project")
+        stress_bare = root / "stress-upstream.git"
+        git(root, "init", "--bare", str(stress_bare))
+        git(stress_repo, "remote", "add", "origin", str(stress_bare))
+        git(stress_repo, "push", "-u", "origin", "main")
+        git(stress_repo, "tag", "v1.0.0")
+
+        (stress_repo / ".gitignore").write_text("ignored_dir/\n", encoding="utf-8")
+        WAITING_COUNT = 45
+        log_body = "---\ndate: 2020-01-01T08:00:00-07:00\ntype: session-log\n---\n\n# Session log\n\n## Waiting on You\n\n"
+        for i in range(WAITING_COUNT):
+            log_body += (
+                f"- **Decide on stress item {i:03d}.** Blocked since 2026-0{1 + i % 9}-1{i % 9}, "
+                f"needs a maintainer call on fixture scenario number {i:03d} before the wrap can close.\n"
+            )
+        log_dir = stress_repo / "_local" / "_session-logs"
+        log_dir.mkdir(parents=True)
+        (log_dir / "2020-01-01_08-00_claude_stress-fixture.md").write_text(log_body, encoding="utf-8")
+        # -f: this machine's global excludesfile also ignores _local/ (the
+        # convention this repo's own AGENTS.md documents), so a plain `git
+        # add` on the fixture's own _local path is refused as already
+        # ignored; the fixture needs this file tracked, not ignored.
+        git(stress_repo, "add", "-f", ".gitignore", "_local")
+
+        STRESS_FILES = 80
+        for i in range(STRESS_FILES):
+            (stress_repo / f"stress_file_{i:03d}.txt").write_text(f"stress file {i}\n", encoding="utf-8")
+        git(stress_repo, "add", *(f"stress_file_{i:03d}.txt" for i in range(STRESS_FILES)))
+        git(stress_repo, "commit", "-m", "add gitignore, the fixture log, and 80 stress files")
+        git(stress_repo, "push", "origin", "main")
+
+        UNPUSHED = 45  # local-only commits ahead of the pushed upstream, never pushed by this fixture
+        for i in range(UNPUSHED):
+            (stress_repo / "counter.txt").write_text(f"{i}\n", encoding="utf-8")
+            git(stress_repo, "add", "counter.txt")
+            git(stress_repo, "commit", "-m", f"chore: bump counter to {i:03d}")
+
+        FAKE_BRANCHES = 44  # + the real refs/remotes/origin/main the push above created = 45 total
+        for i in range(FAKE_BRANCHES):
+            git(stress_repo, "update-ref", f"refs/remotes/origin/branch-{i:03d}", "HEAD")
+
+        UNTRACKED = 45
+        for i in range(UNTRACKED):
+            (stress_repo / f"untracked_{i:03d}.txt").write_text(f"untracked {i}\n", encoding="utf-8")
+
+        IGNORED = 45
+        ignored_dir = stress_repo / "ignored_dir"
+        ignored_dir.mkdir()
+        for i in range(IGNORED):
+            (ignored_dir / f"ignored_{i:03d}.txt").write_text(f"ignored {i}\n", encoding="utf-8")
+
+        proc_json = run_script(str(stress_repo), "--base", "v1.0.0", "--json", no_session_env=True, timeout=30)
+        check("stress fixture: --json run exits 0", proc_json.returncode == 0, proc_json.stderr)
+        data = json.loads(proc_json.stdout)
+
+        proc_text = run_script(str(stress_repo), "--base", "v1.0.0", no_session_env=True, timeout=30)
+        check("stress fixture: text run exits 0", proc_text.returncode == 0, proc_text.stderr)
+        text = proc_text.stdout
+
+        check(
+            f"text digest stays under the 20,000-character budget ({len(text)} chars)",
+            len(text) < 20000,
+            f"{len(text)} chars",
+        )
+
+        files = data["files-changed"]
+        check(f"fixture exceeds the render cap on files-changed ({len(files)} > 40)", len(files) > 40)
+        missing_files = [f for f in files if f not in text]
+        check(
+            "every files-changed entry appears verbatim in the text digest, never capped",
+            not missing_files,
+            f"missing {len(missing_files)}: {missing_files[:5]}",
+        )
+        check(
+            "files-changed count header matches the --json count",
+            f"files-changed ({len(files)})" in text,
+            f"files-changed ({len(files)}) not found",
+        )
+
+        woy = data["evidence-gathering"]["waiting-on-you"]
+        check(f"fixture exceeds the render cap on waiting-on-you ({len(woy)} > 40)", len(woy) > 40)
+        missing_woy = [w for w in woy if w not in text]
+        check(
+            "every waiting-on-you item appears verbatim with its date, never capped",
+            not missing_woy,
+            f"missing {len(missing_woy)}: {missing_woy[:2]}",
+        )
+
+        unpushed = data["hygiene-sweep"]["check1-remote"]["unpushed-commits"]
+        remote_branches = data["hygiene-sweep"]["check1-remote"]["remote-branches"]
+        dirty = data["hygiene-sweep"]["check2-worktree"]["dirty"]
+        gitignored = data["evidence-gathering"]["gitignored-modified"]["files"]
+        for label, items in (
+            ("unpushed-commits", unpushed),
+            ("remote-branches", remote_branches),
+            ("dirty", dirty),
+            ("gitignored-modified", gitignored),
+        ):
+            check(f"fixture exceeds the render cap on {label} ({len(items)} > 40)", len(items) > 40)
+            overflow = len(items) - 40
+            check(
+                f"{label} is capped with an explicit overflow line ('{overflow} more, see --json')",
+                f"... {overflow} more, see --json" in text,
+                text,
+            )
+
+        for needed in (
+            "Frontmatter fields", "Evidence Gathering", "Hygiene Sweep", "Verification",
+            "Check 1, remote reconciliation", "Check 2, working tree", "Check 3, release and repo hygiene",
+            "Check 4, documentation drift", "Check 5, session-log store",
+            "commit-range:", "latest-tag:", "fetch:",
+        ):
+            check(f"text digest includes the {needed!r} section", needed in text, text[:2000])
+
+        check(
+            "check3's version-vs-tag renders as readable prose, not a Python dict repr",
+            "version-vs-tag: latest-tag=" in text,
+            text,
+        )
+        check(
+            "no raw Python dict repr leaks into the text digest",
+            "{'" not in text,
+            text,
+        )
 
     failed = [name for name, ok, _ in results if not ok]
     print()

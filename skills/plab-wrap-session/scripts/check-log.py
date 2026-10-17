@@ -389,6 +389,17 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Write-side encoding guard: a Waiting on You item or path citation this
+    # script echoes verbatim in a finding line can carry a character the
+    # interpreter's default stdout/stderr encoding cannot represent (the same
+    # cp1252-on-Windows gap derive-log-facts.py's run_git() guards on the read
+    # side). Without this, printing such a character raises UnicodeEncodeError
+    # and the whole result is reported BROKEN, which is misleading: the log
+    # may be perfectly clean, it is only the terminal that cannot show it.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
     args = build_parser().parse_args(argv)
     log_path = Path(args.log_path)
 

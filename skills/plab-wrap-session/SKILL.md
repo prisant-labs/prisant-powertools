@@ -35,14 +35,14 @@ Valid downgrade objections mirror the verbosity rule: "trivial typo fix, clean t
 
 ## Evidence Gathering
 
-Before writing the log, run `derive-log-facts.py` once and use its output for everything it returns. Add `--fetch` in deep and final modes, where the Pre-Wrap Hygiene Sweep's remote facts need to be current; omit it in quick and blocked modes.
+Before writing the log, run `derive-log-facts.py` once and read the tool result once. Add `--fetch` in deep and final modes, where the Pre-Wrap Hygiene Sweep's remote facts need to be current; omit it in quick and blocked modes.
 
 ```bash
-python <skill-dir>/scripts/derive-log-facts.py <project-root> --json            # quick, blocked
-python <skill-dir>/scripts/derive-log-facts.py <project-root> --fetch --json    # deep, final
+python <skill-dir>/scripts/derive-log-facts.py <project-root>            # quick, blocked
+python <skill-dir>/scripts/derive-log-facts.py <project-root> --fetch    # deep, final
 ```
 
-`<skill-dir>` resolves relative to this skill's own installed directory, the same rule `organize-logs.py` already follows (see Organize Mode below); `<project-root>` is the project being wrapped, never assumed to share a root with the skill. The output supplies: the frontmatter's environment fields and `files-changed`; `commit-range` and `latest-tag`; the newest existing log's filename and its Waiting on You list verbatim, each item keeping its original `(blocked since YYYY-MM-DD)` date; any qualifying capture-lite records' count and earliest-to-latest `head`; and the gitignored-file inventory that starts step 4 below. Run no further git or shell command to obtain any fact this output already contains. Without `--base`, the script defaults to the commit on `HEAD` just before this session started; if the agent knows where the session's own work actually began and the default `base` the output reports looks wrong, pass `--base <ref>` explicitly instead of trusting the default.
+`<skill-dir>` resolves relative to this skill's own installed directory, the same rule `organize-logs.py` already follows (see Organize Mode below); `<project-root>` is the project being wrapped, never assumed to share a root with the skill. The default (no `--json`) output is a complete wrap digest, held under a 20,000-character budget: every frontmatter field, every Waiting on You item verbatim with its original date (never capped, however many there are), every gitignored-modified path, every hygiene-sweep check's facts and findings as readable text, and the verification facts, each as one compact line. Read this tool result once, directly from the call; two real wraps that ran long (14 and 15 assistant calls against a 12-call baseline) both redirected `--json` to a file and sliced it in `python -c` calls because the old text mode left those fields out, so this is the behavior those re-reads existed to work around. Do not redirect the output to a file or re-read it in pieces. Do not re-run `git` for remote state (ahead/behind, unpushed commits, remote branches, tags) or re-inventory `_local/` for gitignored-modified files: both are already in this output, and re-deriving them was exactly what made those two wraps long. `--json` still exists, for a script or another program that parses this output; the agent reads the text form. Without `--base`, the script defaults to the commit on `HEAD` just before this session started; if the agent knows where the session's own work actually began and the default `base` the output reports looks wrong, pass `--base <ref>` explicitly instead of trusting the default.
 
 From that output, the agent still:
 

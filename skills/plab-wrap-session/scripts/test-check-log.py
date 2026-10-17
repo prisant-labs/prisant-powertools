@@ -16,6 +16,7 @@ without ever touching the shipped detectors.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -26,6 +27,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 SCRIPT = SCRIPT_DIR / "check-log.py"
 
 EM_DASH = chr(0x2014)
+CROSS = chr(0x274C)  # never the literal glyph in a committed file
 
 results: list[tuple[str, bool, str]] = []
 
@@ -503,6 +505,43 @@ def main() -> int:
             and data["checks"]["waiting-on-you"]["state"] == "clean",
             str(data["checks"]),
         )
+
+        # ------------------------------------------------------------------
+        # 22. Encoding robustness, write side: an undated Waiting on You item
+        #     containing a non-ASCII character is echoed verbatim in its
+        #     finding line. The TEXT output path (render_text's print() calls,
+        #     not --json: json.dumps() defaults to ensure_ascii=True, which
+        #     already escapes the character to a plain-ASCII "❌" and
+        #     never exercises this bug) must not crash writing that line to a
+        #     pipe whose encoding cannot represent the character. -X utf8=0,
+        #     PYTHONUTF8=0 and LC_ALL=C force Python out of UTF-8 mode so the
+        #     test does not depend on ambient locale state.
+        # ------------------------------------------------------------------
+        repo22 = root / "repo22"
+        repo22.mkdir()
+        undated_nonascii_waiting = f"## Waiting on You\n\n- **Approve the thing {CROSS}.** No date marker here, on purpose.\n\n"
+        log22 = write(
+            repo22 / "log.md",
+            build_log(make_frontmatter(), DECISIONS_TWO, undated_nonascii_waiting, LEDGER_OK, WYMNR_OK),
+        )
+        enc_env = os.environ.copy()
+        enc_env["PYTHONUTF8"] = "0"
+        enc_env["LC_ALL"] = "C"
+        proc = subprocess.run(
+            [sys.executable, "-X", "utf8=0", str(SCRIPT), str(log22), "--repo-root", str(repo22), "--mode", "deep"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", env=enc_env, timeout=30,
+        )
+        check(
+            "a non-ASCII character in a flagged Waiting on You item does not crash on write",
+            proc.returncode == 1,
+            proc.stdout[-300:] + "\n" + proc.stderr[-1200:],
+        )
+        if proc.returncode == 1:
+            check(
+                "the finding still names the undated item, cross mark included",
+                CROSS in proc.stdout,
+                proc.stdout,
+            )
 
     failed = [name for name, ok, _ in results if not ok]
     print()
