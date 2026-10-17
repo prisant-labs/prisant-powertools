@@ -12,8 +12,8 @@ description: "Document and close agentic coding sessions with structured session
 argument-hint: "[mode: quick|final|deep|blocked] [--organize]"
 license: MIT
 metadata:
-  version: "1.8.0"
-  updated: 2026-10-15
+  version: "1.8.1"
+  updated: 2026-10-16
 ---
 
 # Wrap Session
@@ -35,14 +35,14 @@ Valid downgrade objections mirror the verbosity rule: "trivial typo fix, clean t
 
 ## Evidence Gathering
 
-Before writing the log, run `derive-log-facts.py` once and use its output for everything it returns. Add `--fetch` in deep and final modes, where the Pre-Wrap Hygiene Sweep's remote facts need to be current; omit it in quick and blocked modes.
+Before writing the log, run `derive-log-facts.py` once and read the tool result once. Add `--fetch` in deep and final modes, where the Pre-Wrap Hygiene Sweep's remote facts need to be current; omit it in quick and blocked modes.
 
 ```bash
-python <skill-dir>/scripts/derive-log-facts.py <project-root> --json            # quick, blocked
-python <skill-dir>/scripts/derive-log-facts.py <project-root> --fetch --json    # deep, final
+python <skill-dir>/scripts/derive-log-facts.py <project-root>            # quick, blocked
+python <skill-dir>/scripts/derive-log-facts.py <project-root> --fetch    # deep, final
 ```
 
-`<skill-dir>` resolves relative to this skill's own installed directory, the same rule `organize-logs.py` already follows (see Organize Mode below); `<project-root>` is the project being wrapped, never assumed to share a root with the skill. The output supplies: the frontmatter's environment fields and `files-changed`; `commit-range` and `latest-tag`; the newest existing log's filename and its Waiting on You list verbatim, each item keeping its original `(blocked since YYYY-MM-DD)` date; any qualifying capture-lite records' count and earliest-to-latest `head`; and the gitignored-file inventory that starts step 4 below. Run no further git or shell command to obtain any fact this output already contains. Without `--base`, the script defaults to the commit on `HEAD` just before this session started; if the agent knows where the session's own work actually began and the default `base` the output reports looks wrong, pass `--base <ref>` explicitly instead of trusting the default.
+`<skill-dir>` resolves relative to this skill's own installed directory, the same rule `organize-logs.py` already follows (see Organize Mode below); `<project-root>` is the project being wrapped, never assumed to share a root with the skill. The default (no `--json`) output is a complete wrap digest: every frontmatter field, every Waiting on You item verbatim with its original date (never capped, however many there are), every gitignored-modified path, every hygiene-sweep check's facts and findings as readable text, and the verification facts, each as one compact line (collapsed to one line, capped at 200 characters, showing the 20 newest). Every list that can grow without bound (unpushed commits, commits behind, remote branches, dirty files, gitignored-modified paths) is capped at 10 with an explicit "N more, see `--json`" line, which keeps the digest well under a 20,000-character budget for a typical session. `files-changed` and the Waiting on You list are never capped, because the frontmatter block and the carried-forward log copy both verbatim; on a session that changes several hundred files, that one field alone can exceed the budget (confirmed on `pm-skills`: 239 files, 23,350 characters for that field by itself). That is still the right call to read once in full, not a sign to redirect it to a file or slice it, because files-changed is exactly the field the frontmatter needs complete and verbatim. Read this tool result once, directly from the call; two real wraps that ran long (14 and 15 assistant calls against a 12-call baseline) both redirected `--json` to a file and sliced it in `python -c` calls because the old text mode left those fields out, so this is the behavior those re-reads existed to work around. Do not redirect the output to a file or re-read it in pieces. Do not re-run `git` for remote state (ahead/behind, unpushed commits, remote branches, tags) or re-inventory `_local/` for gitignored-modified files: both are already in this output, and re-deriving them was exactly what made those two wraps long. `--json` still exists, for a script or another program that parses this output; the agent reads the text form. Without `--base`, the script defaults to the commit on `HEAD` just before this session started; if the agent knows where the session's own work actually began and the default `base` the output reports looks wrong, pass `--base <ref>` explicitly instead of trusting the default.
 
 From that output, the agent still:
 
@@ -62,7 +62,7 @@ Run before writing the log; record findings in the log's Hygiene Sweep section. 
 
 1. **Remote reconciliation**, from the script's `check1-remote` field: local branch vs its remote (ahead/behind), unpushed commits, remote branches, remote tags vs local. Parallel work from another checkout must surface at wrap time, not at the next release.
 2. **Working-tree and worktree state**, from `check2-worktree`: uncommitted changes, untracked files, stashes, worktrees.
-3. **Release and repo hygiene**, from `check3-release`: un-released CHANGELOG content and version fields vs the latest tag. The repo's own CI validation scripts, when it has them, are still run locally as a separate step and their results reported (never fixed silently) - the script has no way to know what those scripts are.
+3. **Release and repo hygiene**, from `check3-release`: un-released CHANGELOG content and version fields vs the latest tag. The repo's own validation scripts, when it has them, are still run locally as a separate step, chained into one shell command (for example `python scripts/a.py && python scripts/b.py && ...`) so their combined output is read in one call rather than one call per script, and their results reported (never fixed silently) - the script has no way to know what those scripts are.
 4. **Documentation drift, both directions.** User or technical docs this session made stale: version tables, skill or feature READMEs vs source of truth, missing CHANGELOG entries. And the inverse, which is the direction that actually shipped here: a skill whose content changed since the last tag while its `metadata.version` did not move, or whose `HISTORY.md` has no entry for the version it currently ships, from the script's `check4-doc-drift` field. `references/hygiene-sweep.md` carries the recipe the field mirrors.
 5. **Session-log store**, from `check5-log-store`: logs from closed months sitting unfiled in `_local/_session-logs/`. Offer to file them into `YYYY-MM/` folders (see Organize Mode below). Read-only until confirmed; silent when there is nothing to file.
 
@@ -123,7 +123,7 @@ Store layout, and why discovery reads both the flat store and month folders, are
 
 ### Frontmatter
 
-Include all Tier 1 fields. Add Tier 2 and Tier 3 when available. See `references/frontmatter-schema.md` for the complete field reference. `date`, `type`, `machine`, `repo`, `branch`, and `files-changed` come from the Evidence Gathering run of `derive-log-facts.py` above, as do the two fields it adds, `commit-range` and `latest-tag`. `decisions-count` comes from the same script's `--count-decisions` mode, run once the Decisions Made section below is drafted - never a model estimate. Everything else in this block is agent-filled.
+Include all Tier 1 fields. Add Tier 2 and Tier 3 when available. See `references/frontmatter-schema.md` for the complete field reference. `date`, `type`, `machine`, `repo`, `branch`, and `files-changed` come from the Evidence Gathering run of `derive-log-facts.py` above, as do the two fields it adds, `commit-range` and `latest-tag`. `decisions-count` is filled in by the agent once the Decisions Made section below is drafted, by counting that section's own entries, and `check-log.py` (see Log Self-Check below) then verifies the count mechanically before the wrap is done - it never ships as an uncorrected estimate. Everything else in this block is agent-filled.
 
 ```yaml
 ---
@@ -141,7 +141,7 @@ model: # full model name, e.g. "claude opus 4.6"
 model-settings: # key settings, e.g. "extended-thinking max"
 agent: # claude-code|codex-cli|other
 status: # completed|interrupted|blocked
-decisions-count: # integer - from derive-log-facts.py --count-decisions, run after the Decisions Made section is drafted
+decisions-count: # integer - agent counts the drafted Decisions Made section's own entries; check-log.py verifies the count mechanically
 skills-used: # skills invoked this session, e.g. [plab-guide, plab-ai-review] - feeds usage telemetry
 resumed-from: # written only by an in-session /plab-continue-session resume; never back-filled from memory. See references/frontmatter-schema.md.
 ---
@@ -209,22 +209,28 @@ The only path to a lighter continuation prompt is for the agent to state a **spe
 
 This default is a comply-or-explain rule: produce the verbose form, or produce a lighter form *with the explicit reason recorded*.
 
-## Log Self-Check (before writing)
+## Log Self-Check (one call, after writing)
 
-Verify the drafted log passes every gate; fix failures before writing, never after:
+Write the log, then run one command, and fix every finding before the wrap counts as done:
 
-The two detector-backed gates below report one of three states: clean, findings, or broken. Each proves its detector against a canary corpus before scanning, and a gate reporting broken blocks the log exactly as findings does. A check that cannot prove it still works is not a passing check.
+```bash
+python <skill-dir>/scripts/check-log.py <log-path> --repo-root <project-root> --mode <quick|final|deep|blocked>
+```
+
+It runs every mechanical gate this section used to list as separate steps, in one invocation: the two detector-backed gates below exactly as they are, each still proving its own canary corpus before it scans and still reporting clean, findings, or broken, where a broken detector makes this script's own result broken too; `decisions-count` compared against a mechanical count of the Decisions Made section (skipped, not failed, in quick and blocked modes, whose templates carry neither); summary length (120 characters or fewer); Tier 1 frontmatter completeness, including `machine:`; the Waiting on You rules (section present, "Nothing pending." counting, no item beginning "Optional", every item carrying `(blocked since YYYY-MM-DD)`); and, in deep mode only, that the Uncertainty Ledger and What You May Not Realize sections are present ("Nothing material." and "Nothing surfaced." counting; absence does not). Exit 0 clean, 1 findings, 2 broken; `--json` for machine-readable output. Re-run after every fix until clean.
+
+The two detector scripts it calls:
+
+- Path citations resolve, detector-backed, three-state: `python scripts/path-citation-check.py <log-path> --repo-root <project-root>`. Checks only citations that assert a location: one containing a path separator must exist as written, and a backtick-wrapped citation with no separator is resolved against the repo root and passes silently if it does not resolve. A bare word with a file extension and neither signal is prose, not a path claim, and is not checked. Separator-bearing tokens that are URIs, drive-letter absolute paths, globs, template placeholders, single-segment slash commands, or extensionless are excluded too; see the script docstring for the canary corpus. Exit 0 clean, 1 findings, 2 broken; broken blocks exactly like findings
+- No em-dash or en-dash characters anywhere in the log, detector-backed, three-state: `python scripts/dash-check.py <log-path>`. Exit 0 clean, 1 findings, 2 broken; broken blocks exactly like findings
+
+The following gates are judgment calls no script can make and stay the agent's own check:
 
 - Continuation prompt is self-contained (readable by a cold-start session with zero other context)
-- Waiting on You section present in every mode ("Nothing pending." counts; absence does not)
-- Summary is 120 characters or fewer
-- Frontmatter Tier 1 complete, including `machine:`
-- Path citations resolve, detector-backed, three-state: run `python scripts/path-citation-check.py <log-path> --repo-root <project-root>`. Checks only citations that assert a location: one containing a path separator must exist as written, and a backtick-wrapped citation with no separator is resolved against the repo root and passes silently if it does not resolve. A bare word with a file extension and neither signal is prose, not a path claim, and is not checked. Separator-bearing tokens that are URIs, drive-letter absolute paths, globs, template placeholders, single-segment slash commands, or extensionless are excluded too; see the script docstring for the canary corpus. Exit 0 clean, 1 findings, 2 broken; broken blocks exactly like findings
-- No em-dash or en-dash characters anywhere in the log, detector-backed, three-state: run `python scripts/dash-check.py <log-path>`. Exit 0 clean, 1 findings, 2 broken; broken blocks exactly like findings
-- No Waiting on You item begins with "Optional"
-- Every Waiting on You item carries a `(blocked since YYYY-MM-DD)` marker
-- Deep mode only: Uncertainty Ledger present ("Nothing material." counts; absence does not), sorted by blast radius descending, every row naming what would settle it, and every High-confidence/High-blast-radius row marked `(!)`
-- Deep mode only: What You May Not Realize present ("Nothing surfaced." counts; absence does not), and **every item cites a source from this session**. An item with no source is dropped, never softened into a hedge
+- Deep mode only: the Uncertainty Ledger is sorted by blast radius descending, every row names what would settle it, and every High-confidence/High-blast-radius row is marked `(!)`
+- Deep mode only: **every What You May Not Realize item cites a source from this session**. An item with no source is dropped, never softened into a hedge
+
+`derive-log-facts.py --count-decisions` still works, for compatibility with anything that calls it directly, but `check-log.py` is the one command a wrap now runs.
 
 ## Surrounding Document Updates
 

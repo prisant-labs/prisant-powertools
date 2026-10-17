@@ -94,7 +94,28 @@ MAX_VERIFICATION_FACTS = 50
 # ---------------------------------------------------------------------------
 
 def run_git(args: list[str], cwd: Path, timeout: float = 10) -> tuple[int, str, str]:
-    """Run one git command. Never raises; a failure is a (returncode, "", stderr)."""
+    """Run one git command. Never raises; a failure is a (returncode, "", stderr).
+
+    `encoding="utf-8", errors="replace"` is explicit, not left to `text=True`'s
+    default. Without it, `subprocess.run` decodes git's UTF-8 stdout and stderr
+    using `locale.getpreferredencoding(False)`, which is cp1252 on this
+    maintainer's Windows machine. A commit message (or any other git output)
+    containing a UTF-8 byte sequence that lands on one of cp1252's undefined
+    code points (0x81, 0x8D, 0x8F, 0x90, 0x9D) crashes the background reader
+    thread `capture_output=True` spawns with an uncaught `UnicodeDecodeError`,
+    which this function's own `try/except` around `subprocess.run` cannot
+    catch, because the exception happens in a different thread. Reproduced
+    live during a real wrap on 2026-10-16.
+
+    Returns `.rstrip()`, not `.strip()`. `git status --short` (and porcelain
+    formats generally) use a fixed two-column status code where a literal
+    leading space is meaningful (" M" is an unstaged modify, "M " is a
+    staged one); `.strip()` trims leading whitespace from the START of the
+    whole string, which silently ate that first line's leading space and
+    turned " M path" into "M path". Found live in a real wrap's digest on
+    `pm-skills` on 2026-10-16, where the first dirty entry rendered
+    misaligned. `.rstrip()` only trims the trailing newline every git
+    command leaves, never a character git itself put first."""
     env = os.environ.copy()
     env["GIT_OPTIONAL_LOCKS"] = "0"
     env["GIT_TERMINAL_PROMPT"] = "0"
@@ -104,10 +125,12 @@ def run_git(args: list[str], cwd: Path, timeout: float = 10) -> tuple[int, str, 
             cwd=str(cwd),
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             env=env,
         )
-        return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
+        return proc.returncode, proc.stdout.rstrip(), proc.stderr.rstrip()
     except subprocess.TimeoutExpired:
         return 124, "", "timed out"
     except FileNotFoundError:
@@ -266,11 +289,21 @@ def extract_section(text: str, heading: str) -> list[str] | None:
     return body
 
 
+WAITING_ON_YOU_ITEM_RE = re.compile(r"^[-*]\s")
+
+
 def extract_waiting_on_you(text: str) -> list[str] | None:
+    """Top-level list items only, '-' or '*', with no leading indentation,
+    the same rule DECISION_LIST_ITEM_RE already applies to Decisions Made. A
+    real log ('Approve starting the layout effort', 2026-10-07) carried six
+    indented sub-bullets explaining what one item would do; matching on
+    `line.lstrip().startswith("- ")` counted each of those as its own,
+    undated Waiting on You item, which this script then handed to the next
+    wrap's carry-forward as six separate stale items."""
     body = extract_section(text, "Waiting on You")
     if body is None:
         return None
-    return [line.rstrip() for line in body if line.lstrip().startswith("- ")]
+    return [line.rstrip() for line in body if WAITING_ON_YOU_ITEM_RE.match(line)]
 
 
 def count_decisions(text: str) -> int:
@@ -490,9 +523,21 @@ def check4_doc_drift(project_root: Path) -> dict:
         rc, _, _ = run_git(["cat-file", "-e", f"{last_tag}:{skill_path}/SKILL.md"], project_root)
         if rc != 0:
             continue  # new since last tag
-        rc, _, _ = run_git(["diff", "--quiet", last_tag, "HEAD", "--", skill_path], project_root)
+        # HISTORY.md is excluded from this diff via pathspec, matching the
+        # CI gate scripts/skill-drift-check.py (PR #41). Without the
+        # exclusion, a skill whose only change since the tag is its own
+        # HISTORY.md (adding a row, annotating one, fixing a typo) counted
+        # as "this skill changed", which then compared an unmoved
+        # metadata.version against itself and flagged a false "changed but
+        # not bumped" finding. Found live on this repository's own main
+        # branch: plab-resolve-open-items changed only HISTORY.md since
+        # v0.8.0 and was flagged on 2026-10-16.
+        rc, _, _ = run_git(
+            ["diff", "--quiet", last_tag, "HEAD", "--", skill_path, f":(exclude){skill_path}/HISTORY.md"],
+            project_root,
+        )
         if rc == 0:
-            continue  # unchanged since last tag
+            continue  # unchanged since last tag, HISTORY.md aside
         head_version = None
         if skill_file.is_file():
             m = re.search(r'version:\s*"([^"]+)"', skill_file.read_text(encoding="utf-8", errors="replace"))
@@ -521,6 +566,8 @@ def check5_log_store(project_root: Path) -> dict:
             [sys.executable, str(organize_script), str(store), "--json"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=15,
         )
     except subprocess.TimeoutExpired:
@@ -618,9 +665,19 @@ def derive_verification(transcript_path: Path | None, unavailable_reason: str | 
                         # deque(maxlen=...) keeps the most recent entries: the ones
                         # that matter at wrap time are the latest commands, not the
                         # earliest, which are stale by the time a long session wraps.
+                        # Kept full and untruncated here, even though a Bash
+                        # command can embed many newlines (a heredoc, a
+                        # multi-line script) and run to thousands of
+                        # characters: `--json` is this field's one promise of
+                        # completeness, and the text digest's 200-character,
+                        # single-line cap (render_verification) is a display
+                        # choice, not a data-loss one. Truncating here instead
+                        # would apply to both and silently cost --json the
+                        # same information the text digest only ever meant to
+                        # summarize.
                         facts.append(
                             {
-                                "command": command[:200],
+                                "command": command,
                                 "is_error": bool(block.get("is_error", False)),
                             }
                         )
@@ -641,39 +698,233 @@ def derive_verification(transcript_path: Path | None, unavailable_reason: str | 
 # ---------------------------------------------------------------------------
 # Rendering
 # ---------------------------------------------------------------------------
+# The text digest (the default, non-`--json` output) is read once and used
+# for everything it returns, per SKILL.md's Evidence Gathering: no
+# redirecting it to a file, no re-reading it in pieces, no re-running git or
+# re-inventorying `_local/` for anything it already reports. Two real wraps
+# measured on 2026-10-16 (14 and 15 assistant API calls, against a baseline
+# of 12 and AC-11's target of 6) redirected this output to a file and sliced
+# it with `python -c`, because the old text digest was a set of one-line
+# counts with no actual content, and the full `--json` output is 34,320
+# characters on this repository, over Claude Code's shell output limit.
+# This digest instead carries everything the Frontmatter block and the five
+# sweep checks need, readably rendered rather than as Python dict reprs, and
+# holds the whole thing under a stated budget by capping only the lists a
+# session log does not copy verbatim.
+#
+# NEVER CAPPED: `files-changed` (copied verbatim into the frontmatter's own
+# `files-changed:` list) and `waiting-on-you` (copied verbatim into the new
+# log's carried-forward Waiting on You section, with its dates). Capping
+# either would hand the agent a frontmatter field or a blocked-since date
+# that silently disagrees with the real log.
+#
+# CAPPED, WITH AN EXPLICIT OVERFLOW LINE: everything else that can grow
+# without bound on a large or long-lived repository (gitignored-modified
+# paths, check1's commit and branch lists, check2's dirty/stash/worktree
+# lists, check4's findings, check5's planned moves, verification facts).
+# None of these are copied into the log verbatim; the agent reads them,
+# judges, and writes its own prose or proposal. A capped list never goes
+# silent about what it dropped: `TEXT_LIST_CAP` lines, then one line naming
+# how many more exist and that `--json` has them all.
+#
+# `TEXT_LIST_CAP` was 40 in this digest's first build, measured only against
+# this repository's own fixtures. A live run against two real repositories
+# on 2026-10-16 (prisant-utilities itself, 20,304 characters; `pm-skills`,
+# 43,782) blew the 20,000-character budget: `pm-skills` carries 45 dirty
+# entries at roughly 100 characters each, and a verification fact can embed
+# a multi-line Bash command (one ran 19 lines and 3,782 characters, because
+# the facts kept their embedded newlines). 40 lines of real-repository-sized
+# text is not the same size as 40 lines of this repository's short fixture
+# paths; the cap is now 10, and verification facts get their own stricter
+# rule below rather than sharing this one.
+
+TEXT_LIST_CAP = 10
+
+
+def render_verbatim(items: list[str]) -> list[str]:
+    """One line per item, never capped. Only for a field the log itself
+    reproduces verbatim (files-changed, waiting-on-you)."""
+    if not items:
+        return ["    (none)"]
+    return [f"    {item}" for item in items]
+
+
+def render_capped(items: list[str], cap: int = TEXT_LIST_CAP) -> list[str]:
+    """One line per item, capped at `cap` with an explicit overflow line.
+    For every list the log does not reproduce verbatim."""
+    if not items:
+        return ["    (none)"]
+    lines = [f"    {item}" for item in items[:cap]]
+    if len(items) > cap:
+        lines.append(f"    ... {len(items) - cap} more, see --json")
+    return lines
+
+
+def render_check3(check3: dict) -> list[str]:
+    lines = []
+    changelog = check3.get("changelog", {})
+    if not changelog.get("available"):
+        lines.append(f"    CHANGELOG.md: {changelog.get('reason', 'unavailable')}")
+    elif not changelog.get("has-unreleased-heading"):
+        lines.append("    CHANGELOG.md: no [Unreleased] heading")
+    else:
+        lines.append(f"    CHANGELOG.md: [Unreleased] heading present, has-content={changelog.get('has-content')}")
+    vvt = check3.get("version-vs-tag", {})
+    lines.append(
+        f"    version-vs-tag: latest-tag={vvt.get('latest-tag')} "
+        f"library.json={vvt.get('library-json-version')} consistent={vvt.get('consistent')}"
+    )
+    return lines
+
+
+def render_check4(check4: dict) -> list[str]:
+    if not check4.get("available"):
+        return [f"    {check4.get('reason', 'unavailable')}"]
+    findings = check4.get("findings", [])
+    lines = [f"    last-tag: {check4.get('last-tag')}"]
+    lines.append(f"    findings ({len(findings)}):")
+    lines.extend(render_capped(findings))
+    return lines
+
+
+def render_check5(check5: dict) -> list[str]:
+    if not check5.get("available"):
+        return [f"    {check5.get('reason', 'unavailable')}"]
+    plan = check5.get("plan", {})
+    moves = plan.get("moves", [])
+    collisions = plan.get("collisions", [])
+    lines = [f"    moves: {len(moves)}  collisions: {len(collisions)}"]
+    if moves:
+        lines.append("    would file:")
+        lines.extend(render_capped([f"{m['from']} -> {m['to']}" for m in moves]))
+    if collisions:
+        lines.append("    collisions (anomaly, not a routine proposal):")
+        lines.extend(render_capped(collisions))
+    return lines
+
+
+# A verification fact's `command` is kept full and untruncated in the data
+# (see derive_verification), because a Bash tool call can be a heredoc or a
+# multi-line script running to thousands of characters with dozens of
+# embedded newlines. The text digest cannot afford that per fact: one such
+# fact alone cost 3,782 characters and printed as 19 lines on a real
+# `pm-skills` run on 2026-10-16, which is what blew that digest's budget.
+# So the text digest, and only the text digest, collapses every fact to one
+# line and caps it at FACT_CHAR_CAP characters, and shows at most the
+# FACT_WINDOW newest (facts are appended oldest-first, so the newest are the
+# tail of the list); `--json` still carries every fact the script kept, up
+# to the 50 `MAX_VERIFICATION_FACTS` allows, full text and embedded newlines
+# included.
+FACT_CHAR_CAP = 200
+FACT_WINDOW = 20
+
+
+def render_verification(ver: dict) -> list[str]:
+    if not ver.get("available"):
+        return [f"    available: false ({ver.get('reason')})"]
+    lines = [f"    available: true (source: {ver.get('source')})"]
+    facts = ver.get("facts", [])
+    newest = facts[-FACT_WINDOW:] if len(facts) > FACT_WINDOW else facts
+    older_not_shown = len(facts) - len(newest)
+    lines.append(
+        f"    facts ({len(facts)} total, {ver.get('facts-are')}, showing the {len(newest)} newest, "
+        f"one line each collapsed and capped at {FACT_CHAR_CAP} chars, "
+        f"{ver.get('fact-overflow', 0)} dropped beyond the 50 the script itself keeps):"
+    )
+    fact_lines = []
+    for f in newest:
+        collapsed = " ".join(f.get("command", "").split())
+        if len(collapsed) > FACT_CHAR_CAP:
+            collapsed = collapsed[: FACT_CHAR_CAP - 15] + " ...(truncated)"
+        fact_lines.append(f"[{'ERROR' if f.get('is_error') else 'ok'}] {collapsed}")
+    lines.extend(render_verbatim(fact_lines))
+    if older_not_shown:
+        lines.append(f"    ... {older_not_shown} more, see --json")
+    lines.append(f"    malformed-lines: {ver.get('malformed-lines', 0)}")
+    return lines
+
 
 def render(data: dict) -> str:
-    lines = [
-        f"machine: {data['machine']}",
-        f"repo: {data['repo']}",
-        f"branch: {data['branch']}",
-        f"date: {data['date']}",
-        f"base: {data['base']['ref']} (resolution: {data['base']['resolution']})",
-        f"commit-range: {data['commit-range']}",
-        f"latest-tag: {data['latest-tag']}",
-        f"files-changed ({len(data['files-changed'])}):",
-    ]
-    lines.extend(f"  {f}" for f in data["files-changed"])
+    lines = ["Frontmatter fields"]
+    lines.append(f"  machine: {data['machine']}")
+    lines.append(f"  repo: {data['repo']}")
+    lines.append(f"  branch: {data['branch']}")
+    lines.append(f"  date: {data['date']}")
+    lines.append(f"  commit-range: {data['commit-range']}")
+    lines.append(f"  latest-tag: {data['latest-tag']}")
+    lines.append(f"  base: {data['base']['ref']} (resolution: {data['base']['resolution']})")
+    files = data["files-changed"]
+    lines.append(f"  files-changed ({len(files)}), copy verbatim into the frontmatter, never capped:")
+    lines.extend(render_verbatim(files))
+
     eg = data["evidence-gathering"]
-    lines.append(f"newest-log: {eg['newest-log']}")
-    cap = eg["capture-records"]
-    if cap.get("available"):
-        lines.append(f"capture-records: {cap['count']} ({cap['earliest-head']} .. {cap['latest-head']})")
+    lines.append("")
+    lines.append("Evidence Gathering")
+    lines.append(f"  newest-log: {eg['newest-log']}")
+    cap_rec = eg["capture-records"]
+    if cap_rec.get("available"):
+        lines.append(f"  capture-records: {cap_rec['count']} ({cap_rec['earliest-head']} .. {cap_rec['latest-head']})")
     else:
-        lines.append(f"capture-records: none ({cap.get('reason')})")
+        lines.append(f"  capture-records: none ({cap_rec.get('reason')})")
     woy = eg["waiting-on-you"]
-    lines.append(f"waiting-on-you: {len(woy) if woy is not None else 'n/a'} item(s)")
+    if woy is None:
+        lines.append("  waiting-on-you: n/a (no existing log to carry forward)")
+    else:
+        lines.append(f"  waiting-on-you ({len(woy)} item(s), verbatim with their dates, never capped):")
+        lines.extend(render_verbatim(woy))
     gm = eg["gitignored-modified"]
-    lines.append(f"gitignored-modified: {len(gm['files'])} file(s), {gm['overflow']} overflow")
+    lines.append(
+        f"  gitignored-modified ({len(gm['files'])} file(s), "
+        f"{gm['overflow']} beyond the script's own --gitignored-limit):"
+    )
+    lines.extend(render_capped(gm["files"]))
+
     hs = data["hygiene-sweep"]
-    lines.append(f"check1-remote: ahead={hs['check1-remote'].get('ahead')} behind={hs['check1-remote'].get('behind')}")
-    lines.append(f"check2-worktree: dirty={len(hs['check2-worktree']['dirty'])} stashes={len(hs['check2-worktree']['stashes'])}")
-    lines.append(f"check3-release: {hs['check3-release']}")
-    lines.append(f"check4-doc-drift: {hs['check4-doc-drift']}")
-    lines.append(f"check5-log-store: {hs['check5-log-store'].get('available')}")
-    ver = data["verification"]
-    lines.append(f"verification: available={ver['available']} ({ver.get('reason', ver.get('source'))})")
-    lines.append(f"fetch: {data['fetch']}")
+    lines.append("")
+    lines.append("Hygiene Sweep")
+    c1 = hs["check1-remote"]
+    lines.append(f"  Check 1, remote reconciliation ({c1.get('as-of')}): ahead={c1.get('ahead')} behind={c1.get('behind')}")
+    lines.append(f"    unpushed-commits ({len(c1.get('unpushed-commits', []))}):")
+    lines.extend(render_capped(c1.get("unpushed-commits", [])))
+    lines.append(f"    commits-behind ({len(c1.get('commits-behind', []))}):")
+    lines.extend(render_capped(c1.get("commits-behind", [])))
+    lines.append(f"    remote-branches ({len(c1.get('remote-branches', []))}):")
+    lines.extend(render_capped(c1.get("remote-branches", [])))
+    lines.append(f"    tags-tail: {', '.join(c1.get('tags-tail', [])) or '(none)'}")
+
+    c2 = hs["check2-worktree"]
+    lines.append(
+        f"  Check 2, working tree and worktrees: dirty={len(c2['dirty'])} "
+        f"stashes={len(c2['stashes'])} worktrees={len(c2['worktrees'])}"
+    )
+    lines.append("    dirty:")
+    lines.extend(render_capped(c2["dirty"]))
+    lines.append("    stashes:")
+    lines.extend(render_capped(c2["stashes"]))
+    lines.append("    worktrees:")
+    lines.extend(render_capped(c2["worktrees"]))
+
+    lines.append("  Check 3, release and repo hygiene:")
+    lines.extend(render_check3(hs["check3-release"]))
+
+    lines.append("  Check 4, documentation drift:")
+    lines.extend(render_check4(hs["check4-doc-drift"]))
+
+    lines.append("  Check 5, session-log store:")
+    lines.extend(render_check5(hs["check5-log-store"]))
+
+    lines.append("")
+    lines.append("Verification")
+    lines.extend(render_verification(data["verification"]))
+
+    lines.append("")
+    fetch = data["fetch"]
+    if not fetch.get("ran"):
+        lines.append("fetch: not run (pass --fetch in deep and final modes for current remote state)")
+    else:
+        suffix = f" ({fetch['stderr']})" if fetch.get("stderr") else ""
+        lines.append(f"fetch: ran, ok={fetch.get('ok')}{suffix}")
+
     return "\n".join(lines)
 
 
@@ -689,7 +940,11 @@ def build_parser() -> argparse.ArgumentParser:
         "project_root", nargs="?", default=".",
         help="project to inspect (default: current directory); never the plugin's own install location",
     )
-    parser.add_argument("--base", help="diff base ref (default: upstream, then latest tag, then none)")
+    parser.add_argument(
+        "--base",
+        help="diff base ref (default: the current session's start commit from its transcript, "
+        "then upstream, then latest tag, then none)",
+    )
     parser.add_argument(
         "--fetch", action="store_true",
         help="run 'git fetch --no-prune origin --tags' first; the script's only write path",
@@ -706,6 +961,16 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Write-side guard, mirroring the read-side fix above: a commit message,
+    # file path, or Waiting on You item can carry a character this
+    # interpreter's default stdout/stderr encoding cannot represent (the
+    # same cp1252-on-Windows gap `run_git()` now guards on the read side).
+    # Without this, printing such a character raises UnicodeEncodeError
+    # instead of reporting the fact it was trying to print.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
     parser = build_parser()
     args = parser.parse_args(argv)
 
