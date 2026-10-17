@@ -10,6 +10,8 @@ EXIT-CODE CONTRACT
 
 NEVER INTERPRET 2 AS CLEAN. See `scripts/check-dashes.py` and `skills/plab-wrap-session/scripts/path-citation-check.py` for the same contract applied to a repo-wide grep and a single-log scan; this script applies it to the relationships between the twenty spec/implementation-plan pairs and the five release plans that no single file's own frontmatter can see.
 
+Also see `scripts/skill-drift-check.py`, which carries the same contract applied to a different relationship (a skill's own folder against its content at the latest tag). That script does not read `docs/internal/release-plans/` at all, and this one reads only whether a tag exists (`git tag -l`), never a file's content at a past commit, so neither one's silence substitutes for the other's.
+
 Exit 1 means, and only means, that the detector proved itself and then found a real cross-file problem. No unexpected exception may ever surface as exit 1: `main()` wraps the whole run in a single top-level handler, so any exception this script did not specifically anticipate and convert to a sys.exit(2) of its own is still reported as BROKEN and still exits 2, never falls through to Python's default uncaught-exception behavior (which exits 1 and would be indistinguishable from a real finding).
 
 WHY THIS SCRIPT EXISTS, AND WHY IT IS NOT A JSON SCHEMA
@@ -30,9 +32,9 @@ Invariant 4 (released-but-unfulfilled) can only fire against tags that are actua
 
 WHY EACH INVARIANT'S FIXTURE IS BUILT IN ITS OWN tempfile.TemporaryDirectory()
 ---------------------------------------------------------------------------------
-`self_test()` below never touches this repository. Each of the nine invariants gets its own small, throwaway fixture tree containing exactly one seeded violation (a canary, which must be flagged) alongside at least one correctly-shaped sibling (an anti-canary, which must not be). That keeps this gate's trustworthiness independent of whatever `docs/internal/release-plans/` happens to look like on the machine it runs on, which is the same discipline `path-citation-check.py` documents under "The self-test never touches --repo-root." On top of the nine per-check fixtures, one more fixture drives the checks through `run_all_checks()` itself, the same top-level entry point the real run uses, seeded with one violation of every invariant at once, so a check silently missing from the shipped pipeline is caught even though each check function still passes its own isolated test. And the invariant-4 tag-availability gate is proved separately, as a pure decision function with no git and no filesystem, against all three of its branches (tags present, tags absent without the opt-in, tags absent with the opt-in).
+`self_test()` below never touches this repository. Each of the ten invariants gets its own small, throwaway fixture tree containing exactly one seeded violation (a canary, which must be flagged) alongside at least one correctly-shaped sibling (an anti-canary, which must not be). That keeps this gate's trustworthiness independent of whatever `docs/internal/release-plans/` happens to look like on the machine it runs on, which is the same discipline `path-citation-check.py` documents under "The self-test never touches --repo-root." On top of the ten per-check fixtures, one more fixture drives the checks through `run_all_checks()` itself, the same top-level entry point the real run uses, seeded with one violation of every invariant at once, so a check silently missing from the shipped pipeline is caught even though each check function still passes its own isolated test. The invariant-4/10 tag-availability gate is proved separately, as a pure decision function with no git and no filesystem, against all three of its branches (tags present, tags absent without the opt-in, tags absent with the opt-in); both invariants share one tag list and one gate, so one proof covers both. And invariant 10's dated baseline is proved both ways: a release plan named in it produces zero findings (the anti-canary), and the same release plan with its entry removed from the baseline produces a finding (the canary), by passing a smaller `baseline` dict directly to `check_released_but_prerelease_release_plans()` rather than mutating the module-level constant.
 
-THE NINE INVARIANTS
+THE TEN INVARIANTS
 ----------------------
   1. Supersession symmetry, both directions: if a document declares `superseded-by: X`, a document with `id: X` must exist and must declare `supersedes:` back naming this document's own id; if a document declares `supersedes: Y`, a document with `id: Y` must exist and must declare `superseded-by:` back naming this document's own id. Checked across specs, implementation plans, AND release plans, not just the first two: this is a field-to-field comparison, not a per-file-type rule, so a release plan carrying either field is checked exactly like a spec.
   2. No two release plans may declare the same `target-version`.
@@ -43,6 +45,7 @@ THE NINE INVARIANTS
   7. A release plan's `spec-count` and `plan-count` must equal the number of `spec.md` and `implementation-plan.md` files present in that release plan's effort folders, and its `includes` list must name exactly the effort ids whose folders are present there. "Effort folder" has exactly one definition in this script, used for both halves of this invariant and for invariant 6: an immediate subdirectory of the release plan's own folder, matching the `ID_slug` naming convention (`effort_dirs_of()`). Nothing deeper than that is counted, matching the documented convention that effort subfolders are peers of `plan.md`, not an arbitrarily deep tree.
   8. A spec's `ac-count` must equal the number of AC checklist lines in its body, outside fenced code blocks, counting either of two forms: `- [ ] AC-N: <text>` (17 of the 20 real specs in this repository use this form) or `- [ ] **AC-N** - <text>` (the other 3 real specs use this form, alongside `skills/plab-spec/references/spec-template.md` and its example specs, which document it as the generator's own output).
   9. A spec's `status` and its acceptance-criteria checkboxes must agree: a `fulfilled` spec must have every AC checkbox ticked, and a `draft` spec must have none ticked. `committed` and `superseded` are deliberately not checked, for a reason that is empirical rather than an oversight; see `check_ac_status_agreement()`. Invariants 8 and 9 read the same checkbox lines through the same regex and therefore cannot disagree about what an acceptance criterion is: 8 counts them, 9 reads their state.
+  10. A release plan whose `status` is still pre-release (`draft` or `in-progress`, per `docs/internal/schemas/release-plan.schema.json`'s status enum, which also allows `complete`) and whose `target-version` is already an existing git tag is a finding, unless it is named in the dated baseline below (`BASELINED_PRERELEASE_TAGGED_RELEASE_PLANS`). Baselined 2026-10-16: `plan_05_reconcile-at-resume` (target-version v0.6.0), `plan_06_derived-facts` (v0.7.0) and `plan_07_aggregation` (v0.8.0); v0.6.0, v0.7.0 and v0.8.0 each shipped other content than what these three plans describe. Retiring or renumbering these version-named plans is the deferred "plan half" of decision 21 in the maintainer's private decision register (versions are assigned only at ship time), which is the maintainer's call, not this gate's. The baseline is keyed on `(sequence, target-version)`, so a plan whose frontmatter later changes either field drops out of the baseline on its own and must be re-added deliberately if the deferral still applies; a plan removed from the baseline, or any release plan newly meeting this shape, is a finding. Checked like invariant 4: this invariant is only as trustworthy as the tag list it is checked against.
 
 WHAT THIS SCRIPT DELIBERATELY DOES NOT CHECK
 ------------------------------------------------
@@ -82,6 +85,25 @@ TERMINAL_SPEC_STATUSES = ("fulfilled", "superseded")
 AC_TICK_ALL_REQUIRED = ("fulfilled",)
 AC_TICK_NONE_ALLOWED = ("draft",)
 AC_TICK_UNCHECKED = ("committed", "superseded")
+
+# Invariant 10's two-way split of the release-plan status enum in
+# docs/internal/schemas/release-plan.schema.json: "draft" and "in-progress" are pre-release,
+# "complete" is the one terminal status and is never checked here.
+PRERELEASE_RELEASE_STATUSES = ("draft", "in-progress")
+
+# Dated baseline for invariant 10, added 2026-10-16. Each entry is a release plan already in a
+# pre-release status whose target-version is already tagged, deliberately NOT fixed by retiring or
+# renumbering the plan: that is the deferred "plan half" of decision 21 in the maintainer's private
+# decision register (versions are assigned only at ship time), which is the maintainer's call, not
+# this gate's. v0.6.0, v0.7.0 and v0.8.0 each shipped other content than what these three plans
+# describe. Keyed on (sequence, target-version), not on folder name: a plan whose frontmatter later
+# changes either field drops out of this baseline on its own, so continuing to defer it after that
+# requires a deliberate re-add rather than silently continuing to pass.
+BASELINED_PRERELEASE_TAGGED_RELEASE_PLANS = {
+    ("05", "v0.6.0"),  # plan_05_reconcile-at-resume
+    ("06", "v0.7.0"),  # plan_06_derived-facts
+    ("07", "v0.8.0"),  # plan_07_aggregation
+}
 
 
 class FrontmatterError(Exception):
@@ -424,6 +446,54 @@ def check_ac_status_agreement(specs):
     return findings
 
 
+def check_released_but_prerelease_release_plans(releases, tags, baseline=None):
+    """Invariant 10: a release plan whose target-version is already tagged must not still be
+    pre-release (PRERELEASE_RELEASE_STATUSES), unless it is named in the dated baseline. `baseline`
+    is an injectable parameter, defaulting to the module-level BASELINED_PRERELEASE_TAGGED_RELEASE_PLANS,
+    so the self-test can prove removing an entry makes the run fail without mutating module state."""
+    if baseline is None:
+        baseline = BASELINED_PRERELEASE_TAGGED_RELEASE_PLANS
+    findings = []
+    for r in releases:
+        target = r["fm"].get("target-version")
+        if not target or target not in tags:
+            continue
+        status = r["fm"].get("status")
+        if status not in PRERELEASE_RELEASE_STATUSES:
+            continue
+        seq = r["fm"].get("sequence")
+        if (seq, target) in baseline:
+            continue
+        findings.append(
+            "%s: status is %r but target-version %s is already tagged, and this release plan is "
+            "not in the dated baseline (decision 21 deferred, versions assigned at ship time)"
+            % (r["path"], status, target))
+    return findings
+
+
+def baselined_prerelease_release_plan_notes(releases, tags, baseline=None):
+    """Visible reporting for invariant 10's dated baseline, so a known violation is 'reported as
+    known', not simply absent from the findings list. For each release plan that currently matches
+    the pre-release-but-tagged shape AND is named in the baseline, returns a note string. A plan
+    whose status or target-version later changes so it no longer matches the shape produces no
+    note, so this never claims a plan is still a known violation once it has moved on."""
+    if baseline is None:
+        baseline = BASELINED_PRERELEASE_TAGGED_RELEASE_PLANS
+    notes = []
+    for r in releases:
+        target = r["fm"].get("target-version")
+        status = r["fm"].get("status")
+        seq = r["fm"].get("sequence")
+        if not target or target not in tags or status not in PRERELEASE_RELEASE_STATUSES:
+            continue
+        if (seq, target) in baseline:
+            notes.append(
+                "%s: status %r with already-tagged target-version %s is a known baselined "
+                "violation (decision 21 deferred, versions assigned at ship time)"
+                % (r["path"], status, target))
+    return notes
+
+
 def run_all_checks(repo_root, specs, plans, releases, tags):
     """The one top-level entry point both the real run and the wiring self-test (_self_test_wiring) drive. A check silently dropped from this list is a check that never runs in production; the wiring self-test exists specifically to catch that, by asserting every invariant is represented in the findings from a single fixture seeded with one violation of each."""
     findings = []
@@ -436,6 +506,7 @@ def run_all_checks(repo_root, specs, plans, releases, tags):
     findings += check_counts(repo_root, releases)
     findings += check_ac_count(specs)
     findings += check_ac_status_agreement(specs)
+    findings += check_released_but_prerelease_release_plans(releases, tags)
     return findings
 
 
@@ -851,6 +922,69 @@ def _self_test_ac_status_agreement(failures):
                              "got %r" % noise)
 
 
+def _self_test_prerelease_tagged_release_plan(failures):
+    """Invariant 10's canary, anti-canary, and the baseline-removal proof the task explicitly
+    requires: a release plan baselined at one call and NOT baselined at another, same data, so the
+    only thing that changes between a passing and a failing run is the baseline argument itself."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _write(os.path.join(_rp(tmp, "80"), "plan.md"), _release_doc("80", "v80.0.0", [], 0, 0))
+        _write(os.path.join(_rp(tmp, "81"), "plan.md"), _release_doc("81", "v81.0.0", [], 0, 0))
+        _write(os.path.join(_rp(tmp, "82"), "plan.md"), _release_doc("82", "v82.0.0", [], 0, 0))
+        complete_doc = _release_doc("83", "v83.0.0", [], 0, 0).replace("status: in-progress", "status: complete")
+        _write(os.path.join(_rp(tmp, "83"), "plan.md"), complete_doc)
+        _specs, _plans, releases, errors = discover(tmp)
+        if errors:
+            failures.append("check 10 fixture failed to parse: %r" % errors)
+            return
+
+        # v80.0.0 and v81.0.0 are tagged; v82.0.0 is not; v83.0.0 is tagged but its plan is complete.
+        tags = {"v80.0.0", "v81.0.0", "v83.0.0"}
+
+        # Canary: plan_80 is pre-release, tagged, and not in an empty baseline.
+        findings = check_released_but_prerelease_release_plans(releases, tags, baseline=set())
+        hits80 = [f for f in findings if "plan_80_test" in f.replace("\\", "/")]
+        hits81 = [f for f in findings if "plan_81_test" in f.replace("\\", "/")]
+        hits82 = [f for f in findings if "plan_82_test" in f.replace("\\", "/")]
+        hits83 = [f for f in findings if "plan_83_test" in f.replace("\\", "/")]
+        if not hits80:
+            failures.append("check 10 (prerelease tagged release plan): expected a finding for "
+                            "plan_80 against an empty baseline, got %r" % findings)
+        if not hits81:
+            failures.append("check 10: expected a finding for plan_81 against an empty baseline, "
+                            "got %r" % findings)
+        if hits82:
+            failures.append("check 10: plan_82's target-version is not tagged and must never be "
+                            "flagged (anti-canary), got %r" % findings)
+        if hits83:
+            failures.append("check 10: a 'complete' release plan must never be flagged even when "
+                            "its target-version is tagged (anti-canary), got %r" % findings)
+
+        # Anti-canary AND the baseline-removal proof: baselining plan_81 alone removes exactly its
+        # finding. Removing that same entry (the empty-baseline call above) is what turns it back
+        # on, so this one pair of calls proves both directions with the same fixture data.
+        findings_baselined = check_released_but_prerelease_release_plans(
+            releases, tags, baseline={("81", "v81.0.0")})
+        hits80b = [f for f in findings_baselined if "plan_80_test" in f.replace("\\", "/")]
+        hits81b = [f for f in findings_baselined if "plan_81_test" in f.replace("\\", "/")]
+        if not hits80b:
+            failures.append("check 10: plan_80 is still not in THIS baseline and must still be a "
+                            "finding, got %r" % findings_baselined)
+        if hits81b:
+            failures.append("check 10: plan_81 IS in this baseline and must produce zero findings; "
+                            "removing it from the baseline (proved above) is what turns this finding "
+                            "back on, got %r" % findings_baselined)
+
+        # The NOTE-printing helper only speaks for plans that both match the shape AND are
+        # baselined; plan_80 must never get a note from a baseline it is not in.
+        notes = baselined_prerelease_release_plan_notes(releases, tags, baseline={("81", "v81.0.0")})
+        note81 = [n for n in notes if "plan_81_test" in n.replace("\\", "/")]
+        note80 = [n for n in notes if "plan_80_test" in n.replace("\\", "/")]
+        if len(note81) != 1:
+            failures.append("check 10: expected exactly one baselined-known note for plan_81, got %r" % notes)
+        if note80:
+            failures.append("check 10: plan_80 is not in this baseline and must get no note, got %r" % note80)
+
+
 def _self_test_releases_in_symmetry_and_links(failures):
     # Defect E: release plans (plan.md) must not be silently exempted from invariants 1 and 5 the way
     # they used to be.
@@ -875,7 +1009,7 @@ def _self_test_releases_in_symmetry_and_links(failures):
 def _self_test_wiring(failures):
     """Defect B: drive the checks through run_all_checks(), the same top-level entry point the real run uses, over one fixture tree seeded with one violation of every invariant, and confirm every invariant is represented in the findings, by a message fragment unique to that check's own wording (not just a shared seeded id, which would let two checks alias each other and hide either one's removal). This proves the PIPELINE, not just the individual check functions: a check silently removed from run_all_checks() would leave its marker missing here even though that check's own dedicated self-test above still passes in isolation.
 
-    To prove this test actually does that (not just that it passes), comment out one line inside run_all_checks(), rerun this file with --self-test-only, and confirm self-test now fails naming the missing marker; then restore the line. Do this once per invariant (nine cycles) before trusting this fixture; see the delivery report for the transcript of all eight, and commit b6c173a's message for the ninth."""
+    To prove this test actually does that (not just that it passes), comment out one line inside run_all_checks(), rerun this file with --self-test-only, and confirm self-test now fails naming the missing marker; then restore the line. Do this once per invariant (ten cycles) before trusting this fixture; see the delivery report for the transcript of all eight, commit b6c173a's message for the ninth, and this effort's report for the tenth."""
     with tempfile.TemporaryDirectory() as tmp:
         # Every fixture must sit under docs/internal/release-plans/, the tree discover() actually
         # walks: a spec or plan written directly under tmp is invisible to it.
@@ -925,11 +1059,17 @@ def _self_test_wiring(failures):
         _write(os.path.join(base, "WI-09_statusdrift", "spec.md"),
                _spec_doc("WI-09", ac_lines=2, ac_ticked=1, status="fulfilled", linked_plan=None))
 
+        # Invariant 10: a release plan, still pre-release, whose target-version is already tagged
+        # and is not named in the default (module-level) baseline. Sequence '72' and target-version
+        # 'v72.0.0' are chosen to collide with nothing else in this fixture AND nothing in
+        # BASELINED_PRERELEASE_TAGGED_RELEASE_PLANS, since this call uses that module default.
+        _write(os.path.join(_rp(tmp, "72"), "plan.md"), _release_doc("72", "v72.0.0", [], 0, 0))
+
         specs, plans, releases, errors = discover(tmp)
         if errors:
             failures.append("wiring fixture failed to parse: %r" % errors)
             return
-        findings = run_all_checks(tmp, specs, plans, releases, tags={"v99.0.0"})
+        findings = run_all_checks(tmp, specs, plans, releases, tags={"v99.0.0", "v72.0.0"})
 
         markers = [
             ("1 (supersession symmetry)", "WA-02"),
@@ -941,6 +1081,7 @@ def _self_test_wiring(failures):
             ("7 (counts)", "WG-99"),
             ("8 (ac-count)", "WH-08"),
             ("9 (status/checkbox agreement)", "acceptance criteria are still unticked"),
+            ("10 (released-but-prerelease release plan)", "v72.0.0"),
         ]
         for label, marker in markers:
             if not any(marker in f for f in findings):
@@ -961,21 +1102,21 @@ def decide_tags_action(raw_tags, allow_no_tags):
 def _self_test_tag_gate(failures):
     action, tags = decide_tags_action(set(), allow_no_tags=False)
     if action != "broken":
-        failures.append("invariant-4 tag gate: empty tags without --allow-no-tags must decide 'broken', got %r" % (action,))
+        failures.append("invariant-4/10 tag gate: empty tags without --allow-no-tags must decide 'broken', got %r" % (action,))
 
     action, tags = decide_tags_action(set(), allow_no_tags=True)
     if action != "skip-note" or tags != set():
-        failures.append("invariant-4 tag gate: empty tags with --allow-no-tags must decide 'skip-note' with an "
+        failures.append("invariant-4/10 tag gate: empty tags with --allow-no-tags must decide 'skip-note' with an "
                          "empty tag set, got %r" % ((action, tags),))
 
     action, tags = decide_tags_action({"v1.0.0", "v2.0.0"}, allow_no_tags=False)
     if action != "ok" or tags != {"v1.0.0", "v2.0.0"}:
-        failures.append("invariant-4 tag gate: non-empty tags must decide 'ok' and pass the tags through "
+        failures.append("invariant-4/10 tag gate: non-empty tags must decide 'ok' and pass the tags through "
                          "unchanged, got %r" % ((action, tags),))
 
     action, tags = decide_tags_action({"v1.0.0"}, allow_no_tags=True)
     if action != "ok":
-        failures.append("invariant-4 tag gate: non-empty tags must decide 'ok' regardless of "
+        failures.append("invariant-4/10 tag gate: non-empty tags must decide 'ok' regardless of "
                          "--allow-no-tags, got %r" % (action,))
 
 
@@ -992,6 +1133,7 @@ def self_test():
     _self_test_counts(failures)
     _self_test_ac_count(failures)
     _self_test_ac_status_agreement(failures)
+    _self_test_prerelease_tagged_release_plan(failures)
     _self_test_releases_in_symmetry_and_links(failures)
     _self_test_wiring(failures)
     _self_test_tag_gate(failures)
@@ -1001,9 +1143,10 @@ def self_test():
             print("  " + f, file=sys.stderr)
         print("\nExiting 2. Do NOT read this as a clean tree.", file=sys.stderr)
         return False
-    print("gate self-test: PASS (9 invariants each proved against a canary and an anti-canary, the "
-          "run_all_checks() wiring proved against one fixture seeding all nine, and the invariant-4 "
-          "tag-availability gate proved on all three branches)")
+    print("gate self-test: PASS (10 invariants each proved against a canary and an anti-canary, "
+          "invariant 10's dated baseline additionally proved removable, the run_all_checks() wiring "
+          "proved against one fixture seeding all ten, and the invariant-4/10 tag-availability gate "
+          "proved on all three branches)")
     return True
 
 
@@ -1025,18 +1168,19 @@ def get_git_tags(repo_root, allow_no_tags):
     raw = _run_git_tag_list(repo_root)
     action, tags = decide_tags_action(raw, allow_no_tags)
     if action == "broken":
-        print("BROKEN: git tag -l returned no tags, so invariant 4 (released-but-unfulfilled) cannot "
-              "run and would silently prove nothing if this were allowed to continue as CLEAN.",
-              file=sys.stderr)
+        print("BROKEN: git tag -l returned no tags, so invariants 4 (released-but-unfulfilled) and "
+              "10 (released-but-prerelease release plan) cannot run and would silently prove "
+              "nothing if this were allowed to continue as CLEAN.", file=sys.stderr)
         print("  Likely cause: a shallow or tag-less checkout. actions/checkout does not fetch tags "
               "unless fetch-tags: true is set, or a later 'git fetch --tags' step runs.", file=sys.stderr)
         print("  Remedy: fetch tags before running this gate (fetch-tags: true on actions/checkout, or "
               "an explicit 'git fetch --tags'), OR if this repository has genuinely never tagged a "
-              "release, pass --allow-no-tags to skip invariant 4 explicitly.", file=sys.stderr)
+              "release, pass --allow-no-tags to skip invariants 4 and 10 explicitly.", file=sys.stderr)
         sys.exit(2)
     if action == "skip-note":
-        print("NOTE: git tag -l returned no tags; --allow-no-tags was passed, so invariant 4 "
-              "(released-but-unfulfilled) is skipped for this run.", file=sys.stderr)
+        print("NOTE: git tag -l returned no tags; --allow-no-tags was passed, so invariants 4 "
+              "(released-but-unfulfilled) and 10 (released-but-prerelease release plan) are "
+              "skipped for this run.", file=sys.stderr)
     return tags
 
 
@@ -1061,6 +1205,8 @@ def _run(args):
         sys.exit(2)
 
     tags = get_git_tags(repo_root, args.allow_no_tags)
+    for n in baselined_prerelease_release_plan_notes(releases, tags):
+        print("NOTE: " + n, file=sys.stderr)
     findings = run_all_checks(repo_root, specs, plans, releases, tags)
 
     if findings:
@@ -1083,11 +1229,12 @@ def main():
     ap.add_argument("--self-test-only", action="store_true",
                     help="prove the detector and exit, scanning nothing")
     ap.add_argument("--allow-no-tags", action="store_true",
-                    help="proceed when 'git tag -l' returns no tags at all, skipping invariant 4 "
-                         "(released-but-unfulfilled) with a visible note; only for a repository that "
-                         "has genuinely never tagged a release. Without this flag, an empty tag list "
-                         "is treated as BROKEN, not CLEAN, because a starved CI checkout (actions/"
-                         "checkout without fetch-tags: true) produces the same empty list.")
+                    help="proceed when 'git tag -l' returns no tags at all, skipping invariants 4 "
+                         "(released-but-unfulfilled) and 10 (released-but-prerelease release plan) "
+                         "with a visible note; only for a repository that has genuinely never "
+                         "tagged a release. Without this flag, an empty tag list is treated as "
+                         "BROKEN, not CLEAN, because a starved CI checkout (actions/checkout "
+                         "without fetch-tags: true) produces the same empty list.")
     args = ap.parse_args()
 
     try:
