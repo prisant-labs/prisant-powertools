@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 1.8.1 | 2026-10-16 | unreleased | fixed | `scripts/check-log.py` collapses the whole Log Self-Check into one post-write call, `frontmatter-schema.md` catches up with the two fields 1.8.0 added, and the hygiene sweep's own-validation-scripts step chains into one command. |
+| 1.8.1 | 2026-10-16 | unreleased | fixed | `scripts/check-log.py` collapses the whole Log Self-Check into one post-write call, `extract_waiting_on_you()` stops counting an indented sub-bullet as its own item, `frontmatter-schema.md` catches up with the two fields 1.8.0 added, and the hygiene sweep's own-validation-scripts step chains into one command. |
 | 1.8.0 | 2026-10-15 | v0.8.0 | added | `derive-log-facts.py` derives frontmatter facts, the Evidence Gathering inputs, and the hygiene sweep's detection results from git and the environment, in place of model recall and one-at-a-time commands. |
 | 1.7.0 | 2026-09-13 | v0.5.4 | added | Deep-mode logs carry an Uncertainty Ledger and a What You May Not Realize section. |
 | 1.6.2 | 2026-08-28 | v0.5.2 | fixed | Path-citation gate: three false-positive classes removed, a line-anchor shape brought into scope, and the proof corpus grown from 11 entries to 40. |
@@ -19,6 +19,8 @@
 **Fixed: `references/frontmatter-schema.md` never caught up with 1.8.0's two new fields.** `commit-range` and `latest-tag` joined Tier 1 in `SKILL.md`'s own frontmatter block when 1.8.0 shipped, but the schema reference, the one document meant to be the complete field-by-field specification, still listed only the original seven. Both fields are now documented in Tier 1, with the same non-collision note `derive-log-facts.py`'s docstring already carries.
 
 **Fixed: the hygiene sweep's Check 3 ran the repository's own validation scripts one call per script.** `SKILL.md` now says to chain them into one shell command and read the combined output, the same step-reduction principle 1.8.0 already applied to Evidence Gathering and the other four checks.
+
+**Fixed: a 1.8.0 carry-forward defect, an indented sub-bullet counted as its own Waiting on You item.** `extract_waiting_on_you()` matched any line whose stripped text started with `- `, so a top-level item's own indented sub-bullets, prose elaborating on what the item would do, were extracted as separate items. Found on a real log where one item, "Approve starting the layout effort", carried six such sub-bullets: the carry-forward handed all six to the next wrap as undated items, and `check-log.py` flagged each one for missing its `(blocked since YYYY-MM-DD)` marker. The fix requires a top-level list item, `-` or `*`, with no leading indentation, the same rule `count_decisions()` already applies to Decisions Made. `check-log.py`'s `normalize_waiting_item()` now strips a leading `* ` bullet the same way it already stripped `- `. Proven with a failing-then-passing fixture in both `test-derive-log-facts.py` (the carry-forward) and `test-check-log.py` (the gate).
 
 **Fixed: `derive-log-facts.py --help` described `--base`'s default as "upstream, then latest tag, then none", which was the pre-1.8.0 D7 decision.** The shipped code tries the current session's transcript-derived start commit first (spec D7's revision, same day as the first build), and the help text had never been updated to say so.
 

@@ -17,10 +17,10 @@ All fields are auto-derivable from the environment.
 | `branch` | String | `git branch --show-current` | `main` |
 | `summary` | String (≤120 chars) | Agent generates from session context | `"Deployed strategy-brief skill and CI pipeline"` |
 | `files-changed` | List of paths | `git diff --name-only` | `["skills/plab-strategy-brief/SKILL.md"]` |
-| `commit-range` | String | `derive-log-facts.py`; the `base..HEAD` short-SHA range it diffed | `a1b2c3d..e4f5g6h` |
+| `commit-range` | String | `derive-log-facts.py`; the `base..HEAD` short-SHA range it diffed | `a1b2c3d..e4f5a6b` |
 | `latest-tag` | String or null | `derive-log-facts.py`; nearest reachable tag via `git describe --tags --abbrev=0` - distinct from the Tier 3 `tags:` topic-keyword field below | `v0.6.0` |
 
-Added in 1.8.0 (W-02, derived log facts). Both come from the same `derive-log-facts.py` run as the other seven Tier 1 fields; neither collides with the existing Tier 3 `commit-sha` (a single SHA) or `tags` (topic keywords) fields.
+Added in 1.8.0 (W-02, derived log facts). Both come from the same `derive-log-facts.py` run as the other six script-derived Tier 1 fields (`date`, `type`, `machine`, `repo`, `branch`, `files-changed`); `summary` is the one Tier 1 field the agent writes. Neither new field collides with the existing Tier 3 `commit-sha` (a single SHA) or `tags` (topic keywords) fields.
 
 ## Tier 2: High Value (When Available)
 

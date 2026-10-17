@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`plab-wrap-session` 1.8.1: an indented sub-bullet under a Waiting on You item was counted as its own item** (W-02 follow-up, derived log facts). `derive-log-facts.py`'s `extract_waiting_on_you()` matched any line whose stripped text started with `- `, so a top-level item's own indented sub-bullets, prose elaborating on what the item would do, were extracted as separate, undated items and handed straight to the next wrap's carry-forward. Found on a real log where one item carried six such sub-bullets. Now requires a top-level list item, `-` or `*`, with no leading indentation, the same rule `count_decisions()` already applies to Decisions Made; `check-log.py`'s Waiting on You gate inherits the fix.
+
 ### Changed
 
 - **`plab-wrap-session` 1.8.1: the Log Self-Check becomes one call instead of several** (W-02, derived log facts). `scripts/check-log.py` runs the two existing canary-proven detectors (`path-citation-check.py`, `dash-check.py`) exactly as they are, plus a mechanical decisions-count comparison, summary length, Tier 1 frontmatter completeness, and the Waiting on You rules, and in deep mode the Uncertainty Ledger and What You May Not Realize presence checks, all in one invocation run after the log is written. `references/frontmatter-schema.md` now documents the two fields 1.8.0 added, `commit-range` and `latest-tag`. The hygiene sweep's own-validation-scripts step now chains into one shell command instead of one call per script, and `derive-log-facts.py --help` now describes the `--base` default the shipped code actually uses.

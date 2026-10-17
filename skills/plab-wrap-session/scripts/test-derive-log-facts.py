@@ -288,6 +288,34 @@ def main() -> int:
               and "(blocked since 2026-09-15)" in woy[1],
               str(woy))
 
+        # 4b. An indented sub-bullet under a top-level item is not its own item
+        # (found on the real 2026-10-07 log: "Approve starting the layout
+        # effort" carried 6 indented sub-bullets explaining what it would do,
+        # and all 6 were being counted as separate, undated Waiting on You
+        # items). Top-level only, no leading indentation, matching
+        # count_decisions()'s own rule, '-' or '*'.
+        subbullet_log = (
+            "---\ndate: 2026-10-07T15:56:00-07:00\ntype: session-log\n---\n\n"
+            "# Session log\n\n"
+            "## Waiting on You\n\n"
+            "- **Approve starting the layout effort** (blocked since 2026-10-07). It would:\n"
+            "  - unify the ADR criteria in one place;\n"
+            "  - write ADR-0001 for decision 21.\n"
+            "- **Removed since the 18:04 log** (no date marker, top-level, still flagged).\n"
+        )
+        subbullet_project = root / "subbullet-project"
+        subbullet_project.mkdir()
+        make_log(subbullet_project / "_local" / "_session-logs", "2026-10-07_15-56_claude_x.md", subbullet_log)
+        init_repo(subbullet_project)
+        proc = run_script(str(subbullet_project), "--json")
+        data = json.loads(proc.stdout)
+        woy2 = data["evidence-gathering"]["waiting-on-you"]
+        check(
+            "waiting-on-you excludes indented sub-bullets: 2 top-level items, not 4",
+            woy2 is not None and len(woy2) == 2,
+            str(woy2),
+        )
+
         # ------------------------------------------------------------------
         # 5. Log-store discovery: flat, YYYY-MM, legacy; newest wins by filename
         # ------------------------------------------------------------------

@@ -266,11 +266,21 @@ def extract_section(text: str, heading: str) -> list[str] | None:
     return body
 
 
+WAITING_ON_YOU_ITEM_RE = re.compile(r"^[-*]\s")
+
+
 def extract_waiting_on_you(text: str) -> list[str] | None:
+    """Top-level list items only, '-' or '*', with no leading indentation,
+    the same rule DECISION_LIST_ITEM_RE already applies to Decisions Made. A
+    real log ('Approve starting the layout effort', 2026-10-07) carried six
+    indented sub-bullets explaining what one item would do; matching on
+    `line.lstrip().startswith("- ")` counted each of those as its own,
+    undated Waiting on You item, which this script then handed to the next
+    wrap's carry-forward as six separate stale items."""
     body = extract_section(text, "Waiting on You")
     if body is None:
         return None
-    return [line.rstrip() for line in body if line.lstrip().startswith("- ")]
+    return [line.rstrip() for line in body if WAITING_ON_YOU_ITEM_RE.match(line)]
 
 
 def count_decisions(text: str) -> int:

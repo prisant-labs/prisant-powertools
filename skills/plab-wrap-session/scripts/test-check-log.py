@@ -365,6 +365,33 @@ def main() -> int:
         check("'Nothing pending.' is clean", data["checks"]["waiting-on-you"]["state"] == "clean", str(data["checks"]["waiting-on-you"]))
 
         # ------------------------------------------------------------------
+        # 14b. An indented sub-bullet under a dated top-level item is not its
+        # own item (found on the real 2026-10-07 log; see derive-log-facts.py's
+        # extract_waiting_on_you()). A dated top-level item carrying indented
+        # sub-bullets must stay clean, not generate one undated finding per
+        # sub-bullet.
+        # ------------------------------------------------------------------
+        repo14b = root / "repo14b"
+        repo14b.mkdir()
+        waiting_with_subbullets = (
+            "## Waiting on You\n\n"
+            "- **Approve the thing** (blocked since 2026-10-07). It would:\n"
+            "  - unify the criteria in one place;\n"
+            "  - write the follow-up doc.\n\n"
+        )
+        log14b = write(
+            repo14b / "log.md",
+            build_log(make_frontmatter(), DECISIONS_TWO, waiting_with_subbullets, LEDGER_OK, WYMNR_OK),
+        )
+        proc = run_check(log14b, repo14b, mode="deep")
+        data = json.loads(proc.stdout)
+        check(
+            "indented sub-bullets under a dated top-level item are not flagged as undated items",
+            data["checks"]["waiting-on-you"]["state"] == "clean",
+            str(data["checks"]["waiting-on-you"]),
+        )
+
+        # ------------------------------------------------------------------
         # 15/16. Deep mode: Uncertainty Ledger missing, then present-but-empty.
         # ------------------------------------------------------------------
         repo15 = root / "repo15"

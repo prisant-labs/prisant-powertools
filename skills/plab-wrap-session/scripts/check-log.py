@@ -265,10 +265,10 @@ def check_tier1_frontmatter(frontmatter: str) -> dict:
 
 
 def normalize_waiting_item(line: str) -> str:
-    """Strip the leading bullet and any markdown emphasis, so a bold or
-    italic 'Optional' is caught the same as a plain one."""
+    """Strip the leading bullet ('- ' or '* ') and any markdown emphasis, so
+    a bold or italic 'Optional' is caught the same as a plain one."""
     text = line.lstrip()
-    if text.startswith("- "):
+    if text.startswith("- ") or text.startswith("* "):
         text = text[2:]
     return text.lstrip("*_ ")
 
