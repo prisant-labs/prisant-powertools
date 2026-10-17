@@ -79,14 +79,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # fetch-depth: 0 is load-bearing, not a default worth trimming. The
-      # cross-file gate's released-but-unfulfilled invariant compares each
-      # spec's target-release against `git tag -l`. A default checkout fetches
-      # NO tags, so that invariant would have nothing to compare against and
-      # would pass vacuously on every run while looking healthy. The gate now
-      # refuses to run at all against an empty tag list, so a shallow checkout
-      # here fails loudly rather than silently certifying a tree it never
-      # checked. Adversarial review found exactly this, with the maintainer's
-      # own historical defect seeded and the gate still reporting CLEAN.
+      # cross-file gate's released-but-unfulfilled (invariant 4) and
+      # released-but-prerelease-release-plan (invariant 10) checks each
+      # compare a document's version field against `git tag -l`, and the
+      # skill-drift gate below needs the single latest tag (`git describe
+      # --tags --abbrev=0`) plus a diff since it. A default checkout fetches
+      # NO tags, so any of these would have nothing to compare against and
+      # would pass vacuously on every run while looking healthy. Both gates
+      # now refuse to run at all against an empty tag list, so a shallow
+      # checkout here fails loudly rather than silently certifying a tree it
+      # never checked. Adversarial review found exactly this, with the
+      # maintainer's own historical defect seeded and the gate still
+      # reporting CLEAN.
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
@@ -116,13 +120,26 @@ jobs:
       # The version numbers written in the documentation against the versions the
       # repository declares. This is NOT the hygiene sweep's Check 4, which asks a
       # different question (should this version have been bumped, judged against the
-      # last tag) and which CI has never run, because it is a bash recipe inside a
-      # skill reference rather than a committed script. v0.5.3 shipped with six stale
-      # references that every check above passed over.
+      # last tag); that recipe is mechanized separately, in CI, by the skill-drift
+      # gate just below. v0.5.3 shipped with six stale references that every check
+      # above passed over.
       - name: Documented versions match what the repository declares
         id: version-parity
         if: always()
         run: python3 scripts/version-parity-check.py
+
+      # The hygiene-sweep Check 4 recipe (skills/plab-wrap-session/references/
+      # hygiene-sweep.md), mechanized in CI: a skill whose folder changed since the
+      # latest tag must have bumped its own version and recorded that version in its
+      # own HISTORY.md. Mode matters: this repository deliberately lets effort pull
+      # requests land with an unbumped skill and does all version bookkeeping in one
+      # closing release PR, so a finding is ADVISORY (reported, exit 0) while
+      # library.json's own version is unchanged since the tag, and ENFORCED (exit 1)
+      # once it has moved, which is exactly the closing release PR's own moment.
+      # Exit 2 means the checker could not prove itself. Never read it as clean.
+      - name: Skills changed since the last tag bump their own version
+        if: always()
+        run: python3 scripts/skill-drift-check.py
 
       # plab-audit's own output gate, run against the committed sample bundle.
       #

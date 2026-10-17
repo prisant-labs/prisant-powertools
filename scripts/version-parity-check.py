@@ -16,27 +16,29 @@ v0.5.3 shipped with six stale version references in `README.md` and `docs/status
 
 The gap was wider than the session log that recorded it suggested. The "bidirectional drift check" that was believed to cover this (`skills/plab-wrap-session/references/hygiene-sweep.md`, Check 4, delivered by D-03) is a bash recipe inside a skill reference document, run by an agent during a session wrap. Two consequences follow, and both matter more than the missing file coverage:
 
-  1. **CI has never run it.** It is not a committed script and no workflow invokes it. A version reference can therefore be stale on `main` indefinitely, through any number of green pull requests, until someone happens to wrap a session.
+  1. **CI had never run it, until `scripts/skill-drift-check.py` mechanized it.** Before that script existed, Check 4 was not a committed script and no workflow invoked it, so a version reference could stay stale on `main` indefinitely, through any number of green pull requests, until someone happened to wrap a session. `scripts/skill-drift-check.py` now closes that gap by running Check 4's own recipe in CI.
   2. **It checks a different thing.** Check 4 compares each skill's own `metadata.version` at HEAD against its value at the last tag, and looks for a `HISTORY.md` row. It never reads the version numbers written in the documentation at all. The usage-README comparison in that reference is under "Stale docs, caught by reading", which is a human instruction, not a check.
 
-So this script does not extend Check 4; it covers what Check 4 was mistakenly believed to cover, mechanically and in CI. Check 4 remains useful and unchanged: it answers "should this version have been bumped", which is a question about git history that this script deliberately does not ask.
+So this script does not extend Check 4; it covers what Check 4 was mistakenly believed to cover, mechanically and in CI. Check 4, and `scripts/skill-drift-check.py` which now mechanizes it, remain useful and unchanged by this script: they answer "should this version have been bumped", a question about git history that this script deliberately does not ask.
 
 WHY THIS IS A STRUCTURAL CHECK AND NOT A VERSION-STRING SWEEP
 ------------------------------------------------------------
 The obvious implementation, "find every `\\d+\\.\\d+\\.\\d+` in the tracked docs and compare it to something", is the implementation this repository already knows not to write. D-12's path-citation rule scored 13 flags with 11 false positives when a prose rule was mechanized literally (`docs/internal/release-plans/plan_04_gates-that-cannot-fail-open/D-12_path-citation-precision/spec.md`), and the lesson kept from it is "mechanize the structure, never the prose". Version-shaped strings in these documents are overwhelmingly historical: HISTORY tables, "carried through 1.2.1", changelog entries. Every one of those is correct precisely because it does NOT match the current version.
 
-This script therefore reads exactly four structured locations, each of which is a claim about what a version IS RIGHT NOW, and ignores every other version-shaped string in the repository:
+This script therefore reads exactly six structured locations, each of which is a claim about what a version IS RIGHT NOW, and ignores every other version-shaped string in the repository:
 
   L1  `README.md`, the Skills table. A row whose first cell links a `plab-*` skill claims that skill's current version.
   L2  `docs/status-skills.md`, the At a glance table. Same row shape, same claim.
   L3  `docs/skills/<skill>/README.md`, the `**Version:**` line near the top. One per usage README.
   L4  `docs/status-skills.md`, the `**Plugin version:**` line. A claim about `library.json`'s version, not a skill's.
+  L5  `docs/status-skills.md`, the per-skill section headings in Per-skill detail (a line reading "### " then a backtick-quoted skill name then a version, optionally followed by a comma and a note such as ", explicit only"). One per skill.
+  L6  `library.json`'s `components.skills[].version`. One entry per skill, a claim carried by the same manifest the toolkit's manifest generators read.
 
-Authoritative sources, never the other way round: a skill's version is whatever `skills/<name>/SKILL.md` says in `metadata.version`, and the library's version is whatever `library.json` says in `version`. This script never edits either, and never edits the documents; CI reports, it does not fix (`AGENTS.md`, Build and validate).
+Authoritative sources, never the other way round: a skill's version is whatever `skills/<name>/SKILL.md` says in `metadata.version`, and the library's version is whatever `library.json` says in its top-level `version`. This script never edits either, and never edits the documents; CI reports, it does not fix (`AGENTS.md`, Build and validate).
 
 WHY AN UNPARSEABLE LOCATION IS BROKEN, NOT CLEAN
 ------------------------------------------------
-Each of L1, L2 and L3 is matched by a shape. If someone reformats the Skills table, or renames the `**Version:**` label, the matcher stops finding claims and this gate goes quiet while the documents drift freely. A gate that reports CLEAN because it has gone blind is worse than no gate, and this repository has been bitten by that exact failure twice: the empty `git tag -l` in v0.5.2, and `AGENTS.md` never loading in the superpowers experiment.
+Each of L1, L2, L3, L5 and L6 is matched by a shape. If someone reformats the Skills table, renames the `**Version:**` label, changes the section-heading format, or empties `components.skills`, the matcher stops finding claims and this gate goes quiet while the documents drift freely. A gate that reports CLEAN because it has gone blind is worse than no gate, and this repository has been bitten by that exact failure twice: the empty `git tag -l` in v0.5.2, and `AGENTS.md` never loading in the superpowers experiment.
 
 So a location that yields ZERO claims when the repository has skills to claim is BROKEN, not clean. A location that yields SOME claims but is missing a particular skill is a FINDING, because that is real drift: a skill exists and the documentation does not list it.
 
@@ -57,6 +59,9 @@ SKILL_NAME = re.compile(r'`(plab-[a-z0-9-]+)`')
 SEMVER = re.compile(r'^\d+\.\d+\.\d+$')
 USAGE_VERSION_LINE = re.compile(r'^\*\*Version:\*\*\s*(\d+\.\d+\.\d+)\s*$', re.MULTILINE)
 PLUGIN_VERSION_LINE = re.compile(r'\*\*Plugin version:\*\*\s*(\d+\.\d+\.\d+)')
+# L5. The trailing ", explicit only" (or any other comma-introduced note) is optional, because
+# docs/status-skills.md writes it on the two manual-only skills and nothing else.
+SECTION_HEADING = re.compile(r'^### `(plab-[a-z0-9-]+)` (\d+\.\d+\.\d+)(?:,.*)?$', re.MULTILINE)
 
 README_REL = "README.md"
 STATUS_REL = "docs/status-skills.md"
@@ -117,16 +122,35 @@ def declared_skill_versions(repo_root):
     return versions
 
 
-def declared_library_version(repo_root):
+def _load_library_json(repo_root):
     path = os.path.join(repo_root, LIBRARY_REL)
     try:
-        data = json.loads(read_text(path))
+        return json.loads(read_text(path))
     except json.JSONDecodeError as exc:
         raise Broken("%s is not valid JSON: %s" % (path, exc))
+
+
+def declared_library_version(repo_root):
+    data = _load_library_json(repo_root)
     version = data.get("version")
     if not isinstance(version, str) or not SEMVER.match(version):
-        raise Broken("%s has no usable top-level 'version' string, got %r" % (path, version))
+        raise Broken("%s has no usable top-level 'version' string, got %r"
+                     % (os.path.join(repo_root, LIBRARY_REL), version))
     return version
+
+
+def declared_library_components(repo_root):
+    """L6's claim source within the same manifest: `components.skills[]`, read separately from the top-level `version` field `declared_library_version()` reads. Returns {} if the array is missing, empty, or carries no usable {name, version} entries; the caller (`check_library_components()`) is the one that decides whether an empty result means BROKEN."""
+    data = _load_library_json(repo_root)
+    comps = data.get("components")
+    skills = comps.get("skills") if isinstance(comps, dict) else None
+    out = {}
+    if isinstance(skills, list):
+        for entry in skills:
+            if (isinstance(entry, dict) and isinstance(entry.get("name"), str)
+                   and isinstance(entry.get("version"), str)):
+                out[entry["name"]] = entry["version"]
+    return out
 
 
 def table_claims(text, rel_path):
@@ -223,6 +247,57 @@ def check_plugin_version(repo_root, library_version):
     return findings
 
 
+def check_section_headings(repo_root, declared):
+    """L5. Every skill must have a '### `plab-x` X.Y.Z' heading in docs/status-skills.md's Per-skill detail section, optionally followed by a comma-introduced note (", explicit only")."""
+    rel = STATUS_REL
+    text = read_text(os.path.join(repo_root, rel))
+    matches = SECTION_HEADING.findall(text)
+    if not matches:
+        raise Broken("%s yielded no per-skill section headings at all, but %d skill(s) exist. The "
+                     "heading shape this script matches ('### `plab-x` X.Y.Z') has probably "
+                     "changed, and a silent pass here would let every heading drift unchecked."
+                     % (rel, len(declared)))
+    findings = []
+    seen = set()
+    for name, version in matches:
+        seen.add(name)
+        if name not in declared:
+            findings.append("%s: section heading lists skill %r, which has no skills/%s/SKILL.md"
+                            % (rel, name, name))
+        elif version != declared[name]:
+            findings.append("%s: section heading claims %s is %s, but skills/%s/SKILL.md declares %s"
+                            % (rel, name, version, name, declared[name]))
+    for name in sorted(declared):
+        if name not in seen:
+            findings.append("%s: no per-skill section heading for %r, which exists at skills/%s/SKILL.md"
+                            % (rel, name, name))
+    return findings
+
+
+def check_library_components(repo_root, declared):
+    """L6. library.json's components.skills[].version, one entry expected per skill."""
+    rel = LIBRARY_REL
+    claimed = declared_library_components(repo_root)
+    if not claimed:
+        raise Broken("%s's components.skills array yielded no usable {name, version} entries, but "
+                     "%d skill(s) exist. The manifest shape this script reads has probably "
+                     "changed, and a silent pass here would let every component version drift "
+                     "unchecked." % (rel, len(declared)))
+    findings = []
+    for name, version in sorted(claimed.items()):
+        if name not in declared:
+            findings.append("%s: components.skills lists skill %r, which has no skills/%s/SKILL.md"
+                            % (rel, name, name))
+        elif version != declared[name]:
+            findings.append("%s: components.skills claims %s is %s, but skills/%s/SKILL.md declares %s"
+                            % (rel, name, version, name, declared[name]))
+    for name in sorted(declared):
+        if name not in claimed:
+            findings.append("%s: components.skills has no entry for %r, which exists at skills/%s/SKILL.md"
+                            % (rel, name, name))
+    return findings
+
+
 def run_all_checks(repo_root):
     """The one top-level entry point the real run and the wiring self-test both drive. A check dropped from this list is a check that never runs in production."""
     declared = declared_skill_versions(repo_root)
@@ -232,6 +307,8 @@ def run_all_checks(repo_root):
     findings += check_table_location(repo_root, STATUS_REL, declared, "the status page At a glance table")
     findings += check_usage_readmes(repo_root, declared)
     findings += check_plugin_version(repo_root, library_version)
+    findings += check_section_headings(repo_root, declared)
+    findings += check_library_components(repo_root, declared)
     return declared, findings
 
 
@@ -255,16 +332,26 @@ def _skill_md(name, version):
 
 def _fixture(tmp, skills, readme_versions=None, status_versions=None,
              usage_versions=None, plugin_version="1.0.0", library_version="1.0.0",
-             readme_table=True, usage_label="**Version:**"):
+             readme_table=True, usage_label="**Version:**",
+             heading_versions=None, library_skill_versions=None,
+             write_headings=True, library_has_components=True):
     """Build a miniature repository. Each *_versions dict may override what a location CLAIMS, so a canary is one dict entry away from an anti-canary."""
     readme_versions = dict(skills if readme_versions is None else readme_versions)
     status_versions = dict(skills if status_versions is None else status_versions)
     usage_versions = dict(skills if usage_versions is None else usage_versions)
+    heading_versions = dict(skills if heading_versions is None else heading_versions)
+    library_skill_versions = dict(skills if library_skill_versions is None else library_skill_versions)
 
     for name, version in skills.items():
         _write(os.path.join(tmp, "skills", name, "SKILL.md"), _skill_md(name, version))
 
-    _write(os.path.join(tmp, LIBRARY_REL), json.dumps({"name": "t", "version": library_version}))
+    library_obj = {"name": "t", "version": library_version}
+    if library_has_components:
+        library_obj["components"] = {
+            "skills": [{"name": name, "version": version}
+                      for name, version in sorted(library_skill_versions.items())]
+        }
+    _write(os.path.join(tmp, LIBRARY_REL), json.dumps(library_obj))
 
     rows = ["# Test\n\n## Skills\n", "| Skill | What it does | Version |", "|---|---|---|"]
     for name, version in sorted(readme_versions.items()):
@@ -279,6 +366,11 @@ def _fixture(tmp, skills, readme_versions=None, status_versions=None,
               "\n## At a glance\n", "| Skill | Version | Invocation |", "|---|---|---|"]
     for name, version in sorted(status_versions.items()):
         status.append("| `%s` | %s | Auto |" % (name, version))
+    status.append("\n## Per-skill detail\n")
+    if write_headings:
+        for name, version in sorted(heading_versions.items()):
+            status.append("### `%s` %s\n" % (name, version))
+            status.append("Some body text about %s.\n" % name)
     _write(os.path.join(tmp, STATUS_REL), "\n".join(status) + "\n")
 
     for name, version in usage_versions.items():
@@ -308,6 +400,8 @@ def _self_test_each_location_canary(failures):
         ("L2 status page table", dict(status_versions={"plab-a": "9.9.9"}), "the status page At a glance table"),
         ("L3 usage README", dict(usage_versions={"plab-a": "9.9.9"}), "docs/skills/plab-a/README.md"),
         ("L4 plugin version", dict(plugin_version="9.9.9"), "claims plugin version 9.9.9"),
+        ("L5 status page heading", dict(heading_versions={"plab-a": "9.9.9"}), "section heading claims"),
+        ("L6 library components", dict(library_skill_versions={"plab-a": "9.9.9"}), "components.skills claims"),
     )
     for label, override, marker in cases:
         with tempfile.TemporaryDirectory() as tmp:
@@ -360,6 +454,46 @@ def _self_test_blind_matcher_is_broken(failures):
             failures.append("usage READMEs whose '**Version:**' label changed must raise Broken (exit 2), "
                             "not report %r" % findings)
 
+    with tempfile.TemporaryDirectory() as tmp:
+        _fixture(tmp, {"plab-a": "1.0.0"}, write_headings=False)
+        try:
+            _, findings = run_all_checks(tmp)
+        except Broken:
+            pass
+        else:
+            failures.append("docs/status-skills.md with no per-skill section headings at all must "
+                            "raise Broken (exit 2), not report %r" % findings)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        _fixture(tmp, {"plab-a": "1.0.0"}, library_has_components=False)
+        try:
+            _, findings = run_all_checks(tmp)
+        except Broken:
+            pass
+        else:
+            failures.append("library.json with no components.skills array at all must raise Broken "
+                            "(exit 2), not report %r" % findings)
+
+
+def _self_test_heading_and_component_missing_skill_is_a_finding(failures):
+    """L5 and L6's version of the 'a skill exists but is absent from a location' case the README and status-table locations already prove (`_self_test_missing_skill_is_a_finding`)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _fixture(tmp, {"plab-a": "1.0.0", "plab-b": "2.0.0"},
+                 heading_versions={"plab-a": "1.0.0"},
+                 library_skill_versions={"plab-a": "1.0.0"})
+        try:
+            _, findings = run_all_checks(tmp)
+        except Broken as exc:
+            failures.append("a heading/components location missing ONE skill must be a finding, "
+                            "not BROKEN, got %r" % exc)
+            return
+        heading_hits = [f for f in findings if "no per-skill section heading for 'plab-b'" in f]
+        comp_hits = [f for f in findings if "components.skills has no entry for 'plab-b'" in f]
+        if len(heading_hits) != 1:
+            failures.append("expected exactly one missing-heading finding for plab-b, got %r" % findings)
+        if len(comp_hits) != 1:
+            failures.append("expected exactly one missing-components-entry finding for plab-b, got %r" % findings)
+
 
 def _self_test_history_versions_ignored(failures):
     """The D-12 lesson, as a fixture. Every usage README in the all-agree tree carries a 0.9.0 in a history table, and no fixture above expects a finding for it. This test states that intent explicitly so a future change to a blanket version sweep fails here instead of in review."""
@@ -395,6 +529,7 @@ def self_test():
     _self_test_all_agree(failures)
     _self_test_each_location_canary(failures)
     _self_test_missing_skill_is_a_finding(failures)
+    _self_test_heading_and_component_missing_skill_is_a_finding(failures)
     _self_test_blind_matcher_is_broken(failures)
     _self_test_history_versions_ignored(failures)
     _self_test_ambiguous_row_is_broken(failures)
@@ -404,9 +539,10 @@ def self_test():
             print("  " + f, file=sys.stderr)
         print("\nExiting 2. Do NOT read this as a clean tree.", file=sys.stderr)
         return False
-    print("gate self-test: PASS (4 claim locations each proved against their own canary, an all-agree "
-          "anti-canary, a missing-skill finding, two blind-matcher BROKEN cases, a history-version "
-          "false-positive guard, and an ambiguous-row BROKEN case)")
+    print("gate self-test: PASS (6 claim locations each proved against their own canary, an all-agree "
+          "anti-canary, a missing-skill finding for the README/status tables plus one for the "
+          "section headings and the manifest components, four blind-matcher BROKEN cases, a "
+          "history-version false-positive guard, and an ambiguous-row BROKEN case)")
     return True
 
 
@@ -440,7 +576,7 @@ def main():
         print("\nAuthoritative sources: skills/<name>/SKILL.md metadata.version, and library.json version.")
         sys.exit(1)
 
-    print("CLEAN: canary proved, %d skill(s) checked across 4 claim locations, every claimed version "
+    print("CLEAN: canary proved, %d skill(s) checked across 6 claim locations, every claimed version "
           "matches what the repository declares." % len(declared))
     sys.exit(0)
 

@@ -70,9 +70,9 @@ add:
     update: >-
       Bump the "Plugin version" line, the At a glance table's Version column, and the per-skill
       "### plab-<skill> X.Y.Z" heading for every affected skill. scripts/version-parity-check.py
-      checks the plugin-version line and the At a glance table against SKILL.md and library.json;
-      it does not check the per-skill section headings, so a heading left behind after a version
-      bump is caught only by reading this file, not by CI.
+      checks the plugin-version line, the At a glance table, and the per-skill section headings,
+      all against SKILL.md and library.json, so a heading left behind after a version bump is now
+      caught by CI too.
 
   - doc: "README.md skill table"
     update: >-
