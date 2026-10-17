@@ -447,10 +447,7 @@ def check_ac_status_agreement(specs):
 
 
 def check_released_but_prerelease_release_plans(releases, tags, baseline=None):
-    """Invariant 10: a release plan whose target-version is already tagged must not still be
-    pre-release (PRERELEASE_RELEASE_STATUSES), unless it is named in the dated baseline. `baseline`
-    is an injectable parameter, defaulting to the module-level BASELINED_PRERELEASE_TAGGED_RELEASE_PLANS,
-    so the self-test can prove removing an entry makes the run fail without mutating module state."""
+    """Invariant 10: a release plan whose target-version is already tagged must not still be pre-release (PRERELEASE_RELEASE_STATUSES), unless it is named in the dated baseline. `baseline` is an injectable parameter, defaulting to the module-level BASELINED_PRERELEASE_TAGGED_RELEASE_PLANS, so the self-test can prove removing an entry makes the run fail without mutating module state."""
     if baseline is None:
         baseline = BASELINED_PRERELEASE_TAGGED_RELEASE_PLANS
     findings = []
@@ -472,11 +469,7 @@ def check_released_but_prerelease_release_plans(releases, tags, baseline=None):
 
 
 def baselined_prerelease_release_plan_notes(releases, tags, baseline=None):
-    """Visible reporting for invariant 10's dated baseline, so a known violation is 'reported as
-    known', not simply absent from the findings list. For each release plan that currently matches
-    the pre-release-but-tagged shape AND is named in the baseline, returns a note string. A plan
-    whose status or target-version later changes so it no longer matches the shape produces no
-    note, so this never claims a plan is still a known violation once it has moved on."""
+    """Visible reporting for invariant 10's dated baseline, so a known violation is 'reported as known', not simply absent from the findings list. For each release plan that currently matches the pre-release-but-tagged shape AND is named in the baseline, returns a note string. A plan whose status or target-version later changes so it no longer matches the shape produces no note, so this never claims a plan is still a known violation once it has moved on."""
     if baseline is None:
         baseline = BASELINED_PRERELEASE_TAGGED_RELEASE_PLANS
     notes = []
@@ -923,9 +916,7 @@ def _self_test_ac_status_agreement(failures):
 
 
 def _self_test_prerelease_tagged_release_plan(failures):
-    """Invariant 10's canary, anti-canary, and the baseline-removal proof the task explicitly
-    requires: a release plan baselined at one call and NOT baselined at another, same data, so the
-    only thing that changes between a passing and a failing run is the baseline argument itself."""
+    """Invariant 10's canary, anti-canary, and the baseline-removal proof: a release plan baselined at one call and NOT baselined at another, same data, so the only thing that changes between a passing and a failing run is the baseline argument itself."""
     with tempfile.TemporaryDirectory() as tmp:
         _write(os.path.join(_rp(tmp, "80"), "plan.md"), _release_doc("80", "v80.0.0", [], 0, 0))
         _write(os.path.join(_rp(tmp, "81"), "plan.md"), _release_doc("81", "v81.0.0", [], 0, 0))

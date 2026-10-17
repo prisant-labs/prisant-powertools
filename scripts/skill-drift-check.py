@@ -1,96 +1,47 @@
 #!/usr/bin/env python3
 """
-Skill version-bump gate: a skill whose folder changed since the last tag must have bumped its
-own version and recorded that version in its own HISTORY.md.
+Skill version-bump gate: a skill whose folder changed since the last tag must have bumped its own version and recorded that version in its own HISTORY.md.
 
 EXIT-CODE CONTRACT
 ------------------
-  0  CLEAN      self-test passed AND no skill changed without a matching bump, OR self-test
-                passed AND every finding is ADVISORY (see MODE below)
+  0  CLEAN      self-test passed AND no skill changed without a matching bump, OR self-test passed AND every finding is ADVISORY (see MODE below)
   1  FINDINGS   self-test passed AND at least one finding exists AND the mode is ENFORCED
-  2  BROKEN     the detector could not prove itself, `git describe --tags --abbrev=0` found no
-                tag at all, a skill directory has no SKILL.md or no HISTORY.md, a version string
-                could not be parsed, or any other exception reached the top level
+  2  BROKEN     the detector could not prove itself, `git describe --tags --abbrev=0` found no tag at all, a skill directory has no SKILL.md or no HISTORY.md, a version string could not be parsed, or any other exception reached the top level
 
-NEVER INTERPRET 2 AS CLEAN. Same contract as `scripts/version-parity-check.py` and
-`scripts/doc-lifecycle-check.py`: an empty or unparseable input is BROKEN, never read as a clean
-tree.
+NEVER INTERPRET 2 AS CLEAN. Same contract as `scripts/version-parity-check.py` and `scripts/doc-lifecycle-check.py`: an empty or unparseable input is BROKEN, never read as a clean tree.
 
 WHY THIS SCRIPT EXISTS
 -----------------------
-`skills/plab-wrap-session/references/hygiene-sweep.md`, Check 4, carries a bash recipe (delivered
-by D-03) that answers exactly this question: for each skill directory with content changed since
-the last tag, did `metadata.version` move, and does `HISTORY.md` have a row for the version
-currently shipping. Until this script, that recipe lived only inside a skill reference document,
-run by an agent during a session wrap, so CI never ran it: a version could go unbumped through any
-number of green pull requests, found only if and when someone happened to wrap a session. This
-script mechanizes the same recipe as a committed, CI-wired gate. It answers the same question
-Check 4 always asked ("should this version have been bumped, judged against the last tag") and
-deliberately NOT the question `scripts/version-parity-check.py` asks ("does the version written in
-the documentation agree with what the repository declares right now"); those two gates read
-disjoint evidence and neither one substitutes for the other.
+`skills/plab-wrap-session/references/hygiene-sweep.md`, Check 4 (documentation drift), carries a bash recipe delivered by D-03 (bidirectional drift check) that answers exactly this question: for each skill directory with content changed since the last tag, did `metadata.version` move, and does `HISTORY.md` have a row for the version currently shipping. Until this script, that recipe lived only inside a skill reference document, run by an agent during a session wrap, so CI never ran it: a version could go unbumped through any number of green pull requests, found only if and when someone happened to wrap a session. This script mechanizes the same recipe as a committed, CI-wired gate. It answers the same question Check 4 always asked ("should this version have been bumped, judged against the last tag") and deliberately NOT the question `scripts/version-parity-check.py` asks ("does the version written in the documentation agree with what the repository declares right now"); those two gates read disjoint evidence and neither one substitutes for the other.
 
 MODE: ADVISORY VS ENFORCED, AND WHY
 ------------------------------------
-This repository deliberately lets effort pull requests land with skill content changed and no
-version bump at all, and does every version-bookkeeping decision in one closing release pull
-request instead (`docs/internal/release-plans/release-checklist.yaml`). A gate that always failed
-on an unbumped version would fight that convention on every ordinary effort PR. So this script
-reads `library.json`'s own top-level `version` at HEAD and at the latest tag:
+This repository deliberately lets effort pull requests land with skill content changed and no version bump at all, and does every version-bookkeeping decision in one closing release pull request instead (`docs/internal/release-plans/release-checklist.yaml`). A gate that always failed on an unbumped version would fight that convention on every ordinary effort PR. So this script reads `library.json`'s own top-level `version` at HEAD and at the latest tag:
 
-  equal      no release is in progress (the plugin version has not moved since the tag). Findings
-             are printed labelled ADVISORY and the script exits 0. This is the common case: most
-             pull requests land here, and effort PRs are expected to carry unbumped skills.
-  different  a release is in progress (something, somewhere, already bumped the plugin version).
-             Findings are enforced: printed plainly and the script exits 1, because the closing
-             release PR is exactly the moment this repository's own convention says the bumping
-             should have already happened.
+  equal      no release is in progress (the plugin version has not moved since the tag). Findings are printed labelled ADVISORY and the script exits 0. This is the common case: most pull requests land here, and effort PRs are expected to carry unbumped skills.
+  different  a release is in progress (something, somewhere, already bumped the plugin version). Findings are enforced: printed plainly and the script exits 1, because the closing release PR is exactly the moment this repository's own convention says the bumping should have already happened.
 
-`--strict` forces ENFORCED regardless of the comparison, for a maintainer who wants this gate to
-block on demand rather than warn.
+`--strict` forces ENFORCED regardless of the comparison, for a maintainer who wants this gate to block on demand rather than warn.
 
 WHY A NEW SKILL SINCE THE TAG IS SKIPPED, NOT A FINDING
 ----------------------------------------------------------
-A skill that did not exist at the latest tag has no prior `metadata.version` to differ from; there
-is nothing to bump away from. This mirrors the hygiene-sweep recipe's own
-`git cat-file -e "$LAST_TAG:$skill_file" 2>/dev/null || continue` branch exactly: a skill new since
-the last tag is skipped, silently and correctly, not flagged.
+A skill that did not exist at the latest tag has no prior `metadata.version` to differ from; there is nothing to bump away from. This mirrors the hygiene-sweep recipe's own `git cat-file -e "$LAST_TAG:$skill_file" 2>/dev/null || continue` branch exactly: a skill new since the last tag is skipped, silently and correctly, not flagged.
 
 WHY `git describe --tags --abbrev=0` AND NOT `git tag -l`
 --------------------------------------------------------------
-`scripts/doc-lifecycle-check.py`'s invariant 4 and 10 only need to know WHICH tags exist, so a set
-from `git tag -l` is enough. This script needs the ONE tag to diff against, the same tag the
-hygiene-sweep recipe names `LAST_TAG`, so it uses the same command the recipe uses:
-`git describe --tags --abbrev=0`. An empty result (no tag reachable from HEAD at all) is BROKEN,
-for the same reason `doc-lifecycle-check.py` treats an empty `git tag -l` as BROKEN: a shallow or
-tag-less checkout produces the same empty result as a repository that has genuinely never tagged a
-release, and this gate cannot tell the two apart, so it refuses to report CLEAN by construction.
+`scripts/doc-lifecycle-check.py`'s invariants 4 and 10 only need to know WHICH tags exist, so a set from `git tag -l` is enough. This script needs the ONE tag to diff against, the same tag the hygiene-sweep recipe names `LAST_TAG`, so it uses the same command the recipe uses: `git describe --tags --abbrev=0`. An empty result (no tag reachable from HEAD at all) is BROKEN, for the same reason `doc-lifecycle-check.py` treats an empty `git tag -l` as BROKEN: a shallow or tag-less checkout produces the same empty result as a repository that has genuinely never tagged a release, and this gate cannot tell the two apart, so it refuses to report CLEAN by construction.
 
 WHY EVERY SUBPROCESS BOUNDARY PINS encoding="utf-8"
 -----------------------------------------------------
-Same failure this repository has already been bitten by twice (`scripts/check-dashes.py`,
-`scripts/doc-lifecycle-check.py`): Python's subprocess text mode defaults to the locale encoding,
-cp1252 on this maintainer's machine, which can silently fail to decode what git actually wrote.
-Every subprocess call below pins `encoding="utf-8"` explicitly.
+Same failure this repository has already been bitten by twice (`scripts/check-dashes.py`, `scripts/doc-lifecycle-check.py`): Python's subprocess text mode defaults to the locale encoding, cp1252 on this maintainer's machine, which can silently fail to decode what git actually wrote. Every subprocess call below pins `encoding="utf-8"` explicitly.
 
 WHY THE SELF-TEST BUILDS REAL GIT REPOSITORIES
 -------------------------------------------------
-Every other fixture-based gate in this repository builds a plain directory tree, because none of
-them need git history. This script's entire subject IS git history (a tag, a diff since that tag,
-a file's content at that tag), so its self-test runs real `git init` / `commit` / `tag` sequences
-inside `tempfile.TemporaryDirectory()`, with the identity pinned by `-c user.name=` / `-c
-user.email=` on every invocation so it never depends on the machine's own git config. Each fixture
-is torn down with `ignore_cleanup_errors=True`, because Windows can raise `PermissionError` when a
-`TemporaryDirectory` tries to delete `.git`'s read-only pack files, which is a cleanup artifact and
-not a self-test failure.
+Every other fixture-based gate in this repository builds a plain directory tree, because none of them need git history. This script's entire subject IS git history (a tag, a diff since that tag, a file's content at that tag), so its self-test runs real `git init` / `commit` / `tag` sequences inside `tempfile.TemporaryDirectory()`, with the identity pinned by `-c user.name=` / `-c user.email=` on every invocation so it never depends on the machine's own git config. Each fixture is torn down with `ignore_cleanup_errors=True`, because Windows can raise `PermissionError` when a `TemporaryDirectory` tries to delete `.git`'s read-only pack files, which is a cleanup artifact and not a self-test failure.
 
 WHAT THIS SCRIPT DELIBERATELY DOES NOT CHECK
 ------------------------------------------------
-Whether the version written in `README.md`, `docs/status-skills.md`, or a usage README agrees with
-`skills/<name>/SKILL.md` (`scripts/version-parity-check.py`'s job). Whether a release plan's
-bookkeeping fields agree with its effort folders (`scripts/doc-lifecycle-check.py`'s job). Whether
-an unbumped version is semantically the right increment. And any skill whose folder has no diff at
-all since the latest tag, which is presumed correctly unbumped.
+Whether the version written in `README.md`, `docs/status-skills.md`, or a usage README agrees with `skills/<name>/SKILL.md` (`scripts/version-parity-check.py`'s job). Whether a release plan's bookkeeping fields agree with its effort folders (`scripts/doc-lifecycle-check.py`'s job). Whether an unbumped version is semantically the right increment. And any skill whose folder has no diff at all since the latest tag, which is presumed correctly unbumped.
 """
 
 import argparse

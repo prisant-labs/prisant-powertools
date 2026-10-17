@@ -31,9 +31,7 @@ This script therefore reads exactly six structured locations, each of which is a
   L2  `docs/status-skills.md`, the At a glance table. Same row shape, same claim.
   L3  `docs/skills/<skill>/README.md`, the `**Version:**` line near the top. One per usage README.
   L4  `docs/status-skills.md`, the `**Plugin version:**` line. A claim about `library.json`'s version, not a skill's.
-  L5  `docs/status-skills.md`, the per-skill section headings in Per-skill detail (a line reading
-      "### " then a backtick-quoted skill name then a version, optionally followed by a comma and
-      a note such as ", explicit only"). One per skill.
+  L5  `docs/status-skills.md`, the per-skill section headings in Per-skill detail (a line reading "### " then a backtick-quoted skill name then a version, optionally followed by a comma and a note such as ", explicit only"). One per skill.
   L6  `library.json`'s `components.skills[].version`. One entry per skill, a claim carried by the same manifest the toolkit's manifest generators read.
 
 Authoritative sources, never the other way round: a skill's version is whatever `skills/<name>/SKILL.md` says in `metadata.version`, and the library's version is whatever `library.json` says in its top-level `version`. This script never edits either, and never edits the documents; CI reports, it does not fix (`AGENTS.md`, Build and validate).
@@ -142,10 +140,7 @@ def declared_library_version(repo_root):
 
 
 def declared_library_components(repo_root):
-    """L6's claim source within the same manifest: `components.skills[]`, read separately from the
-    top-level `version` field `declared_library_version()` reads. Returns {} if the array is
-    missing, empty, or carries no usable {name, version} entries; the caller (`check_library_components()`)
-    is the one that decides whether an empty result means BROKEN."""
+    """L6's claim source within the same manifest: `components.skills[]`, read separately from the top-level `version` field `declared_library_version()` reads. Returns {} if the array is missing, empty, or carries no usable {name, version} entries; the caller (`check_library_components()`) is the one that decides whether an empty result means BROKEN."""
     data = _load_library_json(repo_root)
     comps = data.get("components")
     skills = comps.get("skills") if isinstance(comps, dict) else None
@@ -253,8 +248,7 @@ def check_plugin_version(repo_root, library_version):
 
 
 def check_section_headings(repo_root, declared):
-    """L5. Every skill must have a '### `plab-x` X.Y.Z' heading in docs/status-skills.md's
-    Per-skill detail section, optionally followed by a comma-introduced note (", explicit only")."""
+    """L5. Every skill must have a '### `plab-x` X.Y.Z' heading in docs/status-skills.md's Per-skill detail section, optionally followed by a comma-introduced note (", explicit only")."""
     rel = STATUS_REL
     text = read_text(os.path.join(repo_root, rel))
     matches = SECTION_HEADING.findall(text)
@@ -482,8 +476,7 @@ def _self_test_blind_matcher_is_broken(failures):
 
 
 def _self_test_heading_and_component_missing_skill_is_a_finding(failures):
-    """L5 and L6's version of the 'a skill exists but is absent from a location' case the README
-    and status-table locations already prove (`_self_test_missing_skill_is_a_finding`)."""
+    """L5 and L6's version of the 'a skill exists but is absent from a location' case the README and status-table locations already prove (`_self_test_missing_skill_is_a_finding`)."""
     with tempfile.TemporaryDirectory() as tmp:
         _fixture(tmp, {"plab-a": "1.0.0", "plab-b": "2.0.0"},
                  heading_versions={"plab-a": "1.0.0"},
