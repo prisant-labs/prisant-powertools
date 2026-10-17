@@ -28,6 +28,11 @@ Thumbs.db
 # (AU-01 Phase 7). Never committed: the plugin, not this folder, is what users load.
 .claude/skills/
 
+# Git worktrees that Claude Code creates for isolated subagents. Each holds a full
+# checkout of this repository, so leaving it unignored shows the whole folder as
+# untracked in the parent checkout.
+.claude/worktrees/
+
 # claude plugin eval results (R5). Each run writes a timestamped report and
 # JSON under here; these are run artifacts, not suite source, and are never committed.
 evals/results/
