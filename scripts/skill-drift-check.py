@@ -547,7 +547,9 @@ def main():
                   "unbumped skill and does all version bookkeeping in one closing release PR. Pass "
                   "--strict to enforce them anyway." % evidence)
         else:
-            print("ENFORCED MODE: %s. Findings below block." % evidence)
+            reason = ("a release is in progress" if result.head_lib_version != result.tag_lib_version
+                      else "--strict was passed")
+            print("ENFORCED MODE: %s; %s. Findings below block." % (evidence, reason))
 
         if result.findings:
             prefix = "ADVISORY: " if result.mode == "advisory" else ""
@@ -559,7 +561,7 @@ def main():
                       % (len(result.findings), result.tag))
                 sys.exit(0)
             print("\nFINDINGS: %d skill(s) changed since %s without a matching version bump or "
-                  "HISTORY.md row, and a release is in progress." % (len(result.findings), result.tag))
+                  "HISTORY.md row, enforced because %s." % (len(result.findings), result.tag, reason))
             sys.exit(1)
 
         print("CLEAN: canary proved, no skill changed since %s without a matching version bump "
