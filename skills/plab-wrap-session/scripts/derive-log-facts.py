@@ -105,7 +105,17 @@ def run_git(args: list[str], cwd: Path, timeout: float = 10) -> tuple[int, str, 
     thread `capture_output=True` spawns with an uncaught `UnicodeDecodeError`,
     which this function's own `try/except` around `subprocess.run` cannot
     catch, because the exception happens in a different thread. Reproduced
-    live during a real wrap on 2026-10-16."""
+    live during a real wrap on 2026-10-16.
+
+    Returns `.rstrip()`, not `.strip()`. `git status --short` (and porcelain
+    formats generally) use a fixed two-column status code where a literal
+    leading space is meaningful (" M" is an unstaged modify, "M " is a
+    staged one); `.strip()` trims leading whitespace from the START of the
+    whole string, which silently ate that first line's leading space and
+    turned " M path" into "M path". Found live in a real wrap's digest on
+    `pm-skills` on 2026-10-16, where the first dirty entry rendered
+    misaligned. `.rstrip()` only trims the trailing newline every git
+    command leaves, never a character git itself put first."""
     env = os.environ.copy()
     env["GIT_OPTIONAL_LOCKS"] = "0"
     env["GIT_TERMINAL_PROMPT"] = "0"
@@ -120,7 +130,7 @@ def run_git(args: list[str], cwd: Path, timeout: float = 10) -> tuple[int, str, 
             timeout=timeout,
             env=env,
         )
-        return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
+        return proc.returncode, proc.stdout.rstrip(), proc.stderr.rstrip()
     except subprocess.TimeoutExpired:
         return 124, "", "timed out"
     except FileNotFoundError:
@@ -655,9 +665,19 @@ def derive_verification(transcript_path: Path | None, unavailable_reason: str | 
                         # deque(maxlen=...) keeps the most recent entries: the ones
                         # that matter at wrap time are the latest commands, not the
                         # earliest, which are stale by the time a long session wraps.
+                        # Kept full and untruncated here, even though a Bash
+                        # command can embed many newlines (a heredoc, a
+                        # multi-line script) and run to thousands of
+                        # characters: `--json` is this field's one promise of
+                        # completeness, and the text digest's 200-character,
+                        # single-line cap (render_verification) is a display
+                        # choice, not a data-loss one. Truncating here instead
+                        # would apply to both and silently cost --json the
+                        # same information the text digest only ever meant to
+                        # summarize.
                         facts.append(
                             {
-                                "command": command[:200],
+                                "command": command,
                                 "is_error": bool(block.get("is_error", False)),
                             }
                         )
@@ -706,8 +726,19 @@ def derive_verification(transcript_path: Path | None, unavailable_reason: str | 
 # judges, and writes its own prose or proposal. A capped list never goes
 # silent about what it dropped: `TEXT_LIST_CAP` lines, then one line naming
 # how many more exist and that `--json` has them all.
+#
+# `TEXT_LIST_CAP` was 40 in this digest's first build, measured only against
+# this repository's own fixtures. A live run against two real repositories
+# on 2026-10-16 (prisant-utilities itself, 20,304 characters; `pm-skills`,
+# 43,782) blew the 20,000-character budget: `pm-skills` carries 45 dirty
+# entries at roughly 100 characters each, and a verification fact can embed
+# a multi-line Bash command (one ran 19 lines and 3,782 characters, because
+# the facts kept their embedded newlines). 40 lines of real-repository-sized
+# text is not the same size as 40 lines of this repository's short fixture
+# paths; the cap is now 10, and verification facts get their own stricter
+# rule below rather than sharing this one.
 
-TEXT_LIST_CAP = 40
+TEXT_LIST_CAP = 10
 
 
 def render_verbatim(items: list[str]) -> list[str]:
@@ -772,17 +803,43 @@ def render_check5(check5: dict) -> list[str]:
     return lines
 
 
+# A verification fact's `command` is kept full and untruncated in the data
+# (see derive_verification), because a Bash tool call can be a heredoc or a
+# multi-line script running to thousands of characters with dozens of
+# embedded newlines. The text digest cannot afford that per fact: one such
+# fact alone cost 3,782 characters and printed as 19 lines on a real
+# `pm-skills` run on 2026-10-16, which is what blew that digest's budget.
+# So the text digest, and only the text digest, collapses every fact to one
+# line and caps it at FACT_CHAR_CAP characters, and shows at most the
+# FACT_WINDOW newest (facts are appended oldest-first, so the newest are the
+# tail of the list); `--json` still carries every fact the script kept, up
+# to the 50 `MAX_VERIFICATION_FACTS` allows, full text and embedded newlines
+# included.
+FACT_CHAR_CAP = 200
+FACT_WINDOW = 20
+
+
 def render_verification(ver: dict) -> list[str]:
     if not ver.get("available"):
         return [f"    available: false ({ver.get('reason')})"]
     lines = [f"    available: true (source: {ver.get('source')})"]
     facts = ver.get("facts", [])
+    newest = facts[-FACT_WINDOW:] if len(facts) > FACT_WINDOW else facts
+    older_not_shown = len(facts) - len(newest)
     lines.append(
-        f"    facts ({len(facts)}, {ver.get('facts-are')}, "
+        f"    facts ({len(facts)} total, {ver.get('facts-are')}, showing the {len(newest)} newest, "
+        f"one line each collapsed and capped at {FACT_CHAR_CAP} chars, "
         f"{ver.get('fact-overflow', 0)} dropped beyond the 50 the script itself keeps):"
     )
-    fact_lines = [f"[{'ERROR' if f.get('is_error') else 'ok'}] {f.get('command')}" for f in facts]
-    lines.extend(render_capped(fact_lines))
+    fact_lines = []
+    for f in newest:
+        collapsed = " ".join(f.get("command", "").split())
+        if len(collapsed) > FACT_CHAR_CAP:
+            collapsed = collapsed[: FACT_CHAR_CAP - 15] + " ...(truncated)"
+        fact_lines.append(f"[{'ERROR' if f.get('is_error') else 'ok'}] {collapsed}")
+    lines.extend(render_verbatim(fact_lines))
+    if older_not_shown:
+        lines.append(f"    ... {older_not_shown} more, see --json")
     lines.append(f"    malformed-lines: {ver.get('malformed-lines', 0)}")
     return lines
 
