@@ -35,7 +35,7 @@ Install via the prisant-labs marketplace:
 
 ```bash
 /plugin marketplace add prisant-labs/agent-plugins
-/plugin install prisant-utilities@prisant-labs
+/plugin install prisant-powertools@prisant-labs
 ```
 
 ---

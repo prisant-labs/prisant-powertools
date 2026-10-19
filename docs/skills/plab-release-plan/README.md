@@ -45,13 +45,13 @@ Install via the prisant-labs marketplace:
 
 ```bash
 /plugin marketplace add prisant-labs/agent-plugins
-/plugin install prisant-utilities@prisant-labs
+/plugin install prisant-powertools@prisant-labs
 ```
 
 Or symlink into a project:
 
 ```bash
-ln -s /path/to/prisant-utilities/skills/plab-release-plan .claude/skills/plab-release-plan
+ln -s /path/to/prisant-powertools/skills/plab-release-plan .claude/skills/plab-release-plan
 ```
 
 ### Invocation

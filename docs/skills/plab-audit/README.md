@@ -38,7 +38,7 @@ All three modes run by default and the bundle lands in `_output/plab-audit/<repo
 
 ### Installation
 
-Ships with the `prisant-utilities` plugin. Nothing to install separately. Because it carries `disable-model-invocation: true`, it is absent from the auto-loaded skill listing and runs only when you type `/plab-audit`.
+Ships with the `prisant-powertools` plugin. Nothing to install separately. Because it carries `disable-model-invocation: true`, it is absent from the auto-loaded skill listing and runs only when you type `/plab-audit`.
 
 ---
 

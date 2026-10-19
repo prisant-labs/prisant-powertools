@@ -5,6 +5,19 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-10-19
+
+The plugin is renamed from `prisant-utilities` to `prisant-powertools`. The rename changes the name only: no skill's behaviour, version or files change, and `AGENTS.md` keeps its design frame. It ships as a MINOR release because every skill's invocation namespace changes with the plugin name.
+
+### Changed
+
+- **The plugin, its GitHub repository and its marketplace entry are now `prisant-powertools`.** The new install key is `prisant-powertools@prisant-labs`, and every skill now runs under the `prisant-powertools:` prefix, for example `/prisant-powertools:plab-wrap-session`. The repository moved from `prisant-labs/prisant-utilities` to `prisant-labs/prisant-powertools`, and GitHub redirects the old URL, so old links and clones keep working. `library.json` carries the new name and repository URLs, and the three generated manifests were regenerated from it. The README, the status page, every skill usage README, the eval suite's README, `references/decisions-section.md` and the release checklist now name the new plugin.
+- **An existing install moves by installing the new key, then uninstalling the old one.** In Claude Code, run `claude plugin marketplace update prisant-labs`, then `claude plugin install prisant-powertools@prisant-labs`, then `claude plugin uninstall prisant-utilities@prisant-labs`, and restart. In Codex, run `codex plugin marketplace upgrade prisant-labs`, then `codex plugin add prisant-powertools@prisant-labs`, then `codex plugin remove prisant-utilities@prisant-labs`. A permission rule, a hook, or a Codex `[[skills.config]]` entry that names a skill with the `prisant-utilities:` prefix needs the same rename.
+
+### Added
+
+- **The repository's first decision records, in `docs/internal/decisions/`.** ADR-1 (the rename), `0001-rename-to-prisant-powertools.md`, records the three choices behind this release: the name-only charter, the MINOR version, and renaming the maintainer's local checkout folder. ADR-2 (the repository is authoritative), `0002-repository-is-authoritative.md`, records that the repository's files, not GitHub issues or milestones, settle what a release contains, and that no Decision issue type is added. The folder's README follows the MADR v4 seed that `plab-init-project` scaffolds.
+
 ## [0.8.1] - 2026-10-19
 
 A small release, cut before the plugin's rename so that the rename has a clean point to roll back to. It ships the work merged after v0.8.0 and makes `plab-release-plan` manual-only.
