@@ -2,7 +2,7 @@
 
 The current configuration of every skill in `prisant-utilities`, as declared in the repository. One row per skill, plus the setup each one needs and where its output lands.
 
-**Plugin version:** 0.8.0 **Skills:** 10 (8 auto-discoverable, 2 explicit-invocation only) **Verified against:** `library.json`, `manifest.generated.json`, and each `skills/*/SKILL.md` **As of:** 2026-10-16
+**Plugin version:** 0.8.1 **Skills:** 10 (7 auto-discoverable, 3 explicit-invocation only) **Verified against:** `library.json`, `manifest.generated.json`, and each `skills/*/SKILL.md` **As of:** 2026-10-19
 
 > This file describes what the repository declares, not what is installed on any given machine. To check a local install, read `~/.claude/plugins/installed_plugins.json`.
 
@@ -17,13 +17,13 @@ The current configuration of every skill in `prisant-utilities`, as declared in 
 | `plab-continue-session` | 1.6.0 | Auto + explicit | `[--log <path>]` | Nothing. Displays context only |
 | `plab-guide` | 2.2.2 | Auto + explicit | `<topic-or-repo-url> [--type repo-url\|tool\|concept] [--out <dir>] [--force]` | `_output/plab-guide/` |
 | `plab-init-project` | 1.3.0 | **Explicit only** | `[--profile minimal\|standard\|public] [--type ...] [--agents ...] [--dry-run]` | The target repository root |
-| `plab-release-plan` | 1.5.1 | Auto + explicit | `--create \| --promote \| --demote \| --update \| --gate` | `docs/internal/release-plans/plan_NN_<slug>/` |
+| `plab-release-plan` | 1.6.0 | **Explicit only** | `--create \| --promote \| --demote \| --update \| --gate` | `docs/internal/release-plans/plan_NN_<slug>/` |
 | `plab-resolve-open-items` | 1.1.0 | Auto + explicit | `[--backlog \| <document>]` | Each item's home document; the walk record and any backlog file in `_local/decisions/` |
 | `plab-spec` | 1.3.3 | Auto + explicit | `--effort <id> [--target-release vX.Y.Z] [--revise] [--dry-run]` | `docs/internal/release-plans/_unassigned/` by default |
 | `plab-strategy-brief` | 1.1.1 | Auto + explicit | `[paste raw thinking]` | `_output/plab-strategy-brief/` |
 | `plab-wrap-session` | 1.8.1 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
 
-**Explicit only** means the skill carries `disable-model-invocation: true`. It never fires on its own and is absent from the auto-loaded skill listing. It runs when you type its name and only then. **`plab-init-project` and `plab-audit` carry it now.** `plab-spec` and `plab-release-plan` carried it through 1.2.1 and 1.3.0 respectively; both are now auto-discoverable, using explicit do-NOT-fire clauses in their descriptions instead of the binary flag.
+**Explicit only** means the skill carries `disable-model-invocation: true`. It never fires on its own and is absent from the auto-loaded skill listing. It runs when you type its name and only then. **`plab-init-project`, `plab-audit` and `plab-release-plan` carry it now.** `plab-release-plan` carried it through 1.3.0, was auto-discoverable from 1.4.0 to 1.5.1, and carries it again from 1.6.0, provisionally. `plab-spec` carried it through 1.2.1 and is now auto-discoverable, using an explicit do-NOT-fire clause in its description instead of the binary flag.
 
 ---
 
@@ -121,13 +121,13 @@ Writes a feature specification optimized for agent execution.
 
 Produces frontmatter, an agent-updated Task Summary block, and numbered acceptance criteria with source citations. Defines **what** to build. The implementation-plan template in `docs/internal/release-plans/` defines how; `/plab-strategy-brief` explores why.
 
-### `plab-release-plan` 1.5.1
+### `plab-release-plan` 1.6.0, explicit only
 
 Manages a version-scoped release plan folder.
 
 | Property | Value |
 |---|---|
-| Invocation | **Auto-discoverable as of 1.4.0.** Fires on release scoping, promotion, and readiness checks. Do-NOT-fire clause covers general planning talk, changelog requests, and questions about what shipped |
+| Invocation | `disable-model-invocation: true`, from 1.6.0 and provisionally. It was auto-discoverable from 1.4.0 to 1.5.1 |
 | Subcommands | `--create`, `--promote`, `--demote`, `--update`, `--gate` |
 | Output | `docs/internal/release-plans/plan_NN_<slug>/plan.md`. **Folders are named by sequence and theme, not version**; the version lives in `target-version:` frontmatter |
 | Scripts | None |

@@ -1,5 +1,5 @@
 ---
-tags: [trigger, should-fire, plab-release-plan]
+tags: [trigger, manual-only, plab-release-plan]
 max_turns: 6
 timeout_seconds: 90
 allowed_tools: [Read, Glob, Grep, Skill]

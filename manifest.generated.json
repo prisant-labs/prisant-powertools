@@ -1,6 +1,6 @@
 {
   "name": "prisant-utilities",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "tier": "universal",
   "standard": "0.14",
   "skills": [
@@ -32,7 +32,7 @@
     {
       "name": "plab-release-plan",
       "path": "skills/plab-release-plan/SKILL.md",
-      "description": "Create and manage a version-scoped release plan folder: scaffold it, promote or demote whole effort folders between _unassigned/ and a release, regenerate the aggregation table from disk, and report whether a version can be tagged yet against hygiene gates and a doc-update checklist. Use when scoping a release, moving efforts in or out of one, or checking release readiness: 'create the release plan', 'promote these efforts into v0.5.0', 'can we tag yet', 'check release readiness'. Do NOT fire on general planning talk, on requests for release notes or a changelog, or on questions about what already shipped. Refuses to invent or modify acceptance criteria - those live in specs written by /plab-spec; the release plan only aggregates."
+      "description": "Create and manage a version-scoped release plan folder: scaffold it, promote or demote whole effort folders between _unassigned/ and a release, regenerate the aggregation table from disk, and report whether a version can be tagged yet against hygiene gates and a doc-update checklist. Use when scoping a release, moving efforts in or out of one, or checking release readiness: 'create the release plan', 'promote these efforts into v0.5.0', 'can we tag yet', 'check release readiness'. Do NOT fire on general planning talk, on requests for release notes or a changelog, or on questions about what already shipped. Refuses to invent or modify acceptance criteria - those live in specs written by /plab-spec; the release plan only aggregates. Explicit invocation only: run /plab-release-plan; it does not fire on its own."
     },
     {
       "name": "plab-resolve-open-items",

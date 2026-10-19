@@ -60,7 +60,7 @@ SEMVER = re.compile(r'^\d+\.\d+\.\d+$')
 USAGE_VERSION_LINE = re.compile(r'^\*\*Version:\*\*\s*(\d+\.\d+\.\d+)\s*$', re.MULTILINE)
 PLUGIN_VERSION_LINE = re.compile(r'\*\*Plugin version:\*\*\s*(\d+\.\d+\.\d+)')
 # L5. The trailing ", explicit only" (or any other comma-introduced note) is optional, because
-# docs/status-skills.md writes it on the two manual-only skills and nothing else.
+# docs/status-skills.md writes it on the manual-only skills and nothing else.
 SECTION_HEADING = re.compile(r'^### `(plab-[a-z0-9-]+)` (\d+\.\d+\.\d+)(?:,.*)?$', re.MULTILINE)
 
 README_REL = "README.md"

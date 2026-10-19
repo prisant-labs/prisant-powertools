@@ -1,6 +1,6 @@
 # plab-release-plan
 
-**Version:** 1.5.1
+**Version:** 1.6.0
 **Source:** [`skills/plab-release-plan/`](../../../skills/plab-release-plan/)
 
 Manage a version-scoped release plan. Owns the release folder, the `_unassigned/` -> release promotion ceremony, the aggregation table, hygiene gates, and the doc-update checklist that gates the tag.
@@ -56,9 +56,9 @@ ln -s /path/to/prisant-utilities/skills/plab-release-plan .claude/skills/plab-re
 
 ### Invocation
 
-**Auto-discoverable as of 1.4.0.** Through 1.3.0 this skill shipped with `disable-model-invocation: true` and ran only when typed. That flag is gone. It now fires on release scoping, promoting or demoting efforts, and release-readiness checks, and its description carries a do-NOT-fire clause for general planning talk, release-notes or changelog requests, and questions about what already shipped.
+**Manual only from 1.6.0, provisionally.** The skill ships with `disable-model-invocation: true` again, so it never fires on its own and runs only when you type `/plab-release-plan` with a subcommand. It shipped with the flag through 1.3.0, was auto-discoverable from 1.4.0 to 1.5.1, and regained it by the maintainer's ruling of 2026-10-17.
 
-Typing `/plab-release-plan` with a subcommand still works and is still the precise way to run it.
+The skill has never been run in this repository. It was built for release plans numbered in advance, while versions are now assigned at ship time, and its readiness gate (f) cites two files this repository does not have. A review of the wider release plan will decide whether the flag comes off again or the skill is retired.
 
 Cutting a release is a deliberate act performed on a handful of days. A skill that reshapes release folders should not be reachable by an ambiguous phrase match mid-conversation.
 

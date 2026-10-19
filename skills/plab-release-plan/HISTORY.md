@@ -2,12 +2,21 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.6.0 | 2026-10-19 | v0.8.1 | changed | Restored `disable-model-invocation: true`. The skill runs only when typed as `/plab-release-plan`, by the maintainer's provisional ruling of 2026-10-17. |
 | 1.5.1 | 2026-09-01 | v0.5.3 | fixed | Removed every pointer to `/superpowers:writing-plans`, including the stale-plan gate's failure message. The skill names no external plugin. |
 | 1.5.0 | 2026-08-27 | v0.5.0 | changed | Release folders are named by sequence and theme, not by version. The version moves to `target-version:` frontmatter. |
 | 1.4.0 | 2026-08-27 | v0.5.0 (as 1.5.0) | changed | Removed `disable-model-invocation`. The skill is auto-discoverable; a do-NOT-fire clause in the description replaces the binary gate. |
 | 1.3.0 | 2026-08-24 | v0.3.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.3.0; prior history remains there. |
 
 
+
+## 1.6.0 - 2026-10-19
+
+**The skill is manual-only again.** `disable-model-invocation: true` is back in the frontmatter, so the skill is absent from the auto-loaded skill listing and runs only when typed as `/plab-release-plan`. The description says so in the same words `plab-audit` uses. Nothing else about the skill changed.
+
+**Why.** 1.4.0 replaced the flag with a do-NOT-fire clause on the argument that a narrowed description beats a binary gate. That argument assumed a skill in active use, and this one has never been run: no session log lists it, and the v0.5.x logs told agents not to run its `--gate`. Two further reasons make auto-invocation a liability rather than a convenience. The skill was built for release plans numbered in advance, and versions are now assigned at ship time. And its hygiene gate (f) cites two files this repository does not have, `validate-plugin-manifests.py` and `pin-marketplace.yml`, so a readiness check it ran unprompted would fail for a reason unrelated to the release.
+
+**Provisional.** The maintainer ruled on 2026-10-17 to make the skill manual-only, with the words "I still need to review the wider plan in this". A `--ship` mode that would cut a release end to end stays deferred until that review. If the review keeps the skill, the flag can come off again; if it retires the skill, this release has already stopped it firing.
 
 ## 1.5.1 - 2026-09-01
 

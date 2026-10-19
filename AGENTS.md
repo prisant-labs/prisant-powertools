@@ -6,13 +6,15 @@ Agent navigation entrypoint for the `prisant-utilities` plugin.
 
 Ten general-purpose agent skills for the work around the work: scaffolding a repository for agent-assisted development, closing and resuming coding sessions, turning raw thinking into a decision-ready brief, producing guide bundles, getting a second model to review a document, auditing a repository and reordering its backlog on evidence, carrying a feature from written specification through to a taggable release plan, and walking the maintainer through the questions and decisions a session leaves open.
 
-Two of the ten ship with `disable-model-invocation: true` and run only when invoked by name.
+Three of the ten ship with `disable-model-invocation: true` and run only when invoked by name.
 
 `plab-init-project` scaffolds files into a repository root, its trigger phrases ("init", "initialize", "set up") are among the most common words in ordinary conversation, and it is run once per repository rather than routinely.
 
 `plab-audit` is gated by maintainer ruling of 2026-09-19: an audit is occasional and explicit, it is expensive to run by accident, and "audit" collides with dependency scanning and with audit logs as a runtime feature. The counter-argument is recorded in the parent brief and is not dismissed: a manual-only skill cannot displace a manual habit, so if the audit habit does not form, a weak description is no longer a candidate explanation and the dogfood gate is the only adoption signal left.
 
-`plab-spec` and `plab-release-plan` carried the same flag through v0.4.3 and no longer do. Their descriptions now carry explicit do-NOT-fire clauses instead, which is the mechanism that took `plab-continue-session` from over-triggering to correct: a narrowed description is a better instrument than a binary gate, because it can distinguish a request from a mention.
+`plab-release-plan` is gated again from 1.6.0 (v0.8.1), by maintainer ruling of 2026-10-17, recorded as provisional pending a review of the wider release plan. The skill has never been run here, it was built for release plans numbered in advance while versions are now assigned at ship time, and its hygiene gate (f) cites two files this repository does not have, so a readiness check it ran unprompted would fail for reasons unrelated to the release. It dropped the flag in 1.4.0 on the argument below; that argument assumed a skill in use, and this one is not yet.
+
+`plab-spec` carried the same flag through v0.4.3 and no longer does. Its description now carries an explicit do-NOT-fire clause instead, which is the mechanism that took `plab-continue-session` from over-triggering to correct: a narrowed description is a better instrument than a binary gate, because it can distinguish a request from a mention.
 
 ## Design frame
 
@@ -100,7 +102,7 @@ Create a feature specification: the contract between intent and implementation. 
 
 Aggregate every spec and implementation plan in scope of a release into one self-contained folder, and gate the tag on hygiene checks plus a doc-update checklist. Five subcommands: `--create` scaffolds the release folder and plan document, `--promote` and `--demote` move whole per-effort folders between `_unassigned/` and a release, `--update` regenerates the aggregation table from disk, `--gate` reports readiness read-only. The aggregation table is generated, never hand-edited. Refuses to add or modify acceptance criteria; those live in specs.
 
-**Invocation:** auto-discoverable as of 1.4.0. Fires on release scoping, promoting or demoting efforts, and release-readiness checks. Its description carries a do-NOT-fire clause for general planning talk, release-notes or changelog requests, and questions about what already shipped.
+**Invocation:** manual only (`disable-model-invocation: true`) from 1.6.0, provisionally; see the paragraph near the top of this file. `/plab-release-plan`. It was auto-discoverable from 1.4.0 to 1.5.1.
 
 ---
 
