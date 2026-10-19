@@ -1,6 +1,6 @@
 # Decisions / Open Questions Section Standard
 
-Canonical definition of the **decisions section**: the one structural pattern any `prisant-utilities` document uses for a section that captures open questions or decisions (strategy briefs, peer-review documents, and other documents that surface unresolved choices).
+Canonical definition of the **decisions section**: the one structural pattern any `prisant-powertools` document uses for a section that captures open questions or decisions (strategy briefs, peer-review documents, and other documents that surface unresolved choices).
 
 This reference is the single source of truth. Skills and docs cite this file rather than redefining the pattern. The pattern originates in `plab-ai-review`'s review template, the most evolved exemplar in this plugin.
 

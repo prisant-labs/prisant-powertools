@@ -1,6 +1,6 @@
 # Plugin eval suite (R5)
 
-This is a `claude plugin eval` suite for `prisant-utilities`. It checks skill-trigger behavior, not skill output quality: does each auto-invocable skill fire on the phrasing its own description promises, and does it stay quiet on the phrasing its description rules out. It was built from the 2026-10-12 toolchain review's R5 recommendation (Option A: a local suite now; CI integration is a separate, later decision).
+This is a `claude plugin eval` suite for `prisant-powertools`. It checks skill-trigger behavior, not skill output quality: does each auto-invocable skill fire on the phrasing its own description promises, and does it stay quiet on the phrasing its description rules out. It was built from the 2026-10-12 toolchain review's R5 recommendation (Option A: a local suite now; CI integration is a separate, later decision).
 
 ## What it covers
 

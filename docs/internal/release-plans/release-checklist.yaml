@@ -1,4 +1,4 @@
-# Project-level doc-update checklist extensions for prisant-utilities.
+# Project-level doc-update checklist extensions for prisant-powertools.
 #
 # Consumed by /plab-release-plan. The skill applies its eight built-in defaults first, then appends
 # every row listed here. Rows are added, never substituted: if an entry names the same `doc` as a
@@ -14,12 +14,12 @@
 # not documents in THIS repository: running the eval suite locally before tagging (`evals/README.md`,
 # not run in CI); repinning `.claude-plugin/marketplace.json`'s `ref` and `version` in the separate
 # `prisant-labs/agent-plugins` repository through a PR there; and, after `claude plugin marketplace
-# update prisant-labs` and `claude plugin update prisant-utilities@prisant-labs` and a restart,
+# update prisant-labs` and `claude plugin update prisant-powertools@prisant-labs` and a restart,
 # verifying the Claude Code install against a behaviour only the new version has.
 #
 # Codex reads the same `prisant-labs` marketplace and needs its own, separate upgrade step:
 # `codex plugin marketplace upgrade prisant-labs`, followed by a check that `codex plugin list`
-# reports `prisant-utilities@prisant-labs installed, enabled` at the new version. The v0.8.0 release
+# reports `prisant-powertools@prisant-labs installed, enabled` at the new version. The v0.8.0 release
 # missed this step: the Codex install stayed at 0.7.1 until the orchestrator ran the upgrade by hand
 # on 2026-10-16. Post-release verification should name both "Claude Code install upgraded" and
 # "Codex install upgraded" as separate checks, not only the one this repository happened to remember

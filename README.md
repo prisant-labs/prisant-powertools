@@ -1,4 +1,4 @@
-# prisant-utilities
+# prisant-powertools
 
 Ten agent skills for the work around the work: scaffolding a repository for agent-assisted development, closing and resuming coding sessions, turning raw thinking into a decision-ready brief, producing guide bundles, getting a second model to review a document, auditing a repository and reordering its backlog on evidence, carrying a feature from written specification through to a taggable release plan, and walking the maintainer through the questions and decisions a session leaves open.
 
@@ -33,19 +33,19 @@ In Claude Code:
 
 ```
 /plugin marketplace add prisant-labs/agent-plugins
-/plugin install prisant-utilities@prisant-labs
+/plugin install prisant-powertools@prisant-labs
 ```
 
 In Codex, from a terminal:
 
 ```
 codex plugin marketplace add prisant-labs/agent-plugins
-codex plugin add prisant-utilities@prisant-labs
+codex plugin add prisant-powertools@prisant-labs
 ```
 
 Both harnesses read the same marketplace, `prisant-labs`, which pins a released tag. Then invoke any skill by name, for example `/plab-wrap-session`.
 
-To update after a release: in Claude Code, `claude plugin marketplace update prisant-labs` then `claude plugin update prisant-utilities@prisant-labs`, and restart; in Codex, `codex plugin marketplace upgrade prisant-labs`.
+To update after a release: in Claude Code, `claude plugin marketplace update prisant-labs` then `claude plugin update prisant-powertools@prisant-labs`, and restart; in Codex, `codex plugin marketplace upgrade prisant-labs`.
 
 ## Conventions
 

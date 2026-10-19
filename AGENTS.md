@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Agent navigation entrypoint for the `prisant-utilities` plugin.
+Agent navigation entrypoint for the `prisant-powertools` plugin.
 
 ## What this is
 
