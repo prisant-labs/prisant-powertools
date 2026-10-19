@@ -14,14 +14,14 @@ Works with Claude Code and Codex.
 | [`plab-guide`](docs/skills/plab-guide/README.md) | Generate a guide bundle: standard Markdown, an ADHD-formatted variant, a quick-reference HTML page, and a 1-2 page PDF | 2.2.2 |
 | [`plab-ai-review`](docs/skills/plab-ai-review/README.md) | Run a structured peer review of a document with a second model, then synthesise the findings | 1.3.0 |
 | [`plab-spec`](docs/skills/plab-spec/README.md) | Write a feature spec: numbered acceptance criteria, each cited to a source, in a per-effort folder | 1.3.3 |
-| [`plab-release-plan`](docs/skills/plab-release-plan/README.md) | Scope a release, promote efforts into it, and gate the tag on hygiene checks and a doc-update checklist | 1.5.1 |
+| [`plab-release-plan`](docs/skills/plab-release-plan/README.md) **&sup1;** | Scope a release, promote efforts into it, and gate the tag on hygiene checks and a doc-update checklist | 1.6.0 |
 | [`plab-resolve-open-items`](docs/skills/plab-resolve-open-items/README.md) | Walk through the open questions, decisions and tasks a session has raised, take a one-line answer, and write each answer back to its home document | 1.1.0 |
 | [`plab-init-project`](docs/skills/plab-init-project/README.md) **&sup1;** | Scaffold agent infrastructure into a repository: AGENTS.md, CLAUDE.md, session logs, decision records | 1.3.0 |
 | [`plab-audit`](docs/skills/plab-audit/README.md) **&sup1;** | Audit a repository into a five-file bundle: what it is worth, what is wrong with a file path on every finding, and a ranked roadmap that traces to those findings | 1.1.0 |
 
-**&sup1; Manual invocation only.** Both skills ship with `disable-model-invocation: true` and never fire on their own; type `/plab-init-project` or `/plab-audit` to run them. `plab-init-project`'s trigger phrases ("init", "initialize", "set up") are too common in ordinary conversation to be safe auto-matches, and it writes files into your repository root. `plab-audit` is gated because an audit is occasional, explicit, and expensive to start by accident, and because "audit" collides with dependency scanning and with audit logs as a runtime feature.
+**&sup1; Manual invocation only.** These three skills ship with `disable-model-invocation: true` and never fire on their own; type `/plab-release-plan`, `/plab-init-project` or `/plab-audit` to run them. `plab-init-project`'s trigger phrases ("init", "initialize", "set up") are too common in ordinary conversation to be safe auto-matches, and it writes files into your repository root. `plab-audit` is gated because an audit is occasional, explicit, and expensive to start by accident, and because "audit" collides with dependency scanning and with audit logs as a runtime feature. `plab-release-plan` is gated again from 1.6.0, provisionally, because it was built for release plans numbered in advance while versions are now assigned at ship time, and because its readiness gate cites two files this repository does not have.
 
-`plab-spec` and `plab-release-plan` carried the same flag through v0.4.3. Both are now auto-discoverable, with explicit do-NOT-fire clauses in their descriptions in place of the flag.
+`plab-spec` carried the same flag through v0.4.3. It is now auto-discoverable, with an explicit do-NOT-fire clause in its description in place of the flag.
 
 The session pair is a contract: `plab-wrap-session` writes the log that `plab-continue-session` reads. They are versioned and released together.
 

@@ -7,12 +7,14 @@ description: "Create and manage a version-scoped release plan folder: scaffold i
   readiness: 'create the release plan', 'promote these efforts into v0.5.0', 'can we tag yet',
   'check release readiness'. Do NOT fire on general planning talk, on requests for release notes or
   a changelog, or on questions about what already shipped. Refuses to invent or modify acceptance
-  criteria - those live in specs written by /plab-spec; the release plan only aggregates."
+  criteria - those live in specs written by /plab-spec; the release plan only aggregates. Explicit
+  invocation only: run /plab-release-plan; it does not fire on its own."
 argument-hint: "--create vX.Y.Z [--theme <text>] | --promote --from _unassigned --to vX.Y.Z S-NN ... | --demote --from vX.Y.Z [--to _unassigned] S-NN | --update vX.Y.Z | --gate vX.Y.Z"
+disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.5.1"
-  updated: 2026-09-01
+  version: "1.6.0"
+  updated: 2026-10-19
 ---
 
 # Release Plan
