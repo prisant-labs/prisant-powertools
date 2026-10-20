@@ -4,7 +4,7 @@ title: Reconcile the Session Log Against Repo Reality at Resume
 type: spec
 status: committed
 created: 2026-08-23
-updated: 2026-10-15
+updated: 2026-10-20
 linked-effort: the maintainer's private plab-continue-session evolution roadmap, 2026-08-16
 linked-plan: implementation-plan.md
 ac-count: 9
@@ -20,10 +20,10 @@ priority: P1
 ## Task Summary
 
 **Status:** Committed. The maintainer approved this build on 2026-10-15 ("Go ahead and complete the work").
-**Last updated:** 2026-10-15
+**Last updated:** 2026-10-20
 **Linked plan:** `implementation-plan.md`
-**Open questions:** 6 (see Open Questions / Decisions); none are maintainer-decided yet, each carries a working default an agent built against under the 2026-10-15 go-ahead
-**Revisions:** 2 (initial draft, then the 2026-10-15 pre-build refresh; see Revisions)
+**Open questions:** 7 (see Open Questions / Decisions); none are maintainer-decided yet. OQ1 and OQ3 to OQ6 each carry a working default an agent built against under the 2026-10-15 go-ahead, and OQ7 is a defect found on 2026-10-20 with nothing built yet.
+**Revisions:** 3 (initial draft, the 2026-10-15 pre-build refresh, then OQ7 on 2026-10-20; see Revisions)
 
 ### Acceptance Criteria Fulfillment
 
@@ -174,6 +174,7 @@ This is distinct from the existing branch-mismatch warning (which fires when the
 |---|---|---|
 | 2026-08-23 | Initial draft created | Claude (agent) |
 | 2026-10-15 | Pre-build refresh under the maintainer's 2026-10-15 go-ahead ("Go ahead and complete the work"), before implementation. Status moved draft to committed. Stale facts corrected: `plab-continue-session` was 1.4.0/1.5.0 in the draft's framing and is 1.5.0 now (this effort takes it to 1.6.0, not 1.5.0); `plab-wrap-session` was described as reaching 1.6.0 and is 1.7.0 now; the "release ladder" and specific release numbers (v0.4.0, v0.6.0, v0.8.0, v0.9.0) are obsolete because versions are assigned to skills only at ship time, per decision register entry 21 (versions assigned at ship time), so every such reference now reads "the release that ships it"; the implementation plan's claim that "this repository has no `.github/` directory yet" was false even when the plan was drafted, since CI already exists at `.github/workflows/gate.yml`. AC-2's fetch command gained `--no-prune` (see AC-2) because a plain fetch prunes when `fetch.prune` is set in git config, which deleted a remote-tracking ref without confirmation on 2026-09-25 (sibling spec W-02, decision D4, tested 2026-10-05). AC-4's tag-date comparison moved from `creatordate:short` to `creatordate:iso-strict` (see AC-4). AC-6's rename-hint command dropped `--follow` after it was proved empirically not to find a rename for a path missing at HEAD (see AC-6). Design change: reconciliation is implemented as a canary-tested script (`skills/plab-continue-session/scripts/reconcile.py`) with a sibling test file (`test-reconcile.py`), not the rung-3 documented convention the implementation plan originally specified; see OQ4. The Open Questions / Decisions section below was reformatted into this plugin's standard decisions-section form (`references/decisions-section.md`) and gained OQ4, OQ5 and OQ6 for decisions an agent took on the maintainer's behalf; none of OQ1, OQ3, OQ4, OQ5 or OQ6 is maintainer-decided, each carries a working default the build proceeded on. | Claude (agent) |
+| 2026-10-20 | Added OQ7 (`reconcile.py` ignores `commit-range`), a defect found on the first resume after the v0.9.0 rename. The commit check reads only `commit-sha`, which the wrap never writes, so a pull request merged during a wrap reads as landing after the log. Recorded here so the `--backlog` sweep sees it. Nothing else in the spec changed. | Claude (agent) |
 
 ## Sources & Evidence
 
@@ -201,7 +202,7 @@ This is distinct from the existing branch-mismatch warning (which fires when the
 
 ## Open Questions / Decisions
 
-This section follows `references/decisions-section.md`. None of the items below is maintainer-decided. Each carries a working default an agent built against under the maintainer's 2026-10-15 go-ahead; the maintainer's next walk through this document is expected to rule on each one explicitly.
+This section follows `references/decisions-section.md`. None of the items below is maintainer-decided. OQ1 to OQ6 each carry a working default an agent built against under the maintainer's 2026-10-15 go-ahead; the maintainer's next walk through this document is expected to rule on each one explicitly. OQ7 was added on 2026-10-20 as a defect report, and nothing has been built for it.
 
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
@@ -211,6 +212,7 @@ This section follows `references/decisions-section.md`. None of the items below 
 | OQ4 | Implement reconciliation as a script, or as a documented convention | (none) | Open | 2026-10-15 |
 | OQ5 | Build AC-3, AC-4, AC-5, AC-7 and AC-6's rename hint as specified, without a separate per-mechanism maintainer review | (none) | Open | 2026-10-15 |
 | OQ6 | AC-3's date-fallback base ref when the log's branch no longer exists locally | (none) | Open | 2026-10-15 |
+| OQ7 | `reconcile.py` ignores `commit-range`, so commits merged during a wrap read as new | (none) | Open | 2026-10-20 |
 
 ### OQ1: Hard-block or advisory-only for the next-action-already-done signal (Open)
 
@@ -339,6 +341,38 @@ This section follows `references/decisions-section.md`. None of the items below 
 * **Option B:** Report `commits_since` (and therefore `next_action_overlap`) as broken, on the grounds that there is no agreed base to count from once the log's own branch is gone.
 
 **Recommendation.** Option A: implemented in `reconcile.py`. A broken result here would also suppress the next-action-overlap advisory on exactly the resume where a deleted branch makes that advisory most worth seeing, and `HEAD` is the best available substitute as long as the substitution stays visible in the output. Working default: built on this recommendation on 2026-10-15 under the maintainer's go-ahead; not yet ratified.
+
+---
+
+> **Maintainer decision:** _(pending)_
+>
+> * **Status:** Open
+> * **Choice:** (none)
+> * **Reasoning:** (none)
+> * **Decided by / date:** (none)
+
+### OQ7: `reconcile.py` ignores `commit-range`, so commits merged during a wrap read as new (Open)
+
+**Summary.** Whether `reconcile.py` should anchor its commit count on the end SHA of the log's `commit-range` field, and call remote commits unreflected only when the local branch is actually behind.
+
+**Context.** The first resume after the v0.9.0 rename, on 2026-10-20, exposed two faults in `skills/plab-continue-session/scripts/reconcile.py`.
+
+* **The commit check never sees a SHA.** It reads only `commit-sha` (line 478), a Tier 3 field the wrap does not write, so every log from `plab-wrap-session` 1.8.0 onward takes AC-3's date fallback. Since 1.8.0, `derive-log-facts.py` writes `commit-range` as a Tier 1 field, so the anchor this check needs is already in every new log. The date fallback misfires because a log's `date` comes from the system clock when the wrap starts. A pull request merged during the wrap therefore counts as landing after the log.
+* **The remote wording is wrong.** The detail message at line 552 says remote commits are "not yet reflected in the local branch". The count behind it, `remote_count`, is every commit on the remote branch since the anchor, not the commits missing locally. The real behind figure is computed separately at line 536.
+
+The reproduction is the resume of `2026-10-19_19-28_claude_rename-closed-split-repaired-lifecycle-baseline.md`, which reported two findings. Both were false. The two commits were PR #45's own, `46d8877` at 20:19 and its merge `0802aac` at 20:22, and the log lists them in `commit-range: 21bca39..0802aac`. `HEAD` and `origin/main` were the same SHA. Rerunning the installed 0.9.0 script on a copy of that log with `commit-sha: 0802aac` added returned all nine checks `[ok]`, which confirms the cause.
+
+This item changes the ground under OQ2. OQ2 deferred promoting `commit-sha` on the wrap side, and wrap 1.8.0 has since added an anchor of its own in `commit-range`. The gap now lies on the read side. Whether OQ2 becomes Superseded is left to the maintainer's walk.
+
+**Desired outcome.** A resume reports commits since the log only when they landed after the last commit the log records. It reports remote commits as unreflected only when the local branch is behind its remote.
+
+**Options / approaches.**
+
+* **Option A:** When `commit-sha` is absent, take the right-hand SHA of `commit-range` as the anchor. Print "not yet reflected" only when the behind count is above zero. The canary is the 2026-10-20 reproduction: the same log must produce a finding without the anchor and none with it. The trade-off is that the anchor is only as fresh as the wrap's derivation run, so a merge after that run would still count as new.
+* **Option B:** Keep the date fallback and fix only the wording. Every wrap that merges a pull request then keeps producing a false "commits since the log" finding at the next resume.
+* **Option C:** Promote `commit-sha` to Tier 1 on the wrap side, as OQ2 proposed. This duplicates a SHA that `commit-range` already carries, and it changes two skills instead of one.
+
+**Recommendation.** Option A. It is a read-side change of a few lines in one script, and its canary already exists. Build it in the first wrap-and-continue release after the rename, beside W-05 (wrap ordering) and the citation-checker fix. Confidence: high on the cause, verified by the rerun; medium on the release placement.
 
 ---
 
