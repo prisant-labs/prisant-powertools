@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **The document lifecycle check passes again after the v0.9.0 tag.** Release plan 08 is still a draft whose `target-version` is v0.9.0, and v0.9.0 shipped as the rename instead, so invariant 10 of `scripts/doc-lifecycle-check.py` flagged it once the tag existed. The release pull request could not catch this, because its CI ran before the tag was pushed. Plan 08 joins plans 05 to 07 in the dated baseline. It is the last plan with a version assigned in advance, so no later tag can trip the same check.
+
 ## [0.9.0] - 2026-10-19
 
 The plugin is renamed from `prisant-utilities` to `prisant-powertools`. The rename changes the name only: no skill's behaviour, version or files change, and `AGENTS.md` keeps its design frame. It ships as a MINOR release because every skill's invocation namespace changes with the plugin name.
