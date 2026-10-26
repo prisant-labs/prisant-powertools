@@ -236,7 +236,7 @@ applied everywhere else in this portfolio.
 > * **Status:** Decided
 > * **Choice:** Option A, both efforts demoted to `_unassigned/`.
 > * **Reasoning:** A release gets its version number only when it ships; planned work carries no number in advance. This is decision 21 in the maintainer's private decision register.
-> * **Follow-up:** Retire this plan's stale `target-version`. That waits on the plan half of the same ruling, making a release plan's `target-version` optional in `plab-release-plan`, which gets its own spec.
+> * **Follow-up:** Retire this plan's stale `target-version`. That waits on the plan half of the same ruling, making a release plan's `target-version` optional in `plab-release-plan`, specified as H-06 (optional release-plan version) in `docs/internal/release-plans/_unassigned/H-06_optional-release-plan-version/spec.md`.
 > * **Decided by / date:** the maintainer, 2026-10-06.
 
 ---
