@@ -4,7 +4,7 @@ title: Declare and archive same-arc superseding session logs
 type: spec
 status: fulfilled
 created: 2026-08-23
-updated: 2026-08-24
+updated: 2026-10-26
 linked-effort: the maintainer's private defect record for the wrap/continue pair, 2026-08-18
 linked-plan: implementation-plan.md
 ac-count: 7
@@ -228,11 +228,13 @@ source; it follows from Requirement 1 having no log to read]
 
 ## Open Questions / Decisions
 
+**Closed 2026-10-26.** JP approved closing the items below as one batch, after a read-only check on 2026-10-25 confirmed each against shipped code. Each closed item ends with what the check found.
+
 | ID | Title | Status |
 |---|---|---|
-| OQ1 | Overlap with D-07's "read the previous log" | Open |
-| OQ2 | Mode scope for the same-arc check | Open |
-| OQ3 | Whether the archive move should eventually be scripted | Open |
+| OQ1 | Overlap with D-07's "read the previous log" | Superseded |
+| OQ2 | Mode scope for the same-arc check | Decided |
+| OQ3 | Whether the archive move should eventually be scripted | Deferred |
 
 ### OQ1: Overlap with D-07's "read the previous log"
 
@@ -245,6 +247,8 @@ detect whether Evidence Gathering already reads the newest log (for the other ef
 reuse that read rather than adding a second one. Not blocking either effort individually; flagged here
 for whoever integrates both, and mirrored in the implementation plan's Phase 1 notes.
 
+**Closed, Superseded by W-02 (derived log facts).** D-05's same-arc check and D-07's carry-forward both read the newest existing log from one shared call to `derive-log-facts.py` (`skills/plab-wrap-session/SKILL.md`, Evidence Gathering). That is a stronger fix than this item's convention, in which whichever effort landed second would reuse the other's read.
+
 ### OQ2: Mode scope for the same-arc check
 
 This spec scopes the same-arc check to deep and final modes, matching the existing hygiene-sweep
@@ -253,6 +257,8 @@ or blocker-focused by their own mode definitions, which makes them unlikely cand
 same arc as a substantial prior log, but "unlikely" is not "impossible." Recommend confirming this scope
 before treating it as settled; if wrong, the fix is a one-line change to Requirement 1's mode list.
 
+**Closed, Decided.** The deep and final scope for the same-arc check shipped and still holds (`skills/plab-wrap-session/SKILL.md`, Evidence Gathering).
+
 ### OQ3: Whether the archive move should eventually be scripted
 
 The source's own cost estimate ("one paragraph in wrap SKILL.md plus a sentence in log-discovery.md")
@@ -260,3 +266,5 @@ implies a rung-3 documented convention, not a rung-2 script, and this spec follo
 collisions turn out to be frequent enough that the manual move becomes routine, a small script
 analogous to `organize-logs.py` (dry-run by default, single-file move, never delete) would be the next
 mechanization step. Not needed now; recorded so the option is not lost.
+
+**Closed, Deferred.** The archive move is still a step the agent performs on approval, with no script. Nothing shows that same-arc collisions have become frequent enough to justify one, so revisit only if they do.

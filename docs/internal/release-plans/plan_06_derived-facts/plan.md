@@ -5,7 +5,7 @@ title: "Release plan 06: Derived facts"
 type: release-plan
 status: draft
 created: 2026-08-23
-updated: 2026-10-16
+updated: 2026-10-26
 theme: "Derived facts"
 includes: []
 spec-count: 0
@@ -113,6 +113,8 @@ default so the rest of the plan could be written; the maintainer has not seen or
 means no default was adopted and the answer is genuinely needed before the work runs. Nothing in this
 section carries maintainer approval. Ratify or overturn every `Proposed` row before executing the
 work it governs.
+
+**Update, 2026-10-26.** This legend describes the rows as first written. A row now marked `Decided` or `Superseded` carries the maintainer's approval, recorded in its block. A `Proposed` or `Open` row still does not.
 
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|

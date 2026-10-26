@@ -4,7 +4,7 @@ title: Narrow the path-existence gate to real path citations
 type: spec
 status: fulfilled
 created: 2026-08-23
-updated: 2026-08-24
+updated: 2026-10-26
 linked-effort: the maintainer's private defect record for the wrap/continue pair, 2026-08-18
 linked-plan: implementation-plan.md
 ac-count: 6

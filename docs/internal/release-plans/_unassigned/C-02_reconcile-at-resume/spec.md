@@ -4,7 +4,7 @@ title: Reconcile the Session Log Against Repo Reality at Resume
 type: spec
 status: committed
 created: 2026-08-23
-updated: 2026-10-20
+updated: 2026-10-26
 linked-effort: the maintainer's private plab-continue-session evolution roadmap, 2026-08-16
 linked-plan: implementation-plan.md
 ac-count: 9
@@ -203,6 +203,8 @@ This is distinct from the existing branch-mismatch warning (which fires when the
 ## Open Questions / Decisions
 
 This section follows `references/decisions-section.md`. None of the items below is maintainer-decided. OQ1 to OQ6 each carry a working default an agent built against under the maintainer's 2026-10-15 go-ahead; the maintainer's next walk through this document is expected to rule on each one explicitly. OQ7 was added on 2026-10-20 as a defect report, and nothing has been built for it.
+
+**Update, 2026-10-26.** JP approved closing OQ1 and OQ3 to OQ6 as one batch, after a read-only check confirmed that each working default shipped and still holds. OQ7 is still `Open`, and OQ2 stays `Deferred`.
 
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|

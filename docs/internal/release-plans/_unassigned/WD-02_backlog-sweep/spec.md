@@ -4,7 +4,7 @@ title: "plab-resolve-open-items --backlog: sweep the repository's open items int
 type: spec
 status: committed
 created: 2026-10-15
-updated: 2026-10-15
+updated: 2026-10-26
 linked-effort: "the maintainer's private walk-decisions strategy brief, 2026-10-04, and WD-01's Non-Goal 1"
 linked-plan: implementation-plan.md
 linked-release: null
@@ -186,6 +186,8 @@ The script returns no items. The skill replies: "Nothing is open across this rep
 ## Open Questions / Decisions
 
 **What these statuses mean.** Every item below is `Open`: the maintainer has not chosen. Each Recommendation ends by saying the build used it as a working default, so a walk can ratify or overturn it. The build followed the maintainer's instruction of 2026-10-15 to complete this work.
+
+**Update, 2026-10-26.** JP approved closing D1 to D4 and D6 as one batch, after a read-only check confirmed that each working default shipped and still holds. D5 is still `Open`.
 
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|

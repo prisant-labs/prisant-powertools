@@ -4,7 +4,7 @@ title: "Programmatic review dispatch for plab-ai-review"
 type: spec
 status: committed
 created: 2026-08-29
-updated: 2026-10-15
+updated: 2026-10-26
 linked-effort: "the maintainer's private ai-review growth roadmap, entry A-2 (make the handoff programmatic), written 2026-08-16, which names this the single largest improvement available in the portfolio"
 linked-plan: implementation-plan.md
 linked-release: null

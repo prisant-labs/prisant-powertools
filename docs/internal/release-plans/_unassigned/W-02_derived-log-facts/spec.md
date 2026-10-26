@@ -4,7 +4,7 @@ title: Derive session-log facts from git instead of model recall
 type: spec
 status: committed
 created: 2026-08-23
-updated: 2026-10-16
+updated: 2026-10-26
 linked-effort: the maintainer's private plab-wrap-session evolution roadmap, 2026-08-16
 linked-plan: implementation-plan.md
 ac-count: 11
@@ -212,10 +212,10 @@ None.
 | D3 | Whether capture-lite (W-1 / D-4) grounds the current session's Verification table | Decided, see below |
 | D4 | Whether the script may fetch from the remote | Decided 2026-10-04, see below |
 | D5 | Whether the script runs the project's own validation scripts | Decided 2026-10-04, see below |
-| D6 | `files-changed` diff scope: committed-only (`<base>..HEAD`) or base-vs-working-tree (`<base>`) | Open, see below |
-| D7 | Default `--base` resolution order when the caller passes none | Open, see below |
-| D8 | Mechanism for grouping `files-changed` "by purpose if many" | Open, see below |
-| D9 | Which transcript Bash calls count as "verification-relevant" for AC-5 | Open, see below |
+| D6 | `files-changed` diff scope: committed-only (`<base>..HEAD`) or base-vs-working-tree (`<base>`) | Open |
+| D7 | Default `--base` resolution order when the caller passes none | Open |
+| D8 | Mechanism for grouping `files-changed` "by purpose if many" | Open |
+| D9 | Which transcript Bash calls count as "verification-relevant" for AC-5 | Open |
 
 **D1.** The roadmap names "commit range and tags" as one derivable row but does not name field keys. `frontmatter-schema.md` already has Tier 3 fields `commit-sha` (single SHA) and `tags` (topic keywords) that a careless implementation could collide with. AC-3 constrains the answer (must not collide) without dictating the exact name. **Decided at implementation 2026-10-15:** the fields are `commit-range` (e.g. `"a1b2c3d..e4f5g6h"`, matching Example 1) and `latest-tag` (e.g. `"v0.6.0"`). Neither collides with `commit-sha` (a single SHA, `frontmatter-schema.md:57`) or `tags` (topic keywords, `frontmatter-schema.md:58`); both were checked against that file before use. **Decided by / date:** claude, left to implementation by this spec / 2026-10-15.
 

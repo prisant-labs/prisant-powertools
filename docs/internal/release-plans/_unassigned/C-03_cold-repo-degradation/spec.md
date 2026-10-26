@@ -4,7 +4,7 @@ title: Build Orientation From Repo Reality When No Recent Log Exists
 type: spec
 status: draft
 created: 2026-08-23
-updated: 2026-10-05
+updated: 2026-10-26
 linked-effort: the maintainer's private plab-continue-session evolution roadmap, 2026-08-16
 linked-plan: implementation-plan.md
 ac-count: 9
@@ -215,7 +215,7 @@ The two interactions differ only in which phrase the maintainer used. This relea
 
 | ID | Question | Status |
 |---|---|---|
-| OQ1 | Should the trigger surface (description or body carve-out) eventually change to route status questions to this path more reliably? Tracked as D2 in the v0.6.0 release plan. | Open at the release-plan level; this spec ships consistent with D2's current Option A recommendation |
+| OQ1 | Should the trigger surface (description or body carve-out) eventually change to route status questions to this path more reliably? Tracked as D2 in the v0.6.0 release plan. | Open |
 | OQ2 | Is 30 days the right staleness threshold, or should it be tunable, or derived from the repository's own commit cadence rather than fixed? | Open |
 | OQ3 | How should the D-04 (capture-lite consumers) dependency be recorded, given this document set's frontmatter schema has no dependency field? | Resolved; recorded here |
 
@@ -223,6 +223,8 @@ The two interactions differ only in which phrase the maintainer used. This relea
 This is the tension the task explicitly flagged and asked to be handled carefully. This spec's first draft worked through the routing mechanics independently (the description is the router, evaluated before any body content is read; D-01 established that principle) and reached a body-only carve-out design. Re-reading the v0.6.0 release plan afterward surfaced that the same question is already tracked there as D2, with a more conservative recommendation, Option A: leave the entire trigger surface unchanged, including the body carve-out, and reach the orientation path only through the skill's already-existing explicit-resume triggers. This spec was revised to match D2's recommendation (AC-8, AC-9) rather than ship a design one step ahead of it.
 
 The full two-option analysis, restoring the phrases with a body-level carve-out versus leaving the surface alone entirely, lives in D2, not here. Duplicating it in this spec would create exactly the "text contradicting text" risk this repository's conventions name as its dominant defect class: one decision recorded in two places that could quietly drift apart. This entry exists to point at the authoritative record and confirm this spec's consistency with it. If D2 is later revised (the maintainer decision is still pending at time of writing), update this spec to match rather than negotiating between two versions.
+
+**Update, 2026-10-26.** Release plan 05 now holds no efforts, so this item is the open home of the trigger question. Release plan 05's D2 is marked Superseded and points here. Its two-option analysis stays in that plan as the record of what was weighed, and the maintainer's ruling will be recorded here. Until then, this spec stays consistent with that analysis's Option A: leave the trigger surface unchanged.
 
 **OQ2: Threshold tuning.**
 30 days is this spec's own choice; the roadmap only says "months old." Held fixed and un-configurable for v1, consistent with this plugin's stated design frame of fixed values over configurability for a single user. Revisit only if dogfooding shows 30 days is clearly wrong in either direction.
