@@ -210,7 +210,7 @@ without evidence is what produced the original defect.
 > * **Status:** Decided
 > * **Choice:** Option A. Both efforts were demoted to `_unassigned/` on 2026-10-05.
 > * **Reasoning:** The demotion has happened: `_unassigned/C-02_reconcile-at-resume/` and `_unassigned/C-03_cold-repo-degradation/` both exist. The maintainer ruled on 2026-10-06 that a release gets its version number only when it ships, and recorded that ruling on the identical D3 in release plans 06 to 08. This row was never brought into line with them.
-> * **Follow-up:** Retire this plan's stale `target-version`. That waits on the plan half of the same ruling, making a release plan's `target-version` optional in `plab-release-plan`, which gets its own spec.
+> * **Follow-up:** Retire this plan's stale `target-version`. That waits on the plan half of the same ruling, making a release plan's `target-version` optional in `plab-release-plan`, specified as H-06 (optional release-plan version) in `docs/internal/release-plans/_unassigned/H-06_optional-release-plan-version/spec.md`.
 > * **Decided by / date:** the maintainer, 2026-10-06, as decision 21 in the maintainer's private decision register. JP approved recording it on this row on 2026-10-26, as part of a batch of closures.
 
 ---
