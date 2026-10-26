@@ -4,7 +4,7 @@ title: CI bootstrap - toolkit standard gate and repo-wide dash check
 type: spec
 status: fulfilled
 created: 2026-08-23
-updated: 2026-08-24
+updated: 2026-10-26
 linked-effort: the maintainer's private defect record for the wrap/continue pair, 2026-08-18
 linked-plan: implementation-plan.md
 ac-count: 8
@@ -157,12 +157,14 @@ None.
 
 | ID | Question | Status |
 |---|---|---|
-| OQ-1 | Should G-11 (`plab-guide`'s own manual `grep -P` dash check) migrate to reuse `check-dashes.py`'s engine? | Open, out of scope |
+| OQ-1 | Should G-11 (`plab-guide`'s own manual `grep -P` dash check) migrate to reuse `check-dashes.py`'s engine? | Superseded |
 | OQ-2 | Should this spec carry a `spec-dependencies` frontmatter field for the CI-01 to D-11 relationship? | Decided: no |
 | OQ-3 | Which `codeql-action/upload-sarif` tag to pin? | Decided: `v3` |
 | OQ-4 | Does CI-01 warrant a `CHANGELOG.md [Unreleased]` entry? | Decided: yes, propose and confirm |
 
 **OQ-1.** `skills/plab-guide/references/voice-and-style.md` documents G-11 as a manual check run with `grep -P '[\x{2013}\x{2014}]' <output-file>` [S9]. `CHANGELOG.md` confirms this is "a written-discipline rule verified by grep," not an automated sweep [S10]. GNU `grep -P`'s Unicode handling for `\x{...}` escapes is not guaranteed correct without an explicit UTF-8 mode, which is the same failure shape D-11 already found twice elsewhere [S6]. Fixing G-11 is out of scope for CI-01: it belongs to a different skill's internal, rung-3 convention, not to a repo-wide CI gate, and the instruction governing this spec is to record disagreement rather than silently redesign what exists elsewhere. Recorded here for whoever next touches D-11 or `plab-guide`.
+
+**OQ-1 closed 2026-10-26, Superseded by H-05 (retire dash enforcement).** On 2026-10-17 the maintainer ruled to retire `check-dashes.py` and its CI job and to keep G-11 as it is, so there is no engine left for G-11 to reuse. The ruling is specified in `docs/internal/release-plans/_unassigned/H-05_retire-dash-enforcement/spec.md`.
 
 **OQ-2.** This effort's dispatch instructions suggested using `spec-dependencies` frontmatter to record the CI-01 to D-11 relationship. The conventions this spec must follow list a closed frontmatter schema for `spec.md` (id, title, type, status, created, updated, linked-effort, linked-plan, ac-count, source-count, requires-human-review, target-release, linked-release, priority) with no `spec-dependencies` field, and state plainly: "Do not invent frontmatter fields. The schemas below are closed." Adding the field risks the release gate's parser; the conventions take precedence over the dispatch suggestion, which was itself conditional ("if appropriate"). The relationship is instead recorded in prose, in Purpose and here: CI-01 applies the canary-before-trust, three-state pattern inside CI, and D-11 applies the identical pattern to `skills/plab-wrap-session/SKILL.md`'s own Log Self-Check gates [S5] [S6]. It is a shared principle rather than a dependency: neither effort consumes the other's artifacts, and neither blocks the other.
 
