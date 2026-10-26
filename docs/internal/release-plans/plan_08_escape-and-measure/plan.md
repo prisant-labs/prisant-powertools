@@ -112,8 +112,8 @@ work it governs.
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
 | D1 | W-06 (log as a checkable contract) | Deferred, not scheduled | Proposed | 2026-08-23 |
-| D2 | Where promoted blockers are filed | This repo by default | Open | 2026-08-23 |
-| D3 | C-04 and W-03 leave v0.9.0 | Both demoted to `_unassigned/`; this plan's own version is open | Ratified | 2026-10-06 |
+| D2 | Where promoted blockers are filed | Moved to W-03 (waiting-on escapes gitignore) OQ-1 | Superseded | 2026-10-26 |
+| D3 | C-04 and W-03 leave v0.9.0 | Both demoted to `_unassigned/`; this plan's own version is open | Decided | 2026-10-06 |
 
 ### D1: W-06 (log as a checkable contract) is deferred, not scheduled (Proposed)
 
@@ -151,7 +151,7 @@ too. Recording the deferral here means a future reader finds a decision rather t
 > * **Reasoning:** Measure with the one-line field before building the ceremony.
 > * **Proposed by / date:** Claude, planning session 2026-08-23. No maintainer input has been received on this item.
 
-### D2: Where promoted blockers are filed (Open)
+### D2: Where promoted blockers are filed (Superseded)
 
 **Summary.** Which repository receives an issue when a Waiting-on item is promoted.
 
@@ -178,16 +178,16 @@ the effort is executed, since it changes the shape of the proposal prompt.
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Superseded 2026-10-26 by JP
 >
-> * **Status:** Open
-> * **Choice (proposed):** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Superseded
+> * **Choice:** Moved to W-03 (waiting-on escapes gitignore), `docs/internal/release-plans/_unassigned/W-03_waiting-on-escapes-gitignore/spec.md`, as its OQ-1 (cross-repo issue targeting), which is now the open home of this question.
+> * **Reasoning:** W-03 is the effort whose AC-3 depends on the answer, and this plan holds no efforts. The three-option analysis above stays here as the record of what was weighed.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of moves after a read-only check on 2026-10-25 found that this question belongs with an unbuilt draft spec.
 
 ---
 
-### D3: C-04 and W-03 leave v0.9.0, because versions are assigned at ship time (Ratified)
+### D3: C-04 and W-03 leave v0.9.0, because versions are assigned at ship time (Decided)
 
 **Summary.** The maintainer ruled on 2026-10-06 that a release gets its version number only when it ships, so this plan's two efforts, C-04 (consumption disposition) and W-03 (waiting-on escapes gitignore), no longer carry v0.9.0 in advance.
 
@@ -206,9 +206,10 @@ the effort is executed, since it changes the shape of the proposal prompt.
 
 > **Maintainer decision:** Option A
 >
-> * **Status:** Ratified
+> * **Status:** Decided
 > * **Choice:** Option A, both efforts demoted to `_unassigned/`.
 > * **Reasoning:** A release gets its version number only when it ships; planned work carries no number in advance. This is decision 21 in the maintainer's private decision register.
+> * **Follow-up:** Retire this plan's stale `target-version`. That waits on the plan half of the same ruling, making a release plan's `target-version` optional in `plab-release-plan`, which gets its own spec.
 > * **Decided by / date:** the maintainer, 2026-10-06.
 
 ---

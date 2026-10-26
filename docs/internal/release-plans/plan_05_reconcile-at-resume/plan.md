@@ -104,11 +104,11 @@ work it governs.
 
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
-| D1 | Does the pairing contract force a wrap bump | No; format unchanged | Proposed | 2026-08-23 |
-| D2 | Reintroducing the "where were we" trigger | Deferred to C-03 execution | Open | 2026-08-23 |
-| D3 | C-02 and C-03 leave v0.6.0, which the audit skill takes | Both demoted to `_unassigned/`; this plan's own version is open | Proposed | 2026-10-05 |
+| D1 | Does the pairing contract force a wrap bump | Moved to D-10 (log format contract), Requirement 5 | Superseded | 2026-10-26 |
+| D2 | Reintroducing the "where were we" trigger | Moved to C-03 (cold-repo degradation) OQ1 | Superseded | 2026-10-26 |
+| D3 | C-02 and C-03 leave v0.6.0, which the audit skill takes | Both demoted to `_unassigned/`; this plan's own version is open | Decided | 2026-10-26 |
 
-### D1: Does the pairing contract force a wrap bump (Proposed)
+### D1: Does the pairing contract force a wrap bump (Superseded)
 
 **Summary.** Whether `plab-wrap-session` must bump alongside `plab-continue-session` in this release.
 
@@ -140,14 +140,14 @@ release should correct the wording in place rather than adding a third copy on t
 
 ---
 
-> **Maintainer decision:** _(pending ratification)_
+> **Maintainer decision:** Superseded 2026-10-26 by JP
 >
-> * **Status:** Proposed as this session's working default; NOT yet ratified
-> * **Choice (proposed):** Option A, continue bumps alone; clarify the contract wording.
-> * **Reasoning:** The contract protects format compatibility, and the format is untouched here.
-> * **Proposed by / date:** Claude, planning session 2026-08-23. No maintainer input has been received on this item.
+> * **Status:** Superseded
+> * **Choice:** Moved to D-10 (log format contract), `docs/internal/release-plans/_unassigned/D-10_log-format-contract/spec.md`. Its Requirement 5 and AC-5 own the pairing-claim wording this item asked to amend.
+> * **Reasoning:** This plan holds no efforts, so the question of whether its release forces a wrap bump no longer arises. What still matters is the contract's wording, and D-10 owns that.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of moves after a read-only check on 2026-10-25 found that this question belongs with an unbuilt draft spec.
 
-### D2: Reintroducing the "where were we" trigger (Open)
+### D2: Reintroducing the "where were we" trigger (Superseded)
 
 **Summary.** Whether C-03 should restore the status-question phrases that D-01 deliberately removed.
 
@@ -177,16 +177,16 @@ without evidence is what produced the original defect.
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Superseded 2026-10-26 by JP
 >
-> * **Status:** Open
-> * **Choice (proposed):** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Superseded
+> * **Choice:** Moved to C-03 (cold-repo degradation), `docs/internal/release-plans/_unassigned/C-03_cold-repo-degradation/spec.md`, as its OQ1, which is now the open home of this question.
+> * **Reasoning:** C-03 is the effort a trigger change would affect, and this plan holds no efforts. The two-option analysis above stays here as the record of what was weighed.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of moves after a read-only check on 2026-10-25 found that this question belongs with an unbuilt draft spec.
 
 ---
 
-### D3: C-02 and C-03 leave v0.6.0, which the audit skill takes (Proposed)
+### D3: C-02 and C-03 leave v0.6.0, which the audit skill takes (Decided)
 
 **Summary.** The audit skill (AU-01) ships as v0.6.0, outside this release plan, so this plan's two efforts can no longer target that version.
 
@@ -203,12 +203,13 @@ without evidence is what produced the original defect.
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-10-06 by the maintainer
 >
-> * **Status:** Proposed
-> * **Choice (proposed):** Option A
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A. Both efforts were demoted to `_unassigned/` on 2026-10-05.
+> * **Reasoning:** The demotion has happened: `_unassigned/C-02_reconcile-at-resume/` and `_unassigned/C-03_cold-repo-degradation/` both exist. The maintainer ruled on 2026-10-06 that a release gets its version number only when it ships, and recorded that ruling on the identical D3 in release plans 06 to 08. This row was never brought into line with them.
+> * **Follow-up:** Retire this plan's stale `target-version`. That waits on the plan half of the same ruling, making a release plan's `target-version` optional in `plab-release-plan`, which gets its own spec.
+> * **Decided by / date:** the maintainer, 2026-10-06, as decision 21 in the maintainer's private decision register. JP approved recording it on this row on 2026-10-26, as part of a batch of closures.
 
 ---
 

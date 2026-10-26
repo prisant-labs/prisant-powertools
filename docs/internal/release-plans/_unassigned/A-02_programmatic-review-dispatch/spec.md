@@ -191,8 +191,8 @@ The distinction that matters: a document with empty placeholders and a reported 
 | D1 | Dispatch opt-in shape | Option A: a per-invocation flag; the manual path stays the default | Decided | 2026-09-01 |
 | D2 | Where the pending job identifier lives | Option A: the review document's frontmatter, with the Non-Goal narrowed and AC-9 added | Decided | 2026-09-01 |
 | D3 | Reviewer model and effort selection | Option B at `high`: pass `--effort high`, pin no model | Decided | 2026-09-01 |
-| D4 | The frontmatter field's name | (none) | Open | 2026-10-15 |
-| D5 | The collection flag's name | (none) | Open | 2026-10-15 |
+| D4 | The frontmatter field's name | Option A: `dispatch-job` | Decided | 2026-10-26 |
+| D5 | The collection flag's name | Option A: `--collect` | Decided | 2026-10-26 |
 
 ### D1: Dispatch opt-in shape (Decided)
 
@@ -266,7 +266,7 @@ The distinction that matters: a document with empty placeholders and a reported 
 > * **Reasoning:** The recommendation's hedge, "if it can be expressed without pinning a model", was verified on 2026-09-01 against codex-companion 1.0.6 and Codex CLI 0.144.5: `--effort` accepts `none|minimal|low|medium|high|xhigh` independently of `--model`, so the split is expressible and the hedge resolves. Effort is a dial that means the same thing regardless of which model sits behind it, whereas a model identifier is an unversioned reference to something retired on another party's schedule, and skill files are not covered by this repository's document gates, so such a reference would rot unobserved. `xhigh` was considered and declined: review is adversarial work and the routing rule does reserve the strongest tier for it, but every review would then cost more and take longer, which pushes against the one thing this effort exists to achieve, namely making reviews cheap enough to actually run.
 > * **Decided by / date:** JP / 2026-09-01
 
-### D4: The frontmatter field's name (Open)
+### D4: The frontmatter field's name (Decided)
 
 **Summary.** D2 decided that the pending job identifier lives in the review document's frontmatter; it did not name the field.
 
@@ -283,14 +283,15 @@ The distinction that matters: a document with empty placeholders and a reported 
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-10-26 by JP
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A, `dispatch-job`.
+> * **Reasoning:** The working default shipped and still holds. The field is named `dispatch-job` everywhere it appears: `skills/plab-ai-review/SKILL.md`, `skills/plab-ai-review/scripts/dispatch.py`, `skills/plab-ai-review/references/dispatch.md` and `skills/plab-ai-review/references/review-template.md`.
+> * **Follow-up:** None needed.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of closures after a read-only check on 2026-10-25 confirmed that the working default shipped and still holds.
 
-### D5: The collection flag's name (Open)
+### D5: The collection flag's name (Decided)
 
 **Summary.** Phase 3 of the implementation plan said to "add the collection path" without naming a flag or mode for it; something had to be chosen to write `SKILL.md`, `references/dispatch.md`, and `docs/skills/plab-ai-review/README.md`.
 
@@ -308,9 +309,10 @@ The distinction that matters: a document with empty placeholders and a reported 
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-10-26 by JP
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A, `--collect`.
+> * **Reasoning:** The working default shipped and still holds. `--collect` is listed in `argument-hint` and documented in `skills/plab-ai-review/SKILL.md`, and `--respond` was left unchanged.
+> * **Follow-up:** None needed.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of closures after a read-only check on 2026-10-25 confirmed that the working default shipped and still holds.

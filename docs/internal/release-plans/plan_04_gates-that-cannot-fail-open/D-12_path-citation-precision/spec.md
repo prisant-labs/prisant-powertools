@@ -217,9 +217,9 @@ never considered. [S1]
 
 | ID | Title | Resolution | Status | Updated |
 |---|---|---|---|---|
-| D1 | Implement the backtick-resolves branch literally, or simplify to separator-only | Recommend implementing literally | Open | 2026-08-23 |
+| D1 | Implement the backtick-resolves branch literally, or simplify to separator-only | Option A: both branches implemented | Decided | 2026-10-26 |
 
-### D1: Implement the backtick-resolves branch literally, or simplify to separator-only (Open)
+### D1: Implement the backtick-resolves branch literally, or simplify to separator-only (Decided)
 
 **Summary.** Requirement 2 describes a scoping branch for backtick-wrapped, separator-free citations
 that, by construction, can never produce a "missing" finding (a resolution failure is excluded, not
@@ -249,9 +249,10 @@ add real maintenance cost for zero behavioral value.
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-10-26 by JP
 >
-> - **Status:** Open
-> - **Choice:** (none)
-> - **Reasoning:** (none)
-> - **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A, both branches as written.
+> * **Reasoning:** The working default shipped and still holds. `skills/plab-wrap-session/scripts/path-citation-check.py` implements both scoping branches: a token with a path separator, and a backtick-wrapped token with no separator, resolved against the repository root.
+> * **Follow-up:** None needed.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of closures after a read-only check on 2026-10-25 confirmed that the working default shipped and still holds.

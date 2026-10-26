@@ -206,15 +206,15 @@ This section follows `references/decisions-section.md`. None of the items below 
 
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
-| OQ1 | Hard-block or advisory-only for the next-action-already-done signal | (none) | Open | 2026-10-15 |
+| OQ1 | Hard-block or advisory-only for the next-action-already-done signal | Option A: advisory only | Decided | 2026-10-26 |
 | OQ2 | Promote `commit-sha` from Tier 3 to Tier 1 on the wrap side | Deferred to a future `plab-wrap-session` effort | Deferred | 2026-08-23 |
-| OQ3 | Fetch timeout budget for the network checks | (none) | Open | 2026-10-15 |
-| OQ4 | Implement reconciliation as a script, or as a documented convention | (none) | Open | 2026-10-15 |
-| OQ5 | Build AC-3, AC-4, AC-5, AC-7 and AC-6's rename hint as specified, without a separate per-mechanism maintainer review | (none) | Open | 2026-10-15 |
-| OQ6 | AC-3's date-fallback base ref when the log's branch no longer exists locally | (none) | Open | 2026-10-15 |
+| OQ3 | Fetch timeout budget for the network checks | Option A: 20 seconds, set by `--fetch-timeout` | Decided | 2026-10-26 |
+| OQ4 | Implement reconciliation as a script, or as a documented convention | Option A: a canary-tested script | Decided | 2026-10-26 |
+| OQ5 | Build AC-3, AC-4, AC-5, AC-7 and AC-6's rename hint as specified, without a separate per-mechanism maintainer review | Option A: built as specified, deviations disclosed | Decided | 2026-10-26 |
+| OQ6 | AC-3's date-fallback base ref when the log's branch no longer exists locally | Option A: fall back to `HEAD`, named in the output | Decided | 2026-10-26 |
 | OQ7 | `reconcile.py` ignores `commit-range`, so commits merged during a wrap read as new | (none) | Open | 2026-10-20 |
 
-### OQ1: Hard-block or advisory-only for the next-action-already-done signal (Open)
+### OQ1: Hard-block or advisory-only for the next-action-already-done signal (Decided)
 
 **Summary.** Whether AC-7's overlap signal should ever refuse to proceed with the named next action, rather than only flagging it.
 
@@ -231,12 +231,13 @@ This section follows `references/decisions-section.md`. None of the items below 
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-10-26 by JP
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A, advisory only.
+> * **Reasoning:** The working default shipped and still holds. `skills/plab-continue-session/scripts/reconcile.py` marks the next-action overlap signal as advisory, and the signal never blocks the named next action.
+> * **Follow-up:** None needed.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of closures after a read-only check on 2026-10-25 confirmed that the working default shipped and still holds.
 
 ### OQ2: Promote `commit-sha` from Tier 3 to Tier 1 on the wrap side (Deferred)
 
@@ -255,7 +256,7 @@ This section follows `references/decisions-section.md`. None of the items below 
 > * **Reasoning:** Out of scope for this effort; `plab-wrap-session` is not touched here.
 > * **Decided by / date:** (none)
 
-### OQ3: Fetch timeout budget for the network checks (Open)
+### OQ3: Fetch timeout budget for the network checks (Decided)
 
 **Summary.** What the exact timeout budget should be for `git fetch --no-prune origin --tags` and the `git ls-remote` calls before a check reports itself broken rather than hanging.
 
@@ -272,14 +273,15 @@ This section follows `references/decisions-section.md`. None of the items below 
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-10-26 by JP
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A, 20 seconds.
+> * **Reasoning:** The working default shipped and still holds. `skills/plab-continue-session/scripts/reconcile.py` defaults `--fetch-timeout` to 20 seconds.
+> * **Follow-up:** None needed.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of closures after a read-only check on 2026-10-25 confirmed that the working default shipped and still holds.
 
-### OQ4: Implement reconciliation as a script, or as a documented convention (Open)
+### OQ4: Implement reconciliation as a script, or as a documented convention (Decided)
 
 **Summary.** The implementation plan this effort started from made reconciliation a rung-3 documented convention, on the grounds that `plab-continue-session` "has no independent execution runtime ... so there is no standalone script for a canary to test against."
 
@@ -296,14 +298,15 @@ This section follows `references/decisions-section.md`. None of the items below 
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-10-26 by JP
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A, a script.
+> * **Reasoning:** The working default shipped and still holds. `skills/plab-continue-session/scripts/reconcile.py` and its sibling `test-reconcile.py` shipped in `plab-continue-session` 1.6.0, in v0.8.0.
+> * **Follow-up:** None needed.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of closures after a read-only check on 2026-10-25 confirmed that the working default shipped and still holds.
 
-### OQ5: Build AC-3, AC-4, AC-5, AC-7 and AC-6's rename hint as specified, without a separate per-mechanism maintainer review (Open)
+### OQ5: Build AC-3, AC-4, AC-5, AC-7 and AC-6's rename hint as specified, without a separate per-mechanism maintainer review (Decided)
 
 **Summary.** This spec's own Unverified Claims section flagged AC-3, AC-4, AC-5, AC-7 and AC-6's rename-hint mechanism for review before an agent implemented them, since none is named at this level of detail in any source document.
 
@@ -320,14 +323,15 @@ This section follows `references/decisions-section.md`. None of the items below 
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-10-26 by JP
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A, built as specified.
+> * **Reasoning:** The flagged mechanisms were built under the 2026-10-15 go-ahead without a separate line-by-line review. Later concerns about them have arrived as defect reports, such as OQ7, rather than as a blocking review.
+> * **Follow-up:** None needed. A later defect in one of these mechanisms is recorded as its own item, as OQ7 is.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of closures after a read-only check on 2026-10-25 confirmed that the working default shipped and still holds.
 
-### OQ6: AC-3's date-fallback base ref when the log's branch no longer exists locally (Open)
+### OQ6: AC-3's date-fallback base ref when the log's branch no longer exists locally (Decided)
 
 **Summary.** When a log has no `commit-sha` field and its `branch` field names a branch that no longer exists locally (the drift AC-5 exists to catch), what should AC-3's date-based commit count be measured against.
 
@@ -344,12 +348,13 @@ This section follows `references/decisions-section.md`. None of the items below 
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-10-26 by JP
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A, fall back to `HEAD`.
+> * **Reasoning:** The working default shipped and still holds. When the log's branch no longer exists locally, `skills/plab-continue-session/scripts/reconcile.py` counts against `HEAD` and says so in the check's own output.
+> * **Follow-up:** None needed.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of closures after a read-only check on 2026-10-25 confirmed that the working default shipped and still holds.
 
 ### OQ7: `reconcile.py` ignores `commit-range`, so commits merged during a wrap read as new (Open)
 
