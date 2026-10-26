@@ -2,9 +2,9 @@
 id: C-02
 title: "Implementation plan: Reconcile the Session Log Against Repo Reality at Resume"
 type: implementation-plan
-status: draft
+status: complete
 created: 2026-08-23
-updated: 2026-10-15
+updated: 2026-10-26
 linked-spec: spec.md
 linked-release: null
 ac-coverage: complete

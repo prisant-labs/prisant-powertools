@@ -2,9 +2,9 @@
 id: AU-01
 title: "Implementation plan: plab-audit, repository appraisal, findings and roadmap"
 type: implementation-plan
-status: draft
+status: in-progress
 created: 2026-09-19
-updated: 2026-10-06
+updated: 2026-10-26
 linked-spec: spec.md
 linked-release: null
 ac-coverage: complete

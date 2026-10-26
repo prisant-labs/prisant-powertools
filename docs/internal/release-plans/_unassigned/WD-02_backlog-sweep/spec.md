@@ -4,7 +4,7 @@ title: "plab-resolve-open-items --backlog: sweep the repository's open items int
 type: spec
 status: committed
 created: 2026-10-15
-updated: 2026-10-15
+updated: 2026-10-26
 linked-effort: "the maintainer's private walk-decisions strategy brief, 2026-10-04, and WD-01's Non-Goal 1"
 linked-plan: implementation-plan.md
 linked-release: null
@@ -187,16 +187,18 @@ The script returns no items. The skill replies: "Nothing is open across this rep
 
 **What these statuses mean.** Every item below is `Open`: the maintainer has not chosen. Each Recommendation ends by saying the build used it as a working default, so a walk can ratify or overturn it. The build followed the maintainer's instruction of 2026-10-15 to complete this work.
 
+**Update, 2026-10-26.** JP approved closing D1 to D4 and D6 as one batch, after a read-only check confirmed that each working default shipped and still holds. D5 is still `Open`.
+
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
-| D1 | Which sources the sweep reads | (none) | Open | 2026-10-15 |
-| D2 | How items are triaged and ordered | (none) | Open | 2026-10-15 |
-| D3 | How many items one walk presents | (none) | Open | 2026-10-15 |
-| D4 | What the backlog file is | (none) | Open | 2026-10-15 |
+| D1 | Which sources the sweep reads | Option A: typed planning documents plus the newest log's Waiting on You list | Decided | 2026-10-26 |
+| D2 | How items are triaged and ordered | Option A: three tiers, ready first, oldest first within each | Decided | 2026-10-26 |
+| D3 | How many items one walk presents | Option A: ten items per walk | Decided | 2026-10-26 |
+| D4 | What the backlog file is | Option A: a dated snapshot per sweep | Decided | 2026-10-26 |
 | D5 | Overlap with the options board and status page | (none) | Open | 2026-10-15 |
-| D6 | How gathering runs | (none) | Open | 2026-10-15 |
+| D6 | How gathering runs | Option A: one script call, the agent triages | Decided | 2026-10-26 |
 
-### D1: Which sources the sweep reads (Open)
+### D1: Which sources the sweep reads (Decided)
 
 **Summary.** Which documents a backlog sweep gathers from.
 
@@ -214,14 +216,15 @@ The script returns no items. The skill replies: "Nothing is open across this rep
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-10-26 by JP
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A.
+> * **Reasoning:** The working default shipped and still holds. `gather-backlog.py` reads only typed planning documents and the newest session log's Waiting on You list (`skills/plab-resolve-open-items/references/backlog.md`).
+> * **Follow-up:** None needed.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of closures after a read-only check on 2026-10-25 confirmed that the working default shipped and still holds.
 
-### D2: How items are triaged and ordered (Open)
+### D2: How items are triaged and ordered (Decided)
 
 **Summary.** Whether the sweep sorts items into tiers, and in what order a walk presents them.
 
@@ -239,14 +242,15 @@ The script returns no items. The skill replies: "Nothing is open across this rep
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-10-26 by JP
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A.
+> * **Reasoning:** The working default shipped and still holds. The skill sorts items into ready, moot and judgment tiers, and presents them in that order, oldest first within each (`skills/plab-resolve-open-items/references/backlog.md`).
+> * **Follow-up:** None needed.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of closures after a read-only check on 2026-10-25 confirmed that the working default shipped and still holds.
 
-### D3: How many items one walk presents (Open)
+### D3: How many items one walk presents (Decided)
 
 **Summary.** The cap on items presented in one backlog walk.
 
@@ -264,14 +268,15 @@ The script returns no items. The skill replies: "Nothing is open across this rep
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-10-26 by JP
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A.
+> * **Reasoning:** The working default shipped and still holds. One backlog walk presents at most ten items, and the rest stay in the dated backlog file (`skills/plab-resolve-open-items/references/backlog.md`).
+> * **Follow-up:** None needed.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of closures after a read-only check on 2026-10-25 confirmed that the working default shipped and still holds.
 
-### D4: What the backlog file is (Open)
+### D4: What the backlog file is (Decided)
 
 **Summary.** Whether each sweep writes a new dated file or rewrites one living file.
 
@@ -288,12 +293,13 @@ The script returns no items. The skill replies: "Nothing is open across this rep
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-10-26 by JP
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A.
+> * **Reasoning:** The working default shipped and still holds. Each sweep writes one dated snapshot beside the walk records and never edits it afterwards (`skills/plab-resolve-open-items/references/backlog.md`).
+> * **Follow-up:** None needed.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of closures after a read-only check on 2026-10-25 confirmed that the working default shipped and still holds.
 
 ### D5: Overlap with the options board and status page (Open)
 
@@ -320,7 +326,7 @@ The script returns no items. The skill replies: "Nothing is open across this rep
 > * **Reasoning:** (none)
 > * **Decided by / date:** (none)
 
-### D6: How gathering runs (Open)
+### D6: How gathering runs (Decided)
 
 **Summary.** Whether gathering is a script or the agent reading documents one at a time.
 
@@ -337,9 +343,10 @@ The script returns no items. The skill replies: "Nothing is open across this rep
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-10-26 by JP
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A.
+> * **Reasoning:** The working default shipped and still holds. Gathering is one call to `skills/plab-resolve-open-items/scripts/gather-backlog.py`, which returns every candidate item for the agent to triage.
+> * **Follow-up:** None needed.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of closures after a read-only check on 2026-10-25 confirmed that the working default shipped and still holds.

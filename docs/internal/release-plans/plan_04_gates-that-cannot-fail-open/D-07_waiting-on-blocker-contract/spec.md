@@ -4,7 +4,7 @@ title: Restore Waiting on You as an enforced blocker contract
 type: spec
 status: fulfilled
 created: 2026-08-23
-updated: 2026-08-24
+updated: 2026-10-26
 linked-effort: the maintainer's private defect record for the wrap/continue pair, 2026-08-18
 linked-plan: implementation-plan.md
 ac-count: 8
@@ -149,8 +149,10 @@ The exact original date is illustrative here; AC-4's carry-forward is what would
 | ID | Question | Status |
 |---|---|---|
 | D1 | Should the Parked list exist in Quick and Blocked mode templates, or Final/Deep mode only? | Decided for this spec: Final/Deep only |
-| D2 | How does the wrapping agent decide an item is "still applicable" when carrying it forward, versus mechanically re-copying every previous item forever? | Open |
+| D2 | How does the wrapping agent decide an item is "still applicable" when carrying it forward, versus mechanically re-copying every previous item forever? | Superseded |
 
 **D1: Parked list scope.** This spec scopes the new Parked section to Final and Deep mode (AC-7), matching where the Waiting-on section's full contract lives and where the dilution incident occurred [S1][S5]. Quick and Blocked mode sessions are short or urgent by definition (under 30 minutes, or ended by a blocker), so optional context rarely accumulates in them. If a Quick-mode wrap produces optional items with nowhere to go, revisit.
 
 **D2: Resolution judgment.** The source roadmap says carry-forward moves "unresolved items forward" [S1] but does not specify how the wrapping agent determines an item is unresolved rather than settled. This spec leaves that to the agent's existing judgment, the same kind already exercised for `decisions-count`, verification status, and mode selection, rather than inventing a new sub-mechanism the source does not describe. If carry-forward in practice produces stale or wrongly-dropped items, this may need an explicit resolution-check step in a later effort.
+
+**D2 closed 2026-10-26, Superseded.** On 2026-10-20 the maintainer approved a successor design for this question. At resume, each Waiting on You item is re-checked against a closed list of read-only kinds that a computer can check, and reported as still waiting, done since the wrap, or not checkable. That design replaces this item's reliance on the agent's judgment. It is not yet specified or built. JP approved this closure on 2026-10-26, as part of a batch checked against shipped code the day before.

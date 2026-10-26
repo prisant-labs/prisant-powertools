@@ -5,7 +5,7 @@ title: "Release plan 07: Aggregation"
 type: release-plan
 status: draft
 created: 2026-08-23
-updated: 2026-10-16
+updated: 2026-10-26
 theme: "Aggregation"
 includes: []
 spec-count: 0
@@ -108,13 +108,15 @@ means no default was adopted and the answer is genuinely needed before the work 
 section carries maintainer approval. Ratify or overturn every `Proposed` row before executing the
 work it governs.
 
+**Update, 2026-10-26.** This legend describes the rows as first written. A row now marked `Decided` or `Superseded` carries the maintainer's approval, recorded in its block. A `Proposed` or `Open` row still does not.
+
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
-| D1 | Where the shared aggregation layer lives | REOPENED, conflicts with `lib/README.md` | Needs ruling | 2026-08-24 |
-| D2 | Whether arc resume is ever a default | Flag only in this release | Proposed | 2026-08-23 |
-| D3 | C-05 and W-04 leave v0.8.0 | Both demoted to `_unassigned/`; this plan's own version is open | Ratified | 2026-10-06 |
+| D1 | Where the shared aggregation layer lives | REOPENED, conflicts with `lib/README.md` | Open | 2026-08-24 |
+| D2 | Whether arc resume is ever a default | Moved to C-05 (arc resume) | Superseded | 2026-10-26 |
+| D3 | C-05 and W-04 leave v0.8.0 | Both demoted to `_unassigned/`; this plan's own version is open | Decided | 2026-10-06 |
 
-### D1: Where the shared aggregation layer lives (REOPENED, needs a ruling)
+### D1: Where the shared aggregation layer lives (Open)
 
 > **Reopened 2026-08-24.** This decision originally recommended Option A and was written into W-04 and
 > C-05 as though settled. It contradicts an existing, documented convention in this repository that was
@@ -169,13 +171,14 @@ order, before either effort is executed.
 
 > **Maintainer decision:** _(required before execution)_
 >
-> * **Status:** REOPENED. The earlier "Proposed: Option A" was made without consulting `lib/README.md`
->   and is withdrawn as a default.
+> * **Status:** Open
+> * **Reopened:** The earlier "Proposed: Option A" was made without consulting `lib/README.md` and is withdrawn as a default.
 > * **Choice:** (none)
 > * **Reasoning:** (none)
 > * **Reopened by / date:** Claude, 2026-08-24. No maintainer input has been received on this item.
+> * **Status wording:** "REOPENED" became `Open` on 2026-10-26, because the backlog sweep reads only the status vocabulary in `references/decisions-section.md` and had never shown this item.
 
-### D2: Whether arc resume is ever a default (Proposed)
+### D2: Whether arc resume is ever a default (Superseded)
 
 **Summary.** Whether C-05 reads multiple logs automatically or only behind an explicit flag.
 
@@ -200,16 +203,16 @@ applied everywhere else in this portfolio.
 
 ---
 
-> **Maintainer decision:** _(pending ratification)_
+> **Maintainer decision:** Superseded 2026-10-26 by JP
 >
-> * **Status:** Proposed as this session's working default; NOT yet ratified
-> * **Choice (proposed):** Option A, explicit flag.
-> * **Reasoning:** Prototype before defaulting; the cost lands at the worst possible moment.
-> * **Proposed by / date:** Claude, planning session 2026-08-23. No maintainer input has been received on this item.
+> * **Status:** Superseded
+> * **Choice:** Moved to C-05 (arc resume), `docs/internal/release-plans/_unassigned/C-05_arc-resume/spec.md`. Its Non-Goals make arc mode run only on an explicit `--arc` flag, which is Option A, and its D2 defers any automatic trigger.
+> * **Reasoning:** C-05 is the effort this question governs, and this plan holds no efforts.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of moves after a read-only check on 2026-10-25 found that this question belongs with an unbuilt draft spec.
 
 ---
 
-### D3: C-05 and W-04 leave v0.8.0, because versions are assigned at ship time (Ratified)
+### D3: C-05 and W-04 leave v0.8.0, because versions are assigned at ship time (Decided)
 
 **Summary.** The maintainer ruled on 2026-10-06 that a release gets its version number only when it ships, so this plan's two efforts, C-05 (arc resume) and W-04 (digest mode), no longer carry v0.8.0 in advance.
 
@@ -230,9 +233,10 @@ applied everywhere else in this portfolio.
 
 > **Maintainer decision:** Option A
 >
-> * **Status:** Ratified
+> * **Status:** Decided
 > * **Choice:** Option A, both efforts demoted to `_unassigned/`.
 > * **Reasoning:** A release gets its version number only when it ships; planned work carries no number in advance. This is decision 21 in the maintainer's private decision register.
+> * **Follow-up:** Retire this plan's stale `target-version`. That waits on the plan half of the same ruling, making a release plan's `target-version` optional in `plab-release-plan`, which gets its own spec.
 > * **Decided by / date:** the maintainer, 2026-10-06.
 
 ---

@@ -4,7 +4,7 @@ title: Waiting-on items escape the gitignored log via offered GitHub issues
 type: spec
 status: draft
 created: 2026-08-23
-updated: 2026-10-06
+updated: 2026-10-26
 linked-effort: the maintainer's private plab-wrap-session evolution roadmap, 2026-08-16
 linked-plan: implementation-plan.md
 ac-count: 6
@@ -229,6 +229,8 @@ If D2 resolves to asking for an alternate target on non-repo-specific items (its
 or to a single tracker repository (Option C), AC-3 needs revision to add the target question or
 redirect the default. This spec does not restate D2's three-option analysis, which the release plan
 owns.
+
+**Update, 2026-10-26.** Release plan 08 now holds no efforts, so this item is the open home of the question its D2 asked: where a promoted blocker is filed. Release plan 08's D2 is marked Superseded and points here. Its three-option analysis stays in that plan as the record of what was weighed, and the maintainer's ruling will be recorded here.
 
 ### OQ-2: Carry-forward marker format for promoted items
 

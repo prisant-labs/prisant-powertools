@@ -4,7 +4,7 @@ title: Consume capture-lite records in wrap and continue
 type: spec
 status: fulfilled
 created: 2026-08-23
-updated: 2026-08-24
+updated: 2026-10-26
 linked-effort: the maintainer's private defect record for the wrap/continue pair, 2026-08-18
 linked-plan: implementation-plan.md
 ac-count: 7
@@ -239,11 +239,13 @@ from Requirement 2's filter having no lower bound to apply]
 
 ## Open Questions / Decisions
 
+**Closed 2026-10-26.** JP approved closing the items below as one batch, after a read-only check on 2026-10-25 confirmed each against shipped code. Each closed item ends with what the check found.
+
 | ID | Title | Status |
 |---|---|---|
-| OQ1 | Mode scope for wrap's capture report | Open |
-| OQ2 | Exact minimal field list | Open |
-| OQ3 | Evidence Gathering numbering overlap with D-05 | Open |
+| OQ1 | Mode scope for wrap's capture report | Decided |
+| OQ2 | Exact minimal field list | Decided |
+| OQ3 | Evidence Gathering numbering overlap with D-05 | Canceled |
 
 ### OQ1: Mode scope for wrap's capture report
 
@@ -254,12 +256,16 @@ scoping, but the source itself does not state a mode restriction. Recommend conf
 change adds an Outstanding Issues-equivalent to the light modes, this scope should be revisited
 alongside it.
 
+**Closed, Decided.** The deep and final scope shipped and still holds. The capture-lite count is reported in Outstanding Issues, which only the Final and Deep body templates carry (`skills/plab-wrap-session/SKILL.md`).
+
 ### OQ2: Exact minimal field list
 
 `ts`, `head`, `session_id`, `branch`, and `commits_today` are the fields this spec's mechanism actually
 reads. If an even smaller public surface is wanted, `commits_today` is the most droppable of the five:
 Examples 3 and 4 use it for color but neither AC-4 nor AC-5 strictly requires it. Recommend confirming
 the list before implementation locks it in as the AC-7 boundary.
+
+**Closed, Decided.** The five-field list shipped and still holds for both consumers. On the wrap side, `capture_records()` in `skills/plab-wrap-session/scripts/derive-log-facts.py` reads only `session_id`, `ts` and `head`. On the continue side, the orientation line in `skills/plab-continue-session/references/log-discovery.md` names only `branch`, `head`, `commits_today` and `ts`.
 
 ### OQ3: Evidence Gathering numbering overlap with D-05
 
@@ -268,3 +274,5 @@ Neither this spec nor D-05's should assume the other's item already exists, sinc
 implemented in either order. Both implementation plans instruct "add as the next available number"
 rather than a hard-coded integer, which resolves this regardless of execution order; recorded here so
 the reason for that phrasing is not lost.
+
+**Closed, Canceled.** The overlap never arose. D-04's capture count ended up inside `derive-log-facts.py`'s digest rather than as its own numbered Evidence Gathering item, and D-04 and D-05 shipped together in v0.4.0. W-02 (derived log facts) later replaced that numbered list's structure, so the question cannot come back.

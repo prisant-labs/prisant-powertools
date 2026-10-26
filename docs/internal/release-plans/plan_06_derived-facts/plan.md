@@ -5,7 +5,7 @@ title: "Release plan 06: Derived facts"
 type: release-plan
 status: draft
 created: 2026-08-23
-updated: 2026-10-16
+updated: 2026-10-26
 theme: "Derived facts"
 includes: []
 spec-count: 0
@@ -114,13 +114,15 @@ means no default was adopted and the answer is genuinely needed before the work 
 section carries maintainer approval. Ratify or overturn every `Proposed` row before executing the
 work it governs.
 
+**Update, 2026-10-26.** This legend describes the rows as first written. A row now marked `Decided` or `Superseded` carries the maintainer's approval, recorded in its block. A `Proposed` or `Open` row still does not.
+
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
-| D1 | Shared schema artifact or generated contract | Generated contract | Proposed | 2026-08-23 |
+| D1 | Shared schema artifact or generated contract | Moved to D-10 (log format contract) | Superseded | 2026-10-26 |
 | D2 | What happens when the derive script is absent | Degrade to authored, state it | Open | 2026-08-23 |
-| D3 | D-10 and W-02 leave v0.7.0 | Both demoted to `_unassigned/`; this plan's own version is open | Ratified | 2026-10-06 |
+| D3 | D-10 and W-02 leave v0.7.0 | Both demoted to `_unassigned/`; this plan's own version is open | Decided | 2026-10-06 |
 
-### D1: Shared schema artifact or generated contract (Proposed)
+### D1: Shared schema artifact or generated contract (Superseded)
 
 **Summary.** Whether to fix the log-format drift by writing a shared schema document or by making the
 derive script's output the contract.
@@ -147,12 +149,12 @@ defined in exactly one file, verifiable by grep.
 
 ---
 
-> **Maintainer decision:** _(pending ratification)_
+> **Maintainer decision:** Superseded 2026-10-26 by JP
 >
-> * **Status:** Proposed as this session's working default; NOT yet ratified
-> * **Choice (proposed):** Option B, the generated output is the contract.
-> * **Reasoning:** An executable contract cannot drift silently; a fourth document can.
-> * **Proposed by / date:** Claude, planning session 2026-08-23. No maintainer input has been received on this item.
+> * **Status:** Superseded
+> * **Choice:** Moved to D-10 (log format contract), `docs/internal/release-plans/_unassigned/D-10_log-format-contract/spec.md`. Its title makes `derive-log-facts.py`'s output the single contract, which is Option B, and its D3 rules out a separate schema artifact.
+> * **Reasoning:** W-02 (derived log facts) shipped the script, and D-10 is the effort that makes every other document defer to it. This question now belongs to D-10's own review.
+> * **Decided by / date:** JP / 2026-10-26, approving a batch of moves after a read-only check on 2026-10-25 found that this question belongs with an unbuilt draft spec.
 
 ### D2: What happens when the derive script is absent (Open)
 
@@ -192,7 +194,7 @@ different, and collapsing them is the defect.
 
 ---
 
-### D3: D-10 and W-02 leave v0.7.0, because versions are assigned at ship time (Ratified)
+### D3: D-10 and W-02 leave v0.7.0, because versions are assigned at ship time (Decided)
 
 **Summary.** The maintainer ruled on 2026-10-06 that a release gets its version number only when it ships, so this plan's two efforts, D-10 (log format contract) and W-02 (derived log facts), no longer carry v0.7.0 in advance.
 
@@ -213,9 +215,10 @@ different, and collapsing them is the defect.
 
 > **Maintainer decision:** Option A
 >
-> * **Status:** Ratified
+> * **Status:** Decided
 > * **Choice:** Option A, both efforts demoted to `_unassigned/`.
 > * **Reasoning:** A release gets its version number only when it ships; planned work carries no number in advance. This is decision 21 in the maintainer's private decision register.
+> * **Follow-up:** Retire this plan's stale `target-version`. That waits on the plan half of the same ruling, making a release plan's `target-version` optional in `plab-release-plan`, which gets its own spec.
 > * **Decided by / date:** the maintainer, 2026-10-06.
 
 ---
