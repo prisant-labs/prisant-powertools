@@ -1,6 +1,6 @@
 {
   "name": "prisant-powertools",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "tier": "universal",
   "standard": "0.14",
   "skills": [
@@ -22,7 +22,7 @@
     {
       "name": "plab-current-status",
       "path": "skills/plab-current-status/SKILL.md",
-      "description": "Write a dated status snapshot of the current repository to _local/_status/YYYY-MM-DD_<model>_<byline>.md: the answer first, what changed since the last snapshot, what waits on the maintainer, what is next, pending and recent decisions ranked with reasons, what was accomplished, and what is unknown. Facts come from one script call; works in any git repository and names each missing source. Explicit invocation only: run /plab-current-status; it does not fire on its own."
+      "description": "Write a dated status snapshot of the current repository to _local/_status/YYYY-MM-DD_<model>_<byline>.md: the answer first, what changed since the last snapshot, what waits on the maintainer, what is next, pending and recent decisions ranked with reasons, what was accomplished, and what is unknown. Use when the maintainer wants a project status report, a status snapshot, or a prioritized next-steps and decisions document. Facts come from one script call; works in any git repository. Explicit invocation only: run /plab-current-status; it does not fire on its own."
     },
     {
       "name": "plab-guide",

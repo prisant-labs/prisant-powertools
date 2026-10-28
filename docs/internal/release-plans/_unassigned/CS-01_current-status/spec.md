@@ -2,7 +2,7 @@
 id: CS-01
 title: "plab-current-status: a dated, per-repository status snapshot"
 type: spec
-status: committed
+status: fulfilled
 created: 2026-10-28
 updated: 2026-10-28
 linked-effort: "the maintainer's request of 2026-10-28 in session, and stream 3 (seeing everything in one place) of the maintainer's private consolidated status file of 2026-10-25"
@@ -19,11 +19,11 @@ priority: P2
 
 ## Task Summary
 
-**Status:** committed
+**Status:** fulfilled, shipped in v0.10.0
 **Last updated:** 2026-10-28 by claude (Opus 5.5), written and committed under the maintainer's instruction to write and build it
 **Linked plan:** `implementation-plan.md` in this folder
 **Open questions:** 4, each built on its recommendation as a working default and awaiting ratification (see Open Questions / Decisions)
-**Revisions:** 1
+**Revisions:** 2
 
 ### Acceptance Criteria Fulfillment
 
@@ -147,6 +147,7 @@ In a repository with no logs and no specs, the facts report level `git-only` and
 | Date | Author | Type | Description |
 |------|--------|------|-------------|
 | 2026-10-28 | claude | added | Initial spec, written and committed the same day under the maintainer's instruction to write and build it. The four decisions below are built on their recommendations as working defaults and stay `Open` until the maintainer ratifies or overturns them. |
+| 2026-10-28 | claude | status | Status moved to `fulfilled`: all twelve acceptance criteria were verified with the evidence in the Task Summary, and the skill ships in v0.10.0. D1 to D4 remain `Open`; a later answer that overturns one changes the skill in a follow-up version, not this spec's criteria. |
 
 ## Sources & Evidence
 
