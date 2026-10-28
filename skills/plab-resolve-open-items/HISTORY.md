@@ -2,10 +2,20 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.2.0 | 2026-10-28 | unreleased | added | `gather-backlog.py` gains `--answered-since YYYY-MM-DD`, for `plab-current-status`, specified by CS-01 (current status skill). With it, the sweep also returns answered items updated on or after the date and items whose status is outside the vocabulary, each tagged with a `kind`. Without it, the output is byte-identical to 1.1.0, so the walk and `--backlog` are unchanged. |
 | 1.1.0 | 2026-10-15 | v0.8.0 | added | The `--backlog` sweep across every spec, plan, implementation plan and the newest session log, specified by WD-02 (backlog sweep). Gathers in one script call, triages into ready, moot and judgment tiers, caps a walk at ten items, and writes a dated snapshot under `_local/decisions/`. Built on six working-default decisions, D1 to D6 in the WD-02 spec, all still `Open` pending the maintainer's ratification: which sources it reads, how items are triaged and ordered, the ten-item cap, the dated-snapshot file, no overlap with the options board or a living status page, and a script rather than one-document-at-a-time reading. |
 | 1.0.2 | 2026-10-15 | v0.8.0 | fixed | Three defects recorded against WD-01's (resolve open items) Phase 6 live trial. `walk-check.py` now accepts the numbered and `&`/`and` heading variants the skill itself gathers from. One handle is chosen once per walk, from the first filled maintainer block in gathering order, and recorded in the walk record. An item omitted in one round can still be answered in a later round. |
 | 1.0.1 | 2026-10-12 | v0.7.1 | fixed | A walk in a session with nothing open listed `_local/` folders and read memory files, looking for items, instead of saying nothing was open. A document now counts as a source only if the session read or wrote it before the walk was requested, and gathering never searches. |
 | 1.0.0 | 2026-10-08 | v0.7.0 | added | First version. Walks the open questions, decisions and tasks of the current session, or of one named document, takes a one-line answer, writes each answer back to its one home, and writes a walk record that `walk-check.py` verifies. |
+
+## 1.2.0 - 2026-10-28
+
+**Added: `--answered-since` on `gather-backlog.py`.** `plab-current-status` lists recent decisions and needs the same parsing the sweep already does, so the sweep gains one argument rather than the new skill gaining a second parser (CS-01's D1, where the decisions sweep lives).
+
+- **With the argument,** every row whose status is an answer (`Decided`, `Provisional`, `Deferred`, `Canceled`, `Superseded`) and whose `Updated` date is on or after the given date is returned with `kind: answered`. A status that starts with an answer word, such as "Decided, see below", counts as an answer, because older documents paraphrase. An answer with no parseable `Updated` date is not called recent.
+- **Any other status** is returned with `kind: unrecognised`. Six open items were invisible to every sweep until PR #47 (closing verified decision items) on 2026-10-26, because their status words were outside the vocabulary. On this repository on 2026-10-28 the argument finds nine such rows, all paraphrased answers such as "Resolved" and "Ratified".
+- **Without the argument,** the output is byte-identical to 1.1.0. Proof: the 1.1.0 script and this one, run on this repository with the same `--today`, produce identical JSON.
+- **Tests:** `test-gather-backlog.py` gains six checks. Canary: with the date comparison removed, the boundary check fails and names itself (24 of 25 pass).
 
 ## 1.1.0 - 2026-10-15
 

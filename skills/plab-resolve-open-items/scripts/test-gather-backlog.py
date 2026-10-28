@@ -241,6 +241,37 @@ def main() -> int:
         check("text mode exits 0", r.returncode == 0, r.stderr)
         check("text mode reports a count", "1 item" in r.stdout, repr(r.stdout))
 
+        # 9. --answered-since (1.2.0, for plab-current-status). Without it the
+        # output is unchanged; with it, recent answers and out-of-vocabulary
+        # statuses are added, each with a kind.
+        repo = init_repo(root / "answered-since")
+        write(repo / "spec.md", typed_doc("spec", table_lines=canonical_table([
+            ("D1", "Still open", "(none)", "Open", "(none)"),
+            ("D2", "Decided on the boundary day", "Option A", "Decided", "2026-01-20"),
+            ("D3", "Decided the day before the boundary", "Option B", "Decided", "2026-01-19"),
+            ("D4", "Paraphrased answer, recent", "Option A", "Decided, see below", "2026-01-25"),
+            ("D5", "Out of vocabulary", "(none)", "Needs ruling", "(none)"),
+            ("D6", "Answered with no date", "Option A", "Canceled", "(none)"),
+        ])))
+        commit_all(repo)
+        default = run(repo, "--json")
+        default_items = json.loads(default.stdout)
+        check("without --answered-since only the pending item returns, with no kind field",
+              [i["id"] for i in default_items] == ["D1"] and "kind" not in default_items[0],
+              default.stdout)
+        r = run(repo, "--json", "--answered-since", "2026-01-20")
+        check("--answered-since exits 0", r.returncode == 0, r.stderr)
+        kinds = {i["id"]: i.get("kind") for i in json.loads(r.stdout or "[]")}
+        check("answered-since boundary: the boundary day is in, the day before is out",
+              kinds.get("D2") == "answered" and "D3" not in kinds, str(kinds))
+        check("a status starting with an answer word counts as answered",
+              kinds.get("D4") == "answered", str(kinds))
+        check("an out-of-vocabulary status returns as unrecognised",
+              kinds.get("D5") == "unrecognised", str(kinds))
+        check("an answer with no Updated date is not called recent",
+              "D6" not in kinds, str(kinds))
+        check("the pending item carries kind pending", kinds.get("D1") == "pending", str(kinds))
+
     failed = [name for name, ok, _ in results if not ok]
     print()
     print(f"{len(results) - len(failed)}/{len(results)} checks passed.")
