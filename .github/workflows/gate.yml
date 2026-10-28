@@ -187,6 +187,27 @@ jobs:
         if: always()
         run: python3 skills/plab-resolve-open-items/scripts/walk-check.py writeback skills/plab-resolve-open-items/examples/sample-walk/before.md skills/plab-resolve-open-items/examples/sample-walk/after.md
 
+      # The backlog sweep's fixture tests. Added with plab-resolve-open-items
+      # 1.2.0, because plab-current-status now depends on the sweep's
+      # --answered-since output, so a regression there is no longer one
+      # skill's private concern.
+      - name: The backlog sweep, against its fixture repositories
+        if: always()
+        run: python3 skills/plab-resolve-open-items/scripts/test-gather-backlog.py
+
+      # plab-current-status (CS-01). The checker's self-test proves each of its
+      # eight rules fails on a mutation of the committed sample, so exit 2
+      # means a rule has gone blind; never read it as clean. The facts script's
+      # tests build throwaway repositories and name an absent `gh`, so they
+      # never touch GitHub.
+      - name: The status checker, against its committed sample
+        if: always()
+        run: python3 skills/plab-current-status/scripts/status-check.py --self-test
+
+      - name: The status facts script, against its fixture repositories
+        if: always()
+        run: python3 skills/plab-current-status/scripts/test-derive-status-facts.py
+
       # plab-ai-review's dispatch helper (A-02). This is the one script in this
       # job that talks to a subprocess at all, but that subprocess is a fake
       # codex-companion.mjs the test writes into a tempdir itself - never the

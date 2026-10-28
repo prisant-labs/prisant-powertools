@@ -20,6 +20,11 @@
       "description": "Resume an interrupted work session by replaying its recorded handoff. Use when the user explicitly asks to resume: 'resume', 'continue session', 'pick up where we left off'. Reads the most recent session log, reports what was outstanding and the named next action, then confirms before acting. Do NOT fire on status questions like 'where are we' or 'what's next'; answer those directly rather than resuming. Companion to plab-wrap-session, which writes the log this reads."
     },
     {
+      "name": "plab-current-status",
+      "path": "skills/plab-current-status/SKILL.md",
+      "description": "Write a dated status snapshot of the current repository to _local/_status/YYYY-MM-DD_<model>_<byline>.md: the answer first, what changed since the last snapshot, what waits on the maintainer, what is next, pending and recent decisions ranked with reasons, what was accomplished, and what is unknown. Facts come from one script call; works in any git repository and names each missing source. Explicit invocation only: run /plab-current-status; it does not fire on its own."
+    },
+    {
       "name": "plab-guide",
       "path": "skills/plab-guide/SKILL.md",
       "description": "Generate a paired guide bundle (standard MD + ADHD MD + quick-reference HTML + 1-2 page PDF) for any topic. Use when the user provides a GitHub URL, a tool name, or a concept and wants a structured explanatory document plus a printable operator card. Triggers on \"create a guide\", \"build a cheat sheet\", \"explain X with a quick reference\", \"/plab-guide\"."

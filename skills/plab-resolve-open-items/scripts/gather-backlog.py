@@ -75,6 +75,13 @@ TYPED_KINDS = ("spec", "implementation-plan", "release-plan")
 # (delete this filter, rerun the tests, see them fail naming "status") is a
 # single-line edit rather than a scavenger hunt through the module.
 PENDING_STATUSES = {"Open", "Needs info", "Proposed"}
+# The five statuses that record an answer (references/decisions-section.md).
+# Read only under --answered-since, which plab-current-status passes to list
+# recent decisions; a status in neither set is returned there as
+# "unrecognised", because an out-of-vocabulary status hid six open items from
+# every sweep until PR #47 (closing verified decision items) on 2026-10-26.
+ANSWERED_STATUSES = {"Decided", "Provisional", "Deferred", "Canceled", "Superseded"}
+ANSWERED_PREFIX_RE = re.compile(r"^(?:%s)\b" % "|".join(sorted(ANSWERED_STATUSES)))
 
 FRONTMATTER_LINE_RE = re.compile(r"^([A-Za-z][\w-]*):\s?(.*)$")
 WAITING_HEADING_RE = re.compile(r"^##\s+Waiting on You\s*$")
@@ -187,7 +194,24 @@ def list_tracked_markdown(repo_root):
     return [line for line in result.stdout.splitlines() if line]
 
 
-def gather_decisions_items(repo_root, rel_paths, today, wc):
+def classify(status, updated, answered_since):
+    """The item's kind, or None when the row is not returned.
+
+    With answered_since unset this is exactly the pending filter, so the
+    default output is byte-identical to 1.1.0 (the caller adds no `kind`)."""
+    if status in PENDING_STATUSES:
+        return "pending"
+    if answered_since is None:
+        return None
+    # Older documents paraphrase an answer ("Decided, see below", "Decided: no");
+    # a status that starts with an answer word is an answer, not a hidden item.
+    if status in ANSWERED_STATUSES or ANSWERED_PREFIX_RE.match(status):
+        when = _parse_date(updated)
+        return "answered" if when is not None and when >= answered_since else None
+    return "unrecognised"
+
+
+def gather_decisions_items(repo_root, rel_paths, today, wc, answered_since=None):
     items = []
     for rel in rel_paths:
         path = repo_root / rel
@@ -235,11 +259,12 @@ def gather_decisions_items(repo_root, rel_paths, today, wc):
                     % (rel, len(r), len(header))
                 )
             status = r[col["Status"]].strip()
-            if status not in PENDING_STATUSES:
-                continue
             updated = r[col["Updated"]] if "Updated" in col else None
+            kind = classify(status, updated, answered_since)
+            if kind is None:
+                continue
             title = r[col[title_col]].strip() if title_col else "(untitled)"
-            items.append({
+            item = {
                 "home": rel.replace(os.sep, "/"),
                 "id": r[col["ID"]].strip(),
                 "title": title,
@@ -247,7 +272,11 @@ def gather_decisions_items(repo_root, rel_paths, today, wc):
                 "age_days": compute_age(today, updated, doc_created),
                 "source_kind": "decisions-section",
                 "home_status": doc_status,
-            })
+            }
+            if answered_since is not None:
+                item["kind"] = kind
+                item["updated"] = (updated or "").strip() or None
+            items.append(item)
     return items
 
 
@@ -321,11 +350,14 @@ def gather_waiting_on_items(repo_root, today):
 # ---------------------------------------------------------------------------
 
 
-def gather(repo_root, today):
+def gather(repo_root, today, answered_since=None):
     wc = load_walk_check()
     rel_paths = list_tracked_markdown(repo_root)
-    decisions_items = gather_decisions_items(repo_root, rel_paths, today, wc)
+    decisions_items = gather_decisions_items(repo_root, rel_paths, today, wc, answered_since)
     waiting_items = gather_waiting_on_items(repo_root, today)
+    if answered_since is not None:
+        for item in waiting_items:
+            item["kind"] = "pending"
     return decisions_items + waiting_items
 
 
@@ -340,13 +372,19 @@ def main(argv=None):
     parser.add_argument("--repo", default=".", help="repository root (default: current directory)")
     parser.add_argument("--json", action="store_true", help="emit the gathered items as a JSON array")
     parser.add_argument("--today", help="override today's date as YYYY-MM-DD (for testing)")
+    parser.add_argument(
+        "--answered-since", metavar="YYYY-MM-DD",
+        help="also return answered items updated on or after this date, and items whose status "
+             "is outside the vocabulary; every item then carries a `kind`",
+    )
     args = parser.parse_args(argv)
 
     repo_root = Path(args.repo).resolve()
     today = dt.date.fromisoformat(args.today) if args.today else dt.date.today()
+    answered_since = dt.date.fromisoformat(args.answered_since) if args.answered_since else None
 
     try:
-        items = gather(repo_root, today)
+        items = gather(repo_root, today, answered_since)
     except Broken as exc:
         sys.stderr.write("BROKEN: %s\n" % exc)
         return 2

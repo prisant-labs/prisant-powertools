@@ -4,8 +4,8 @@ description: "Walk the maintainer through every open question, decision and task
 argument-hint: "[--backlog | <document>]"
 license: MIT
 metadata:
-  version: "1.1.0"
-  updated: 2026-10-15
+  version: "1.2.0"
+  updated: 2026-10-28
 ---
 
 # Resolve Open Items
