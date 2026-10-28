@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`plab-current-status` 1.0.0, a new manual-only skill.** It writes a dated, ranked status snapshot of the current repository to `_local/_status/YYYY-MM-DD_<model>_<byline>.md`: the answer first, what changed since the previous snapshot, what waits on you, what is next, pending and recent decisions each with a reason for its rank, what was accomplished, where the project is, and what is unknown. One script call gathers every repository fact and names each missing source, so it works in any git repository, with or without session logs and specs. A self-testing checker verifies every snapshot, and CI runs its self-test. Run it with `/plab-current-status`; it never fires on its own. Specified by CS-01 (current status skill), whose four design decisions are built on working defaults and await ratification.
+- **`plab-resolve-open-items` 1.2.0: `gather-backlog.py --answered-since YYYY-MM-DD`.** With the argument, the sweep also returns answered decisions updated on or after the date and decisions whose status is outside the vocabulary, each tagged with a `kind`. `plab-current-status` uses it for Recent Decisions. Without the argument, the output is byte-identical to 1.1.0, so walks and `--backlog` are unchanged.
+
 ### Fixed
 
 - **The document lifecycle check passes again after the v0.9.0 tag.** Release plan 08 is still a draft whose `target-version` is v0.9.0, and v0.9.0 shipped as the rename instead, so invariant 10 of `scripts/doc-lifecycle-check.py` flagged it once the tag existed. The release pull request could not catch this, because its CI ran before the tag was pushed. Plan 08 joins plans 05 to 07 in the dated baseline. It is the last plan with a version assigned in advance, so no later tag can trip the same check.

@@ -2,7 +2,7 @@
 
 The current configuration of every skill in `prisant-powertools`, as declared in the repository. One row per skill, plus the setup each one needs and where its output lands.
 
-**Plugin version:** 0.9.0 **Skills:** 10 (7 auto-discoverable, 3 explicit-invocation only) **Verified against:** `library.json`, `manifest.generated.json`, and each `skills/*/SKILL.md` **As of:** 2026-10-19
+**Plugin version:** 0.9.0 **Skills:** 11 (7 auto-discoverable, 4 explicit-invocation only) **Verified against:** `library.json`, `manifest.generated.json`, and each `skills/*/SKILL.md` **As of:** 2026-10-19
 
 > This file describes what the repository declares, not what is installed on any given machine. To check a local install, read `~/.claude/plugins/installed_plugins.json`.
 
@@ -14,6 +14,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 |---|---|---|---|---|
 | `plab-ai-review` | 1.3.0 | Auto + explicit | `<doc.md> [--reviewer codex\|gpt\|gemini] [--dispatch] [--respond] [--collect] [--close]` | Beside the source doc, plus `_archive/` on `--close` |
 | `plab-audit` | 1.1.0 | **Explicit only** | `<path> [--appraise\|--audit\|--roadmap] [--type ...] [--lens=docs] [--out <path>]` | `_output/plab-audit/<repo>_<YYYY-MM-DD>/` |
+| `plab-current-status` | 1.0.0 | **Explicit only** | `[<byline>] [--no-fetch]` | `_local/_status/YYYY-MM-DD_<model>_<byline>.md` (gitignored) |
 | `plab-continue-session` | 1.6.0 | Auto + explicit | `[--log <path>]` | Nothing. Displays context only |
 | `plab-guide` | 2.2.2 | Auto + explicit | `<topic-or-repo-url> [--type repo-url\|tool\|concept] [--out <dir>] [--force]` | `_output/plab-guide/` |
 | `plab-init-project` | 1.3.0 | **Explicit only** | `[--profile minimal\|standard\|public] [--type ...] [--agents ...] [--dry-run]` | The target repository root |
@@ -23,7 +24,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 | `plab-strategy-brief` | 1.1.1 | Auto + explicit | `[paste raw thinking]` | `_output/plab-strategy-brief/` |
 | `plab-wrap-session` | 1.8.1 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
 
-**Explicit only** means the skill carries `disable-model-invocation: true`. It never fires on its own and is absent from the auto-loaded skill listing. It runs when you type its name and only then. **`plab-init-project`, `plab-audit` and `plab-release-plan` carry it now.** `plab-release-plan` carried it through 1.3.0, was auto-discoverable from 1.4.0 to 1.5.1, and carries it again from 1.6.0, provisionally. `plab-spec` carried it through 1.2.1 and is now auto-discoverable, using an explicit do-NOT-fire clause in its description instead of the binary flag.
+**Explicit only** means the skill carries `disable-model-invocation: true`. It never fires on its own and is absent from the auto-loaded skill listing. It runs when you type its name and only then. **`plab-init-project`, `plab-audit`, `plab-release-plan` and `plab-current-status` carry it now.** `plab-release-plan` carried it through 1.3.0, was auto-discoverable from 1.4.0 to 1.5.1, and carries it again from 1.6.0, provisionally. `plab-spec` carried it through 1.2.1 and is now auto-discoverable, using an explicit do-NOT-fire clause in its description instead of the binary flag.
 
 ---
 
@@ -191,6 +192,24 @@ Audits a repository into a five-file bundle: what it is worth, what is wrong wit
 | References | 7 files |
 
 **The deterministic layer produces candidates, not findings.** A candidate becomes a finding only after reconciliation against the repository's own recorded decisions; on the fixture run that specified the skill, that withdrew 7 of 15 candidates including the two highest-ranked. `evidence.md` is produced in every mode, and a tool that is absent or fails is recorded as a coverage gap with its exit code rather than as silence.
+
+---
+
+### `plab-current-status` 1.0.0, explicit only
+
+Writes a dated, ranked status snapshot of the current repository.
+
+| Property | Value |
+|---|---|
+| Invocation | `disable-model-invocation: true`, from 1.0.0 |
+| Output | `_local/_status/YYYY-MM-DD_<model>_<byline>.md`. A new file each run; an existing one is never overwritten. It asks before writing when that folder is not gitignored |
+| Sections | The Answer, Changed Since Last Status, Waiting on You, What's Next, Pending Decisions, Recent Decisions, Accomplished, Where the Project Is, What I Don't Know |
+| Levels | `git-only`, `logs`, `decisions`, reported by the facts script; each missing source is a named gap |
+| Scripts | `derive-status-facts.py`, with `test-derive-status-facts.py`; `status-check.py`, its own output gate, which proves eight rules against the committed sample on every run. It calls `plab-resolve-open-items`'s `gather-backlog.py --answered-since` for decisions |
+| Setup required | Python 3. `gh` is optional; without it, pull requests become a named gap |
+| References | 1 file |
+
+**A ranked list, not an inventory.** Each ranked section shows at most ten items, each with a `Why here:` clause, and names where the rest are. The frontmatter carries the counts, the level and the previous snapshot, so another tool can read the file without parsing its prose.
 
 ---
 

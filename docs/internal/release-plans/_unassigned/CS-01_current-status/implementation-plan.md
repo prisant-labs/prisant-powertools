@@ -93,7 +93,7 @@ Steps use checkbox syntax and phases run in order. A phase is done when every st
 
 **Files:**
 - Create `skills/plab-current-status/scripts/status-check.py`
-- Create `skills/plab-current-status/examples/sample-status/_local/_status/2026-10-28_opus-5-5_sample-status-snapshot.md`
+- Create `skills/plab-current-status/examples/sample-status/2026-10-28_opus-5-5_billing-retry-shipped-export-next.md` (not under a `_local/` folder, which `.gitignore` ignores at every depth; the self-test checks it under the logical path `_local/_status/<name>`)
 - Create `skills/plab-current-status/examples/sample-status/facts.json`
 
 **Fulfills:** AC-5 to AC-10, AC-11 (part)

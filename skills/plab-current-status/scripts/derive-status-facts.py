@@ -8,8 +8,8 @@ implementation plan this script fulfils.
 
 USAGE
 -----
-  derive-status-facts.py [--repo <path>] [--json] [--no-fetch] [--gh <exe>]
-                         [--today YYYY-MM-DD]
+  derive-status-facts.py [--repo <path>] [--json] [--out <file>] [--no-fetch]
+                         [--gh <exe>] [--today YYYY-MM-DD]
 
 EXIT-CODE CONTRACT
 ------------------
@@ -24,7 +24,9 @@ break is a failure to read something that exists and is not.
 
 WRITE CONTRACT
 --------------
-This script writes no file in the working tree. Its one write is the fetch,
+This script writes no file in the working tree. `--out` writes the JSON to a
+path the caller names, which the skill places in a temp folder. Its one write
+to the repository is the fetch,
 `git fetch --no-prune origin --tags`, which updates remote-tracking refs under
 `.git` only (CS-01's D2, whether to fetch). `--no-prune` is explicit because a
 plain fetch prunes whenever `fetch.prune` is set, the same reason
@@ -395,6 +397,8 @@ def main(argv=None):
     parser.add_argument("--no-fetch", action="store_true", help="do not fetch from origin first")
     parser.add_argument("--gh", default="gh", help="the GitHub CLI executable (default: gh)")
     parser.add_argument("--today", help="override today's date as YYYY-MM-DD (for testing)")
+    parser.add_argument("--out", help="also write the JSON to this file, for `status-check.py --facts`; "
+                                      "give a path outside the working tree")
     args = parser.parse_args(argv)
     today = args.today or dt.date.today().isoformat()
     try:
@@ -402,6 +406,11 @@ def main(argv=None):
     except Broken as exc:
         sys.stderr.write("BROKEN: %s\n" % exc)
         return 2
+    if args.out:
+        # Written by Python rather than by shell redirection, because `>` in
+        # Windows PowerShell 5.1 writes UTF-16, which the checker cannot read.
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.out).write_text(json.dumps(facts, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(facts, indent=2) if args.json else summary(facts))
     return 0
 
