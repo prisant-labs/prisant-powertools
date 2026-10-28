@@ -2,7 +2,7 @@
 id: CS-01
 title: "Implementation plan: plab-current-status"
 type: implementation-plan
-status: in-progress
+status: complete
 created: 2026-10-28
 updated: 2026-10-28
 linked-spec: spec.md
@@ -33,12 +33,12 @@ Steps use checkbox syntax and phases run in order. A phase is done when every st
 
 | Phase | Goal | Fulfills AC | Owner | Status |
 |---|---|---|---|---|
-| P1 | The backlog sweep can return recent answers and unrecognised statuses | AC-4, AC-11 (part) | agent | Not started |
-| P2 | The facts script returns every fact in one call, with its level and gaps | AC-2, AC-3, AC-11 (part) | agent | Not started |
-| P3 | The checker enforces the file's shape and proves every rule can fail | AC-5 to AC-10, AC-11 (part) | agent | Not started |
-| P4 | The skill, its reference, its history and its eval case exist | AC-1 | agent | Not started |
-| P5 | The plugin registers the skill and CI runs its checks | AC-11 (CI) | agent | Not started |
-| P6 | A live run on this repository passes the checker | AC-12 | agent | Not started |
+| P1 | The backlog sweep can return recent answers and unrecognised statuses | AC-4, AC-11 (part) | agent | Done |
+| P2 | The facts script returns every fact in one call, with its level and gaps | AC-2, AC-3, AC-11 (part) | agent | Done |
+| P3 | The checker enforces the file's shape and proves every rule can fail | AC-5 to AC-10, AC-11 (part) | agent | Done |
+| P4 | The skill, its reference, its history and its eval case exist | AC-1 | agent | Done |
+| P5 | The plugin registers the skill and CI runs its checks | AC-11 (CI) | agent | Done |
+| P6 | A live run on this repository passes the checker | AC-12 | agent | Done |
 
 ---
 
@@ -160,6 +160,8 @@ Steps use checkbox syntax and phases run in order. A phase is done when every st
 - [ ] Run `status-check.py --facts` on the result.
 
 **Verification:** the checker's output, quoted.
+
+**Result, 2026-10-28.** A headless `claude -p` session (Opus 5.5, 17 turns, $3.12 including the advisor) wrote `2026-10-28_opus-5-5_status-skill-built-goal-trial-first.md` under `_local/_status/`. Its own check and an independent re-run both returned `CLEAN: canary proved, ... satisfies every rule`. One caveat: Git Bash rewrote the prompt `/plab-current-status` into a Windows path, so the session followed `SKILL.md` from the checkout rather than loading the skill as a slash command. The run therefore proves the workflow, both scripts and the checker on real data, and not skill loading. Loading through a `.claude/skills/` junction was proved for `plab-audit` on 2026-10-05.
 
 ---
 

@@ -27,22 +27,22 @@ priority: P2
 
 ### Acceptance Criteria Fulfillment
 
-- [ ] AC-1: The skill is manual-only and does not fire on a status question
-- [ ] AC-2: Facts come from one script call that writes nothing in the working tree and reports broken rather than empty
-- [ ] AC-3: The facts name the repository's level and every source that was missing
-- [ ] AC-4: The backlog sweep can also return recent answers and unrecognised statuses, and its default output is unchanged
-- [ ] AC-5: The file lands at `_local/_status/YYYY-MM-DD_<model>_<byline>.md` and never overwrites
-- [ ] AC-6: The file carries the agreed frontmatter and the ten sections in order
-- [ ] AC-7: Every ranked item is numbered and says why it ranks where it does
-- [ ] AC-8: Every decision item names its home document
-- [ ] AC-9: The file says what changed since the previous snapshot, or that there is none
-- [ ] AC-10: Every gap the facts report appears in What I Don't Know
-- [ ] AC-11: Stdlib tests and a self-testing checker prove the scripts, each with a canary, and CI runs them
-- [ ] AC-12: A live run on this repository produces a file the checker passes
+- [x] AC-1: The skill is manual-only and does not fire on a status question
+- [x] AC-2: Facts come from one script call that writes nothing in the working tree and reports broken rather than empty
+- [x] AC-3: The facts name the repository's level and every source that was missing
+- [x] AC-4: The backlog sweep can also return recent answers and unrecognised statuses, and its default output is unchanged
+- [x] AC-5: The file lands at `_local/_status/YYYY-MM-DD_<model>_<byline>.md` and never overwrites
+- [x] AC-6: The file carries the agreed frontmatter and the ten sections in order
+- [x] AC-7: Every ranked item is numbered and says why it ranks where it does
+- [x] AC-8: Every decision item names its home document
+- [x] AC-9: The file says what changed since the previous snapshot, or that there is none
+- [x] AC-10: Every gap the facts report appears in What I Don't Know
+- [x] AC-11: Stdlib tests and a self-testing checker prove the scripts, each with a canary, and CI runs them
+- [x] AC-12: A live run on this repository produces a file the checker passes
 
 ### Currently In Progress
 
-None. The build follows on the same branch.
+None. Built on 2026-10-28 on `feat/plab-current-status`. Evidence: AC-2 and AC-3 by `test-derive-status-facts.py` (31 checks); AC-4 by `test-gather-backlog.py` (25 checks) and a byte comparison of the 1.1.0 and 1.2.0 default output on this repository; AC-5 to AC-10 by `status-check.py --self-test`, whose mutations fail each rule; AC-11 by the three canaries in the plan; AC-12 by a headless run whose snapshot the checker passed. AC-1's eval case exists but the eval suite has not been run, because each case is a full session on the maintainer's credential.
 
 ---
 
