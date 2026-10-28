@@ -2,7 +2,7 @@
 
 The current configuration of every skill in `prisant-powertools`, as declared in the repository. One row per skill, plus the setup each one needs and where its output lands.
 
-**Plugin version:** 0.9.0 **Skills:** 11 (7 auto-discoverable, 4 explicit-invocation only) **Verified against:** `library.json`, `manifest.generated.json`, and each `skills/*/SKILL.md` **As of:** 2026-10-28
+**Plugin version:** 0.10.0 **Skills:** 11 (7 auto-discoverable, 4 explicit-invocation only) **Verified against:** `library.json`, `manifest.generated.json`, and each `skills/*/SKILL.md` **As of:** 2026-10-28
 
 > This file describes what the repository declares, not what is installed on any given machine. To check a local install, read `~/.claude/plugins/installed_plugins.json`.
 

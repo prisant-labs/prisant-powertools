@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-28
+
+A new manual-only skill, `plab-current-status`, writes a dated, ranked status snapshot of any git repository. It ships as a MINOR release because it adds a skill and adds an argument to `plab-resolve-open-items`; no existing behaviour changes.
+
 ### Added
 
 - **`plab-current-status` 1.0.0, a new manual-only skill.** It writes a dated, ranked status snapshot of the current repository to `_local/_status/YYYY-MM-DD_<model>_<byline>.md`: the answer first, what changed since the previous snapshot, what waits on you, what is next, pending and recent decisions each with a reason for its rank, what was accomplished, where the project is, and what is unknown. One script call gathers every repository fact and names each missing source, so it works in any git repository, with or without session logs and specs. A self-testing checker verifies every snapshot, and CI runs its self-test. Run it with `/plab-current-status`; it never fires on its own. Specified by CS-01 (current status skill), whose four design decisions are built on working defaults and await ratification.

@@ -1,6 +1,6 @@
 {
   "name": "prisant-powertools",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "General-purpose agent skills for the work around the work: session continuity, structured analysis, guide authoring, cross-LLM peer review, repository auditing, resolving open questions and decisions, status snapshots, and the specification and release-planning documents that sit between an idea and a tag. Use when wrapping or resuming a coding session, turning raw thinking into a decision-ready brief, generating a guide bundle, getting a second-model review of a document, auditing a repository, walking through the questions and decisions a session left open, writing a status snapshot of a repository, writing a feature spec, managing a version-scoped release plan, or scaffolding agent infrastructure into a repository.",
   "standard": "0.14",
   "tier": "universal",
