@@ -163,6 +163,8 @@ Steps use checkbox syntax and phases run in order. A phase is done when every st
 
 **Result, 2026-10-28.** A headless `claude -p` session (Opus 5.5, 17 turns, $3.12 including the advisor) wrote `2026-10-28_opus-5-5_status-skill-built-goal-trial-first.md` under `_local/_status/`. Its own check and an independent re-run both returned `CLEAN: canary proved, ... satisfies every rule`. One caveat: Git Bash rewrote the prompt `/plab-current-status` into a Windows path, so the session followed `SKILL.md` from the checkout rather than loading the skill as a slash command. The run therefore proves the workflow, both scripts and the checker on real data, and not skill loading. Loading through a `.claude/skills/` junction was proved for `plab-audit` on 2026-10-05.
 
+**Second run, 2026-10-28, closing the caveat.** Re-run with `MSYS_NO_PATHCONV=1`, the session's transcript shows `<command-name>/plab-current-status</command-name>` and the skill's base directory resolved through the junction, with no file read of `SKILL.md`, so the slash command loaded the skill (8 turns, $0.80). It wrote `2026-10-28_opus-5-5_pr-open-goal-trial-still-waits.md`, whose frontmatter names the first run's snapshot as `previous`, and whose Changed Since Last Status compares the two correctly: the first live exercise of D3's chained window and of R7's named-previous branch. The checker passed it. The run surfaced one gap worth a later effort: the facts report open pull requests but not their CI status.
+
 ---
 
 ## CI and Documentation Coverage
