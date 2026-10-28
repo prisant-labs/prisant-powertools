@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "today": "2026-10-28",
+  "repo": {"root": "/work/example-app", "name": "example-app"},
+  "level": "decisions",
+  "previous_status": {
+    "path": "_local/_status/2026-10-14_opus-5-5_billing-retry-in-review.md",
+    "date": "2026-10-14",
+    "model": "opus-5-5",
+    "byline": "billing-retry-in-review"
+  },
+  "gaps": [
+    {"source": "pull requests", "reason": "only pull requests merged since the previous snapshot were read"},
+    {"source": "unrecognised statuses", "reason": "1 decision row(s) carry a status outside the vocabulary of references/decisions-section.md"}
+  ]
+}
