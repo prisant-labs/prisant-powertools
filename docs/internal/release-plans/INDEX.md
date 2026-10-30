@@ -2,7 +2,7 @@
 
 Generated file. Regenerate with `python scripts/gen-release-index.py` from the repository root. Hand edits will be overwritten on the next regeneration.
 
-**Releases:** 5 **Efforts:** 23 (15 unassigned) **Source:** every `plan.md` and `spec.md` under `docs/internal/release-plans/`, including `_unassigned/`, plus each effort's `implementation-plan.md` where present
+**Releases:** 5 **Efforts:** 25 (17 unassigned) **Source:** every `plan.md` and `spec.md` under `docs/internal/release-plans/`, including `_unassigned/`, plus each effort's `implementation-plan.md` where present
 
 ---
 
@@ -21,6 +21,8 @@ Every effort id's letter prefix names which series it belongs to. An id whose le
 | AU | audit-skill roadmap item |
 | WD | resolve-open-items roadmap item |
 | CS | current-status roadmap item |
+| UA | usage-audit roadmap item |
+| PP | project-pulse roadmap item |
 
 ---
 
@@ -53,6 +55,8 @@ Specs written before being assigned to a release: the documented default home `/
 | [D-10](_unassigned/D-10_log-format-contract/spec.md) | log format contract | D (defect in the wrap and continue pair) | draft | draft | P2 | No |
 | [H-05](_unassigned/H-05_retire-dash-enforcement/spec.md) | retire dash enforcement | H (hygiene and repo-wide) | draft | (no implementation plan yet) | P3 | Yes |
 | [H-06](_unassigned/H-06_optional-release-plan-version/spec.md) | optional release plan version | H (hygiene and repo-wide) | draft | (no implementation plan yet) | P3 | Yes |
+| [PP-01](_unassigned/PP-01_project-pulse/spec.md) | project pulse | PP (project-pulse roadmap item) | draft | in-progress | P2 | Yes |
+| [UA-01](_unassigned/UA-01_usage-audit/spec.md) | usage audit | UA (usage-audit roadmap item) | draft | in-progress | P2 | Yes |
 | [W-02](_unassigned/W-02_derived-log-facts/spec.md) | derived log facts | W (wrap-session roadmap item) | committed | in-progress | P1 | No |
 | [W-03](_unassigned/W-03_waiting-on-escapes-gitignore/spec.md) | waiting on escapes gitignore | W (wrap-session roadmap item) | draft | draft | P2 | Yes |
 | [W-04](_unassigned/W-04_digest-mode/spec.md) | digest mode | W (wrap-session roadmap item) | draft | draft | P2 | Yes |
@@ -85,6 +89,8 @@ One row per effort, grouped by release in sequence order (see the Release column
 | [D-10](_unassigned/D-10_log-format-contract/spec.md) | log format contract | D (defect in the wrap and continue pair) | draft | draft | `_unassigned/` | - | P2 | No |
 | [H-05](_unassigned/H-05_retire-dash-enforcement/spec.md) | retire dash enforcement | H (hygiene and repo-wide) | draft | (no implementation plan yet) | `_unassigned/` | - | P3 | Yes |
 | [H-06](_unassigned/H-06_optional-release-plan-version/spec.md) | optional release plan version | H (hygiene and repo-wide) | draft | (no implementation plan yet) | `_unassigned/` | - | P3 | Yes |
+| [PP-01](_unassigned/PP-01_project-pulse/spec.md) | project pulse | PP (project-pulse roadmap item) | draft | in-progress | `_unassigned/` | - | P2 | Yes |
+| [UA-01](_unassigned/UA-01_usage-audit/spec.md) | usage audit | UA (usage-audit roadmap item) | draft | in-progress | `_unassigned/` | - | P2 | Yes |
 | [W-02](_unassigned/W-02_derived-log-facts/spec.md) | derived log facts | W (wrap-session roadmap item) | committed | in-progress | `_unassigned/` | - | P1 | No |
 | [W-03](_unassigned/W-03_waiting-on-escapes-gitignore/spec.md) | waiting on escapes gitignore | W (wrap-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | Yes |
 | [W-04](_unassigned/W-04_digest-mode/spec.md) | digest mode | W (wrap-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | Yes |
