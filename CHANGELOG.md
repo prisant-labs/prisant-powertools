@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-10-30
+
+A metadata-only release: the plugin is now credited to Prisant Labs and named Prisant Power Tools. No skill changed.
+
 ### Changed
 
 - The plugin's author is now "Prisant Labs" rather than "JP", in `library.json` and both generated manifests. `library.json` also declares `displayName: "Prisant Power Tools"`, which the Codex manifest now carries in place of the computed "Prisant Powertools". Claude Code listings already show the new name and author, because the `prisant-labs/agent-plugins` marketplace entry sets both and entry display fields take precedence. The Claude `plugin.json` does not yet carry `displayName`, because the agent-skills-toolkit manifest generator does not emit that field for Claude.
