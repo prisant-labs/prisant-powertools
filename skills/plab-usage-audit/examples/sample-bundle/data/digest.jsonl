@@ -1,0 +1,4 @@
+{"project": "alpha-app", "kind": "tag", "ref": "v2.3.0", "date": "2026-10-22"}
+{"project": "alpha-app", "kind": "pull_request", "ref": "#41", "merged": "2026-10-21"}
+{"project": "alpha-app", "kind": "pull_request", "ref": "#42", "merged": "2026-10-24"}
+{"project": "beta-lib", "kind": "commit", "ref": "3 commits on main", "date": "2026-10-23"}

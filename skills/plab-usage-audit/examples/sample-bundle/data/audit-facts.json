@@ -1,0 +1,42 @@
+{
+  "reconciliation": {
+    "prior_week_published_total_usd": 118.90,
+    "prior_week_reproduced_total_usd": 118.90,
+    "workflow_sum_usd": 139.20,
+    "workflow_lane_total_usd": 142.30,
+    "gap_usd": 3.10,
+    "tolerance_usd": 5.00
+  },
+  "settings_drift": [
+    {
+      "key": "permissions.allow",
+      "change": "lost the entry for `gh pr create`",
+      "when": "2026-10-21",
+      "register_row": "absent"
+    },
+    {
+      "key": "model.sonnet",
+      "change": "pinned to claude-sonnet-4-5",
+      "when": "2026-09-12",
+      "register_row": "absent"
+    }
+  ],
+  "credentials": [
+    {
+      "project": "alpha-app",
+      "key_name": "ALPHA_APP_API_KEY",
+      "present": true,
+      "file_modified": "2026-10-23"
+    }
+  ],
+  "backup_health": {
+    "last_run": "2026-10-24",
+    "sessions_archived": 2114,
+    "sessions_archived_prior_week": 2098,
+    "max_gap_hours": 19
+  },
+  "due_overdue": [
+    {"id": "Y6", "handle": "drop-weekly-manual-prompts", "consecutive_audits": 4},
+    {"id": "Y5", "handle": "backup-health-line", "consecutive_audits": 2}
+  ]
+}

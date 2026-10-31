@@ -20,7 +20,7 @@ One folder per run, named `YYYY-MM-DD_claude-usage`, where the date is the audit
 
 ## Rules
 
-**R1, files.** Every file in the table above exists. `data/` holds at least one `.json` file.
+**R1, files.** `README.md`, `01` to `05` and `data/README.md` exist, and `data/` holds at least one `.json` file. The digest and the briefs are not required by this rule, because a run with a supplied digest launches no reader.
 
 **R2, the five-minute version.** `README.md` has a level-2 heading that starts with `Five-minute version`, and a table whose header row contains `ID` and `Who acts`.
 
