@@ -49,8 +49,10 @@ Ask the owner one question: "What do `/usage`'s session and weekly plan-limit ba
 ```bash
 python <this skill's base directory>/scripts/collect.py --config <settings> --start <prior start> --end <audit day> --focus-start <focus start> --cutoff <cutoff UTC> --out <bundle>/data --ledger <ledger>
 python <this skill's base directory>/scripts/derive-audit-facts.py --config <settings> --data <bundle>/data --ledger <ledger> --state <state> --out <bundle>/data/audit-facts.json
-python <this skill's base directory>/scripts/sweep.py --config <settings> --start <focus start> --end <audit day> --prior-start <prior start> --json > <bundle>/data/sweep.json
+python <this skill's base directory>/scripts/shipped.py --config <settings> --start <focus start> --end <audit day> --prior-start <prior start> --out <bundle>/data/sweep.json
 ```
+
+When a `plab-project-pulse` run already covered the same week, pass `--pulse-facts <its pulse-facts.json>` to `shipped.py` instead of the window, and it runs no git command.
 
 The collector exits 1 on findings such as an unpriced model or model drift: carry those into the bundle; they are findings, not failures. Exit 2 from any script stops the run with its named cause. Never write a figure the scripts did not produce.
 
