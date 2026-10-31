@@ -1,6 +1,6 @@
 # plab-spec
 
-**Version:** 1.3.3
+**Version:** 1.3.4
 **Source:** [`skills/plab-spec/`](../../../skills/plab-spec/)
 
 Produce a feature specification: the contract between intent and implementation. Spec defines **what** to build and how the team knows it's done. Distinct from the implementation-plan template in `docs/internal/release-plans/` (how to build) and `/plab-strategy-brief` (explore problem space).

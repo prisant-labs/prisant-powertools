@@ -86,7 +86,7 @@ Immediately after the H1 title and the frontmatter. Before any other content. Al
 
 **Status:** committed
 **Last updated:** 2026-04-20 14:30 (UTC) by codex
-**Linked plan:** `docs/internal/efforts/S-04/S-04_plan.md`
+**Linked plan:** `docs/internal/release-plans/plan_03_peer-review/S-04_ai-review/implementation-plan.md`
 **Open questions:** 2 (see Open Questions section)
 **Revisions:** 1 (see Revisions section)
 

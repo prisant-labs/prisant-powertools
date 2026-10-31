@@ -2,6 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.3.4 | 2026-10-30 | unreleased | fixed | Every reference example now uses the per-effort folder layout the skill writes. Twenty-four lines across six reference files still showed the retired `docs/internal/efforts/` layout, and `spec-template.md` still named the output `<id>_spec.md`. |
 | 1.3.3 | 2026-09-01 | v0.5.3 | fixed | Removed every pointer to `/superpowers:writing-plans`. The implementation-plan stage is now an in-repo template, so the skill names no external plugin. |
 | 1.3.2 | 2026-08-28 | v0.5.2 | changed | Supersession is documented as symmetric: `superseded-by` and `supersedes` are both written, and a cross-file gate enforces the pair. |
 | 1.3.1 | 2026-08-28 | v0.5.1 | changed | `linked-effort` documented as a string, not a path. A tracked artifact must not cite an untracked one. |
@@ -9,6 +10,17 @@
 | 1.2.1 | 2026-08-24 | v0.3.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.2.1; prior history remains there. |
 
 
+
+## 1.3.4 - 2026-10-30
+
+Documentation only. The 2026-08-29 audit found that the skill writes `spec.md` into a per-effort folder, `docs/internal/release-plans/_unassigned/<id>_<slug>/` or `plan_NN_<slug>/<id>_<slug>/`, while its references still showed the layout it retired in v1.1.0. The references are loaded exactly when the agent needs the output's shape, so a stale example can override the workflow in practice. The audit's other half, the missing `docs/internal/planning-artifact-model.md`, was fixed on 2026-09-12.
+
+- **`spec-template.md`** named the output `<id>_spec.md`; it now names `spec.md` inside `<id>_<slug>/`. Its `linked-effort` placeholder showed a path into `docs/internal/efforts/`; it now asks for a tracked path or a plain-language description, which is what `frontmatter-schema.md` already required.
+- **`examples/example-spec-complex.md`** links its plan, strategy brief and reviewed copy inside one effort folder, `docs/internal/release-plans/plan_03_peer-review/S-04_ai-review/`, and gains the `linked-release` its `target-release` implies. **`examples/example-spec-simple.md`** describes its source instead of citing a path that never existed.
+- **`frontmatter-schema.md`, `source-traceability.md` and `task-summary-block.md`** use the same layout. The source-priority table now names the `linked-effort` source and `<effort folder>/spec.md` instead of an effort-brief file the model no longer has.
+- **Kept on purpose:** the legacy-path note in `SKILL.md` and the v1.1.0 note in `docs/skills/plab-spec/README.md`, both of which describe the old layout as history.
+
+**Proof:** `grep -rn docs/internal/efforts skills/plab-spec`, excluding this file, returned 25 lines before this change: 24 in the six reference files and the legacy-path note in `SKILL.md`. After it, only the legacy-path note remains.
 
 ## 1.3.3 - 2026-09-01
 

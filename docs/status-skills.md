@@ -22,7 +22,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 | `plab-init-project` | 1.3.1 | **Explicit only** | `[--profile minimal\|standard\|public] [--type ...] [--dry-run]` | The target repository root |
 | `plab-release-plan` | 1.6.0 | **Explicit only** | `--create \| --promote \| --demote \| --update \| --gate` | `docs/internal/release-plans/plan_NN_<slug>/` |
 | `plab-resolve-open-items` | 1.2.0 | Auto + explicit | `[--backlog \| <document>]` | Each item's home document; the walk record and any backlog file in `_local/decisions/` |
-| `plab-spec` | 1.3.3 | Auto + explicit | `--effort <id> [--target-release vX.Y.Z] [--revise] [--dry-run]` | `docs/internal/release-plans/_unassigned/` by default |
+| `plab-spec` | 1.3.4 | Auto + explicit | `--effort <id> [--target-release vX.Y.Z] [--revise] [--dry-run]` | `docs/internal/release-plans/_unassigned/` by default |
 | `plab-strategy-brief` | 1.1.1 | Auto + explicit | `[paste raw thinking]` | `_output/plab-strategy-brief/` |
 | `plab-wrap-session` | 1.8.1 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
 
@@ -109,7 +109,7 @@ Turns raw, unstructured thinking into a decision-ready analysis document.
 
 Explicitly not for summarizing already-structured documents, editing polished prose, or pure research queries with no raw thinking supplied.
 
-### `plab-spec` 1.3.3
+### `plab-spec` 1.3.4
 
 Writes a feature specification optimized for agent execution.
 

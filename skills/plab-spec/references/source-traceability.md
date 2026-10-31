@@ -18,7 +18,7 @@ This is supported by two sources. [S1, S3]
 `[S1]` is shorthand for the entry in the Sources & Evidence section:
 
 ```
-- **[S1]** Strategy brief - `docs/internal/efforts/S-04/S-04_strategy-brief.md` - class A
+- **[S1]** Strategy brief - `supporting/strategy-brief.md` in the effort folder - class A
 ```
 
 ### Form 2: Model inference
@@ -42,11 +42,11 @@ In order of preference for a given requirement:
 
 | Priority | Source type | Example path |
 |----------|-------------|--------------------------|
-| 1 | Linked strategy-brief | `docs/internal/efforts/<id>/<id>_strategy-brief.md` |
-| 2 | Effort brief (the linked-effort itself) | `docs/internal/efforts/<id>.md` |
+| 1 | Linked strategy-brief | the path in `linked-strategy-brief`, such as `<effort folder>/supporting/strategy-brief.md` |
+| 2 | The effort's source (the linked-effort itself) | the tracked path or the description in `linked-effort` |
 | 3 | Linked GitHub issue | resolve `gh-issue:` in effort frontmatter |
 | 4 | ADR / decision record | `docs/internal/decisions/NNNN-*.md` |
-| 5 | Prior spec (if revising) | `docs/internal/efforts/<id>/<id>_spec.md` previous content |
+| 5 | Prior spec (if revising) | `<effort folder>/spec.md` previous content |
 | 6 | Authoritative external doc | RFC, official docs, signed-off design |
 | 7 | Maintainer or expert blog | named author, well-cited |
 | 8 | Community reference | Stack Overflow, tutorials |
@@ -121,8 +121,8 @@ Use judgment. The test: would a reviewer ask "where did this come from?" If yes,
 ```markdown
 ## Sources & Evidence
 
-- **[S1]** Strategy brief: plab-spec discovery - `docs/internal/efforts/S-04/S-04_strategy-brief.md` - class A
-- **[S2]** Effort brief - `docs/internal/efforts/S-04.md` - class A
+- **[S1]** Strategy brief: plab-spec discovery - `supporting/strategy-brief.md` in the effort folder - class A
+- **[S2]** Effort request - the source named in `linked-effort` - class A
 - **[S3]** GitHub issue #15 - `https://github.com/<org>/<repo>/issues/15` - class A
 - **[S4]** Sibling-plugin skill `deliver-prd` - `<other-plugin>/skills/deliver-prd/SKILL.md` - class B (precedent for AC format)
 

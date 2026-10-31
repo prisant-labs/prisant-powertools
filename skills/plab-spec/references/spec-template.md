@@ -1,6 +1,6 @@
 # Spec Template
 
-The full structural contract for the output `<id>_spec.md`. Sections appear in this order. None are optional - empty sections include a one-line "N/A - <reason>".
+The full structural contract for the output `spec.md`, written inside the effort's folder `<id>_<slug>/`. Sections appear in this order. None are optional - empty sections include a one-line "N/A - <reason>".
 
 ```markdown
 ---
@@ -10,7 +10,7 @@ type: spec
 status: draft
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
-linked-effort: docs/internal/efforts/<id>.md
+linked-effort: <tracked path, or a plain-language description of the source>
 linked-plan: null
 linked-strategy-brief: <path | omit>
 gh-issue: <n | omit>
