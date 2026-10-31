@@ -183,6 +183,35 @@ def find_row(path, row_id):
     return None
 
 
+def build_run_row(audit_day, agents, period_start=None, minutes=None, dollars=None,
+                  plan_session=None, plan_weekly=None, plan_read_at=None):
+    """The audit_run row SKILL.md step 9 appends: the run's own agents, models, tokens and minutes,
+    and the owner's plan-limit reading when one was given (UA-01 Requirements 16 and 17)."""
+    import datetime as _dt
+    end = _dt.date.fromisoformat(audit_day)
+    start = _dt.date.fromisoformat(period_start) if period_start else end - _dt.timedelta(days=6)
+    models = {}
+    tokens = 0
+    for a in agents:
+        m = a.get("model") or "unnamed"
+        models[m] = models.get(m, 0) + 1
+        tokens += int(a.get("tokens") or 0)
+    if minutes is None:
+        mins = [a.get("minutes") for a in agents if isinstance(a.get("minutes"), (int, float))]
+        minutes = round(sum(mins), 1) if mins else None
+    plan = None
+    if plan_session is not None or plan_weekly is not None:
+        plan = {"session_pct": plan_session, "weekly_pct": plan_weekly, "read_at": plan_read_at}
+    return {
+        "row_kind": "audit_run",
+        "period_start": start.isoformat(),
+        "period_end": end.isoformat(),
+        "run": {"agents": len(agents), "models": models, "tokens": tokens or None,
+                "dollars": dollars, "minutes": minutes, "agent_list": agents},
+        "plan_limit": plan,
+    }
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -190,6 +219,17 @@ def main():
     p_append = sub.add_parser("append")
     p_append.add_argument("--ledger", required=True)
     p_append.add_argument("--row-json", required=True, help="path to a JSON file holding the row, or - for stdin")
+
+    p_run = sub.add_parser("append-run", help="append the audit_run row for one weekly run")
+    p_run.add_argument("--ledger", required=True)
+    p_run.add_argument("--date", required=True, help="the audit day, YYYY-MM-DD")
+    p_run.add_argument("--period-start", default=None, help="defaults to six days before --date")
+    p_run.add_argument("--agents", required=True, help="agents.json: a list of {stage, label, model, assigned, returned, escalated, tokens, minutes}")
+    p_run.add_argument("--minutes", type=float, default=None)
+    p_run.add_argument("--dollars", type=float, default=None)
+    p_run.add_argument("--plan-session", type=float, default=None)
+    p_run.add_argument("--plan-weekly", type=float, default=None)
+    p_run.add_argument("--plan-read-at", default=None)
 
     p_latest = sub.add_parser("latest")
     p_latest.add_argument("--ledger", required=True)
@@ -216,6 +256,28 @@ def main():
             print(f"refused: {reason}")
             return 1
         print(json.dumps(written))
+        return 0
+
+    if args.cmd == "append-run":
+        try:
+            agents = json.loads(open(args.agents, encoding="utf-8").read())
+        except Exception as e:
+            print(f"broken: could not read agents file: {e}")
+            return 2
+        if not isinstance(agents, list) or any(not isinstance(a, dict) for a in agents):
+            print("broken: the agents file must be a JSON list of objects")
+            return 2
+        unnamed = [a.get("label") or "?" for a in agents if not a.get("model")]
+        row = build_run_row(args.date, agents, args.period_start, args.minutes, args.dollars,
+                            args.plan_session, args.plan_weekly, args.plan_read_at)
+        ok, reason, written = append(args.ledger, row)
+        if not ok:
+            print(f"refused: {reason}")
+            return 1
+        print(json.dumps(written))
+        if unnamed:
+            print("finding: agents with no model named: " + ", ".join(unnamed))
+            return 1
         return 0
 
     if args.cmd == "latest":

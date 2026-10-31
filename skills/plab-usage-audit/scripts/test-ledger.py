@@ -7,6 +7,7 @@ exits 0 when every check passes, 1 when any check fails.
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -122,6 +123,34 @@ def main():
         bad = {"population": "interactive", "method": method()}
         ok_bad, reason_bad, _ = ledger.append(os.path.join(tmp, "bad.jsonl"), bad)
         check("append: a measurement row missing period_start is rejected", ok_bad is False, reason_bad)
+
+        # ---- append-run, the CLI SKILL.md step 9 calls: agents, models, tokens and the plan-limit reading.
+        agents_path = os.path.join(tmp, "agents.json")
+        with open(agents_path, "w", encoding="utf-8") as f:
+            json.dump([{"stage": "brief", "label": "usage", "model": "sonnet", "tokens": 1000, "minutes": 3},
+                       {"stage": "verify", "label": "verifier", "model": "sonnet", "tokens": 500, "minutes": 2}], f)
+        run_ledger = os.path.join(tmp, "append-run-cli.jsonl")
+        cli = [sys.executable, os.path.join(HERE, "ledger.py"), "append-run", "--ledger", run_ledger,
+               "--date", "2026-11-06", "--agents", agents_path, "--plan-session", "41", "--plan-weekly", "63",
+               "--plan-read-at", "2026-11-06T16:05:00Z"]
+        r = subprocess.run(cli, capture_output=True, text=True)
+        rows_run = ledger.read_rows(run_ledger)
+        written_run = rows_run[0] if rows_run else {}
+        check("append-run: exits 0 and writes one audit_run row", r.returncode == 0 and len(rows_run) == 1
+              and written_run.get("row_kind") == "audit_run", (r.returncode, r.stdout, r.stderr))
+        check("append-run: the period is the seven days ending on --date",
+              written_run.get("period_start") == "2026-10-31" and written_run.get("period_end") == "2026-11-06", written_run)
+        check("append-run: agents, models, tokens and minutes are summed",
+              written_run.get("run", {}).get("agents") == 2 and written_run["run"].get("models") == {"sonnet": 2}
+              and written_run["run"].get("tokens") == 1500 and written_run["run"].get("minutes") == 5, written_run.get("run"))
+        check("append-run: the plan-limit reading is kept",
+              written_run.get("plan_limit") == {"session_pct": 41.0, "weekly_pct": 63.0, "read_at": "2026-11-06T16:05:00Z"},
+              written_run.get("plan_limit"))
+        with open(agents_path, "w", encoding="utf-8") as f:
+            json.dump([{"stage": "brief", "label": "nameless"}], f)
+        r2 = subprocess.run(cli[:-6], capture_output=True, text=True)
+        check("append-run: an agent with no model is a finding, exit 1", r2.returncode == 1 and "nameless" in r2.stdout,
+              (r2.returncode, r2.stdout))
 
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

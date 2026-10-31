@@ -42,6 +42,9 @@ One row per weekly run of the skill itself, recording what the run cost. Never d
 | `period_start`, `period_end` | the week the run audited |
 | `measured_at` | when the run finished |
 | `run` | `{"agents", "models", "tokens", "dollars", "minutes"}`; `dollars` is `null` when not known |
+| `plan_limit` | the owner's `/usage` reading for this run, `{"session_pct", "weekly_pct", "read_at"}`, or `null` when skipped |
+
+Written by `ledger.py append-run --ledger <file> --date <audit day> --agents <agents.json> [--plan-session N --plan-weekly N --plan-read-at UTC]`. It exits 1 after writing when any agent in the file names no model, because routing rule 1 requires one.
 
 ## The mapping file (Requirement 14)
 

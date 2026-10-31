@@ -225,6 +225,10 @@ jobs:
         if: always()
         run: python3 skills/plab-usage-audit/scripts/test-ledger.py
 
+      - name: The usage-audit facts script, with fixture credential files
+        if: always()
+        run: python3 skills/plab-usage-audit/scripts/test-derive-audit-facts.py
+
       - name: The usage-audit scrub and placement check
         if: always()
         run: python3 skills/plab-usage-audit/scripts/test-scrub.py

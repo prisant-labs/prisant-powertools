@@ -66,3 +66,27 @@ One row per project, half and population, sorted by `cost_total` descending: `pr
 | `aliases` | one-level mapping | a project folder's lowercased name, after the generic drive-letter strip, has its longest matching key replaced by that key's value |
 
 None of these four keys has a built-in value in the shipped code: a run with no `--config` and no matching CLI flag gets no noise patterns, no aliases, and the machine's own time zone and the generic default transcript root (`~/.claude/projects`).
+
+## `audit-facts.json` (Requirement 18)
+
+`scripts/derive-audit-facts.py --config <settings> --data <bundle>/data --ledger <ledger> --state <state> --out <file>` reads the collector's output above, the ledger, the state file and the owner's own machine, and writes one JSON file, printed to stdout as well as to `--out`. Every top-level key:
+
+| Field | Meaning |
+|---|---|
+| `reconciliation` | the prior week's ledger row(s), re-run with `collect.py --reproduce`, and whether the totals agreed; `{"found": false, ...}` when no row exists for that period |
+| `workflows` | `workflow_count`, `agent_count` and `model_split` for the focus half from `workflow_calls.json`, plus `cost_gap`: the per-workflow costs summed against the workflow lane total from `global.json`, and `over_tolerance` against `workflow_tolerance_usd` (Requirement 18, AC-16) |
+| `compactions` | `compactions_dedup` and `sessions_compacting_dedup` per half and population, read straight from `global.json`'s `waste` block |
+| `claude_version` | the installed `claude --version` against the state file's `last_claude_version` |
+| `settings_drift` | keys added, removed or changed in the file named by `claude_settings` since the state's snapshot, each checked against the `change_register` file; `unregistered` lists only those with no dated row after `last_audit_date`, by key name, never by value |
+| `model_pins` | keys matching a model-pin name; the value is printed only when it looks like a model id, otherwise withheld |
+| `credentials` | per `credential_files` entry: `exists`, `mtime`, and `inline_keys` (key names only; a value is never read into this output) |
+| `insights_report` | the newest `~/.claude/usage-data/report*.html` next to the configured `claude_settings` file, and whether it postdates the last audit |
+| `next_series_letter` | the recommendation-id letter this run should use, from the state or settings `recommendation_series`, skip-adjusted |
+| `previous_bundle` | the newest `*_claude-usage` folder under `output_dir` other than the one this run is writing |
+| `settings_snapshot` | the full key-to-sha256 snapshot, carried through so `--commit-state` writes exactly what this run compared against, never the live file re-read later |
+| `findings` | reasons this run exits 1: an over-tolerance workflow gap, a reproduction mismatch, or an unregistered settings change |
+| `gaps` | every source this run could not read, by name (a missing `claude` binary, an unreadable settings or register file, a missing collector output file) |
+
+Exit codes: 0 clean, 1 when `findings` is non-empty, 2 only when `--data` is missing or unreadable.
+
+`derive-audit-facts.py --config <settings> --state <state> --commit-state --facts <facts file>` reads that facts file and advances the state atomically: `last_claude_version`, the `settings_snapshot` it carried, `last_audit_date` (the facts file's `audit_date`), and `recommendation_series.next` moved past the letter the facts file used.
