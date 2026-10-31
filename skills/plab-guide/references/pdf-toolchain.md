@@ -102,6 +102,10 @@ Flag explanations:
 
 Run `scripts/check-toolchain.sh` to see the exact paths searched. Install one of the three browsers above. The skill auto-detects after install.
 
+### "the browser exited N and produced no PDF" (exit 5)
+
+The browser ran but left no PDF at the output path, or left a file that is empty or is not a PDF. `scripts/render-pdf.sh` removes any earlier PDF at that path before each render, so an old file cannot pass for a new one. Run the browser command from the section above by hand and read its stderr.
+
 ### "PDF rendered N pages; expected 2"
 
 Page count exceeded the contract. Check `scripts/render-pdf.sh`'s overflow report (printed on stderr). Fix order:

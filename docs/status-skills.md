@@ -18,7 +18,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 | `plab-project-pulse` | 1.0.0 | **Explicit only** | `[--quick\|--week] [--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD/`, private, outside any repository or ignored by it |
 | `plab-usage-audit` | 1.0.0 | **Explicit only** | `[--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD_claude-usage/`; a tracked folder only when the settings allow it |
 | `plab-continue-session` | 1.6.0 | Auto + explicit | `[--log <path>]` | Nothing. Displays context only |
-| `plab-guide` | 2.2.2 | Auto + explicit | `<topic-or-repo-url> [--type repo-url\|tool\|concept] [--out <dir>] [--force]` | `_output/plab-guide/` |
+| `plab-guide` | 2.2.3 | Auto + explicit | `<topic-or-repo-url> [--type repo-url\|tool\|concept] [--out <dir>] [--force]` | `_output/plab-guide/` |
 | `plab-init-project` | 1.3.0 | **Explicit only** | `[--profile minimal\|standard\|public] [--type ...] [--agents ...] [--dry-run]` | The target repository root |
 | `plab-release-plan` | 1.6.0 | **Explicit only** | `--create \| --promote \| --demote \| --update \| --gate` | `docs/internal/release-plans/plan_NN_<slug>/` |
 | `plab-resolve-open-items` | 1.2.0 | Auto + explicit | `[--backlog \| <document>]` | Each item's home document; the walk record and any backlog file in `_local/decisions/` |
@@ -79,7 +79,7 @@ Structured peer review of a document by a second model.
 
 `argument-hint` now lists every mode, including `--close`, which it omitted through 1.2.1.
 
-### `plab-guide` 2.2.2
+### `plab-guide` 2.2.3
 
 Generates a paired guide bundle from a topic, tool name, or GitHub URL.
 
@@ -88,7 +88,7 @@ Generates a paired guide bundle from a topic, tool name, or GitHub URL.
 | Default behavior | Produces the full four-artifact bundle |
 | Output | `_output/plab-guide/`, overridable with `--out` |
 | Artifacts | Standard Markdown, ADHD Markdown, quick-reference HTML, and a 1-2 page PDF |
-| Scripts | 8, including `check-toolchain.sh`, `render-pdf.sh`, `validate-manifest.py`, `regression-test.sh` |
+| Scripts | 9, including `check-toolchain.sh`, `render-pdf.sh`, `validate-manifest.py`, `regression-test.sh` and the fixture test `test-guide-scripts.py` |
 | Setup required | **A Chromium-based browser** (Chrome, Chromium, or Edge) for PDF rendering. `check-toolchain.sh` detects it during intake and warns without blocking |
 | References | 9 files, 1 asset |
 | Shared deps | `lib/render-mermaid.py` and `references/diagrams.md` at plugin root |

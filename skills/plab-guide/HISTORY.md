@@ -2,8 +2,22 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 2.2.3 | 2026-10-30 | unreleased | fix | Five defects from the 2026-08-29 audit. `render-pdf.sh` no longer reports success without a PDF, `regression-test.sh` no longer passes a page count it could not check, and `validate-manifest.py` accepts `low-confidence draft`. `SKILL.md` stops claiming four templates and stops requiring an unshipped `CREATION_NOTES.md`. A `.gitattributes` keeps shell scripts LF. |
 | 2.2.2 | 2026-08-23 | v0.3.0 | fix | Three internal contradictions with the v2.0.0 one-or-two-page contract, plus vestigial em-dash-sweep wording. |
 | 2.2.1 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 2.2.1; prior history remains there. |
+
+## 2.2.3 - 2026-10-30
+
+Correctness only. All five defects were found by the 2026-08-29 audit and re-confirmed against the files on 2026-10-30. No behavior a working run depends on changes.
+
+- **`scripts/render-pdf.sh` could report success with no PDF.** `render_scale()` ended the browser call with `|| true` and always returned 0, so the script's verdict never depended on a file existing. Every render now removes any earlier PDF at the output path, then requires a non-empty file that starts with `%PDF-`, and exits 5 when there is none. The file is the proof, not the browser's exit code: a browser that exits non-zero but writes a PDF gets a note on stderr, not a failure. Exit code 5 is new and documented in the header and in `references/pdf-toolchain.md`.
+- **`scripts/regression-test.sh` passed what it had not checked.** Without `pdfinfo` it printed `[PASS]` for a bundle whose page count it never read, and a run in which every bundle was missing printed "all baselines passed" and exited 0. An unchecked bundle is now `[SKIP]`, the summary counts skips, and a run that passes no bundle exits 2.
+- **The confidence value did not match.** `SKILL.md`, both guide templates and three references tell the agent to write `low-confidence draft` for a guide with no sources, and `scripts/validate-manifest.py` accepted only `low-confidence`, so such a guide failed its own validator. The validator now accepts `low-confidence draft`, and still accepts `low-confidence` so that older manifests keep validating.
+- **`SKILL.md` said "Four templates".** Three ship, and three have shipped since the migration in 2.2.1. The text now says three.
+- **Acceptance item 5 required `CREATION_NOTES.md`.** The 2.2.1 entry below records that the file deliberately does not ship. The item is removed.
+- **Line endings.** The repository gains a `.gitattributes` that pins `*.sh` to LF. The scripts were already LF in git, but a Windows checkout with `core.autocrlf` set turned them CRLF on disk, and bash fails on the stray carriage returns.
+
+**Tests:** the new `scripts/test-guide-scripts.py` runs both shell scripts against a fake browser and a fake `pdfinfo` placed first on `PATH`, and runs the validator against fixture manifests: 12 of 12 checks pass, and CI runs it. Canary: with `|| true`, `return 0` and the stale-file removal restored in `render_scale()`, and the no-bundle exit removed from `regression-test.sh`, five checks fail by name (7 of 12 pass).
 
 ## 2.2.2 - 2026-08-23
 

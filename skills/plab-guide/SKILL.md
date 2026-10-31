@@ -4,8 +4,8 @@ description: Generate a paired guide bundle (standard MD + ADHD MD + quick-refer
 argument-hint: "<topic-or-repo-url> [--type repo-url|tool|concept] [--out <dir>] [--force]"
 license: MIT
 metadata:
-  version: "2.2.2"
-  updated: 2026-08-23
+  version: "2.2.3"
+  updated: 2026-10-30
 ---
 
 # plab-guide
@@ -69,7 +69,7 @@ Read during the matching phase:
 
 ## Locked templates
 
-Four templates in `assets/templates/`. **Treat as locked**; any change is a breaking change to the skill's output and triggers a version bump.
+Three templates in `assets/templates/`. **Treat as locked**; any change is a breaking change to the skill's output and triggers a version bump.
 
 | Template | Purpose |
 |----------|---------|
@@ -120,6 +120,7 @@ The skill runs gates G-1 through G-19 before MANIFEST write. Critical-gate failu
 
 | Failure | Behavior |
 |---------|----------|
+| Browser writes no PDF | `scripts/render-pdf.sh` exits 5 whatever the browser's own exit code was, because the file is the proof of a render. Phase 7 fails; the other three artifacts are still produced. |
 | No browser found | Phase 7 emits an install hint; the other three artifacts are still produced. |
 | Content overflows 2 pages | Phase 7 auto-fits: it steps `--fit-scale` down (1.00 -> 0.95 -> 0.90 -> 0.85, into a throwaway copy) until the PDF fits 2 pages. It fails only if the content still overflows at fit-scale 0.85 (exit 3), with a fix list (trim longest card, drop low-value card). Stepping the scale down also raises ink density, so a fitted overflow tends to read denser. |
 | Single dense page | A small, dense topic that legitimately fits 1 page is accepted as of v2.0.0; page 2 is no longer forced. G-19 may warn that body content looks thin, but the build still passes as long as the page clears the G-8 ink floor. |
@@ -160,4 +161,3 @@ The skill is complete for a topic when:
 2. `MANIFEST.yaml` validates via `scripts/validate-manifest.py`.
 3. `<slug>_quick-reference.pdf` is 1 or 2 dense pages (auto-fit; never 3+).
 4. `_work/research.md` lists real, reachable URLs (no fabrication).
-5. CREATION_NOTES.md is updated for the build (per skill-builder convention).
