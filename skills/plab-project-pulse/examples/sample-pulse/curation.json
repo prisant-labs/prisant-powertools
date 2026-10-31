@@ -1,0 +1,65 @@
+{
+  "whats_next": [
+    {
+      "rank": 1,
+      "repo": "work/alpha-app",
+      "item": "wire the retry queue into the export job",
+      "who": "owner",
+      "why": "blocks the next release",
+      "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"
+    },
+    {
+      "rank": 2,
+      "repo": "work/beta-lib",
+      "item": "add integration tests for the retry queue",
+      "who": "agent",
+      "why": "covers a feature that already merged",
+      "source": "docs/plan.md"
+    },
+    {
+      "rank": 3,
+      "repo": "work/gamma-service",
+      "item": "move the deploy notes into the session log",
+      "who": "owner",
+      "why": "keeps the note out of an unprotected folder",
+      "source": "_local/_session-logs/2026-10-27_deploy-notes.md"
+    },
+    {
+      "rank": 4,
+      "repo": "work/delta-tool",
+      "item": "cut a patch release",
+      "who": "agent-after-yes",
+      "why": "small fixes are queued and low-risk",
+      "source": "_local/_session-logs/2026-10-29_08-15_haiku-4-5_patch-fixes.md"
+    },
+    {
+      "rank": 5,
+      "repo": "work/alpha-app",
+      "item": "add a second export format",
+      "who": "owner",
+      "why": "requested twice this month",
+      "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"
+    }
+  ],
+  "readout_notes": [
+    "Two repositories in the work folder carry an unreviewed logging-format decision and a retry-queue conflict, and both trace to the same feature branch."
+  ],
+  "agents": [
+    {
+      "stage": "scout",
+      "label": "scout-1",
+      "model": "sonnet",
+      "assigned": 1,
+      "returned": 1,
+      "escalated": false
+    },
+    {
+      "stage": "scout",
+      "label": "scout-2",
+      "model": "haiku",
+      "assigned": 2,
+      "returned": 2,
+      "escalated": false
+    }
+  ]
+}

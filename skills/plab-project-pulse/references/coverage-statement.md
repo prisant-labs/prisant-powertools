@@ -4,12 +4,12 @@
 
 | Heading | What it holds |
 |---|---|
-| `## Window` | The focus week, the prior week, and the time zone |
-| `## Roots` | Each root and the maximum depth |
-| `## Repositories` | How many were found, active and dormant, and each alias skipped with its target |
-| `## Without upstream` | Every repository with `has_upstream: false` |
-| `## GitHub` | Whether `gh` ran, and each failed call with its command |
-| `## Snapshots` | Snapshots read and fresh, snapshots found stale, and the `/plab-current-status` candidates |
-| `## Session logs` | Logs read, logs listed as nonstandard names, and whether a supplied digest replaced the readers |
-| `## Agents` | Every agent with its model, assigned and returned counts, and each escalation; items still missing |
-| `## Snapshot times` | When the sweep ran and when the logs were read |
+| `## Window and zone` | The focus week, the prior week, and the time zone |
+| `## Roots and depth` | Each root and the maximum depth |
+| `## Repositories found and aliases skipped` | How many were found, active and dormant, and each alias skipped with its target |
+| `## Repositories without an upstream` | Every repository with `has_upstream: false` |
+| `## gh failures` | Whether `gh` ran, and each failed call with its command |
+| `## Snapshots read and stale` | Snapshots read and fresh, snapshots found stale, the `/plab-current-status` candidates, and when the sweep ran |
+| `## Logs read and nonstandard names` | Logs read, logs with nonstandard names, and whether a supplied digest replaced the readers |
+| `## Agents` | Every agent with its model and its assigned and returned counts |
+| `## Escalations and items still missing` | Each escalation, and every assigned repository that no scout returned |

@@ -23,6 +23,7 @@ main loop ──> curation.json ────────────────
   "mode": "week",
   "window": {"start": "2026-10-24", "end": "2026-10-30", "prior_start": "2026-10-17", "timezone": "America/Los_Angeles"},
   "roots": ["/abs/root"],
+  "max_depth": 2,
   "repos": [
     {
       "repo": "group/name",
@@ -33,7 +34,7 @@ main loop ──> curation.json ────────────────
       "gh": {"visibility": "private", "releases_in_window": [{"tag": "v1.2.0", "date": "2026-10-28"}], "open_prs": 2} ,
       "activity": "active",
       "logs_in_window": ["/abs/.../_local/_session-logs/2026-10-29_14-02_opus-5-5_x.md"],
-      "snapshot": {"path": "/abs/.../_local/_status/2026-10-29_opus-5-5_x.md", "date": "2026-10-29", "head": "4f2a9c1", "fresh": true, "waiting": 2, "pending_decisions": 3, "next": 4,
+      "snapshot": {"path": "/abs/.../_local/_status/2026-10-29_opus-5-5_x.md", "date": "2026-10-29", "head": "4f2a9c1", "fresh": true, "waiting_count": 2, "pending_decisions_count": 3, "next_count": 4,
                    "waiting_on_you": [{"text": "...", "source": "_local/_status/2026-10-29_opus-5-5_x.md"}],
                    "whats_next": [{"text": "...", "source": "..."}],
                    "pending_decisions": [{"id": "D1", "handle": "...", "home": "docs/...", "source": "..."}]},
@@ -52,8 +53,9 @@ main loop ──> curation.json ────────────────
 
 - `gh` is `null` when enrichment is off or failed for that repository; the failure is in `gaps`.
 - `activity` is `active` or `dormant` (spec Requirement 6).
+- `snapshot`'s three counts come from the snapshot's frontmatter `waiting`, `pending-decisions` and `next`, renamed with a `_count` suffix so they never collide with the item lists.
 - `snapshot` is `null` when the repository has no file matching `^\d{4}-\d{2}-\d{2}_[a-z0-9-]+_[a-z0-9]+(-[a-z0-9]+){1,5}\.md$` in `_local/_status/`. The item lists come from the snapshot's `## Waiting on You`, `## What's Next` and `## Pending Decisions` sections: one item per numbered line, text without the leading number and without the `Why here:` clause. `pending_decisions` items take `id` from the first token that looks like an id (`[A-Z]{1,3}-?\d+`), `handle` from the bold text or parenthesis after it, and `home` from the first backticked path; any of the three may be `null`.
-- `status_source` is one of `snapshot` (a fresh snapshot), `scout` (active, to be scouted), `carried` (dormant with a previous state entry), `sweep-only` (dormant with none).
+- `status_source` is one of `snapshot` (a fresh snapshot), `scout` (active, to be scouted), `carried` (dormant with a previous state entry), `sweep-only` (dormant with none). An alias, a record with `alias_of` set, is always `sweep-only` and is never scouted.
 - `carried` is `null` unless `status_source` is `carried`; then it is the previous entry's `status` object plus `"carried_from": "YYYY-MM-DD"`.
 - `to_scout` is true exactly when `status_source` is `scout`.
 - `current_status_candidate` is true when the repository is active and its snapshot is `null` or not fresh.
