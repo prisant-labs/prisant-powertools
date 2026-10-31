@@ -381,6 +381,14 @@ def main():
     md = "---\n" + sample + "---\nbody\n"
     check("settings parser: frontmatter extraction round-trips", settings_mod.parse_yaml_subset(settings_mod.extract_frontmatter(md)) == parsed)
 
+    # ---- <synthetic> placeholder messages with no tokens are listed but are not an unpriced-model finding.
+    check("unpriced: a zero-token <synthetic> placeholder is not a finding",
+          collect_mod.is_unpriced_finding("<synthetic>", {"input": 0, "output": 0, "cache_read": 0, "cache_creation": 0}) is False)
+    check("unpriced: a <synthetic> entry that carries tokens is still a finding",
+          collect_mod.is_unpriced_finding("<synthetic>", {"input": 5, "output": 0, "cache_read": 0, "cache_creation": 0}) is True)
+    check("unpriced: a real unpriced model is a finding",
+          collect_mod.is_unpriced_finding("claude-future-9", {"input": 0, "output": 0, "cache_read": 0, "cache_creation": 0}) is True)
+
     # ---- settings.py: inline comments and one-line flow lists, as references/settings-example.md writes them.
     extended = (
         "timezone: America/Los_Angeles   # IANA name\n"

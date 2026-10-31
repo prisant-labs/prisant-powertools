@@ -233,6 +233,10 @@ jobs:
         if: always()
         run: python3 skills/plab-usage-audit/scripts/test-scrub.py
 
+      - name: The usage-audit shipped-work sweep
+        if: always()
+        run: python3 skills/plab-usage-audit/scripts/test-shipped.py
+
       - name: The usage-audit agent workflow names a model and the credential rule
         if: always()
         run: python3 skills/plab-usage-audit/scripts/test-workflow-reference.py

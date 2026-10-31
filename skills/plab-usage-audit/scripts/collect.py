@@ -250,7 +250,7 @@ class Ctx:
         self.tz_name = tz_name
         self.day_tz = ZoneInfo(tz_name) if tz_name else None
         self.day_zone = tz_name or f"machine ({datetime.datetime.now().astimezone().tzname()})"
-        self.base = args.base or settings.transcript_root or DEFAULT_TRANSCRIPT_ROOT
+        self.base = os.path.expanduser(args.base or settings.transcript_root or DEFAULT_TRANSCRIPT_ROOT)
         self.noise_patterns = settings.noise_patterns
         self.aliases = settings.aliases
         self.mtime_floor = (datetime.datetime.fromisoformat(self.win_start) - datetime.timedelta(days=1)).timestamp()
@@ -860,7 +860,7 @@ def collect(ctx, price_data):
             })
 
     findings = []
-    if g["unpriced_models"]:
+    if any(is_unpriced_finding(m, v) for m, v in g["unpriced_models"].items()):
         findings.append("unpriced_models")
     if g["model_drift"]:
         findings.append("model_drift")
@@ -983,6 +983,14 @@ def run_reproduce(args, settings):
     return 1
 
 
+def is_unpriced_finding(model, usage):
+    """An unpriced model is a finding unless it is Claude Code's own `<synthetic>` placeholder with no
+    tokens: those are messages the client writes itself (an interrupted turn, a local error) and they
+    cost nothing. They stay listed under unpriced_models, so nothing is hidden."""
+    tokens = sum(usage.get(k, 0) or 0 for k in ("input", "output", "cache_read", "cache_creation"))
+    return not (model == "<synthetic>" and tokens == 0)
+
+
 def main():
     ap = build_arg_parser()
     args = ap.parse_args()
@@ -993,6 +1001,13 @@ def main():
 
     if not args.start or not args.end or not args.out:
         print("broken: --start, --end and --out are required (unless using --reproduce)")
+        return 2
+
+    # A transcript root that does not exist is a broken run, not an empty week: a week of zero
+    # sessions written to the ledger would read as real history.
+    root = os.path.expanduser(args.base or settings.transcript_root or DEFAULT_TRANSCRIPT_ROOT)
+    if not os.path.isdir(root):
+        print(f"broken: the transcript root is not a folder: {root}")
         return 2
 
     price_file = args.price_file or DEFAULT_PRICE_FILE

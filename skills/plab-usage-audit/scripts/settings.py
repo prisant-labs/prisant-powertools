@@ -39,6 +39,7 @@ A line is a comment, and ignored, when its first non-space character is
 a line belongs to the block opened by the nearest preceding line with
 strictly less indentation.
 """
+import os
 import re
 
 _BOOL = {"true": True, "false": False}
@@ -221,7 +222,8 @@ class Settings:
 
     @property
     def transcript_root(self):
-        return self._resolve("transcript_root", None)
+        v = self._resolve("transcript_root", None)
+        return os.path.expanduser(v) if isinstance(v, str) else v
 
     @property
     def noise_patterns(self):

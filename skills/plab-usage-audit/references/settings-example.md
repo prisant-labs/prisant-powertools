@@ -32,6 +32,7 @@ private_patterns: ["_local/", "_session-logs/"]
 sweep:
   roots: [~/src]
   max_depth: 2
+  exclude: ["_delete", "_temp", "*_worktrees"]
   author_pattern: "owner|noreply@anthropic"
 recommendation_series:
   next: A

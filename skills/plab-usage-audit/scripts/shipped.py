@@ -64,7 +64,7 @@ def from_sweep(args):
     author = sweep_cfg.get("author_pattern") or ".*"
     max_depth = int(sweep_cfg.get("max_depth") or 2)
     discover, sweep = _load("discover"), _load("sweep")
-    found = discover.run(roots, max_depth)
+    found = discover.run(roots, max_depth, list(sweep_cfg.get("exclude") or []))
     alias_paths = {a.get("path") for a in found.get("aliases", [])}
     repos = [r for r in found["repos"] if r.get("path") not in alias_paths]
     gaps, records = [], []
