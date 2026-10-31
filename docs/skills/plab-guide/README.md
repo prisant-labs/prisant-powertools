@@ -1,6 +1,6 @@
 # plab-guide
 
-**Version:** 2.2.2
+**Version:** 2.2.3
 **Source:** [`skills/plab-guide/`](../../../skills/plab-guide/)
 
 Generate a paired guide bundle (standard MD + ADHD MD + quick-reference HTML + 1-2 page PDF) for any topic. Works for software repos, tools, methodologies, frameworks, or domain knowledge.
@@ -178,7 +178,7 @@ Read any of them to see what a finished guide looks like.
 skills/plab-guide/scripts/render-pdf.sh path/to/file.html
 ```
 
-Auto-fits to 1 or 2 pages and validates per-page ink density (gate G-8). Exit 3 means the content still overflows 2 pages at the minimum fit-scale; exit 4 means a page fell below the ink-density floor.
+Auto-fits to 1 or 2 pages and validates per-page ink density (gate G-8). Exit 3 means the content still overflows 2 pages at the minimum fit-scale; exit 4 means a page fell below the ink-density floor; exit 5 means the browser wrote no PDF.
 
 ### Check generated text for em-dashes
 
@@ -204,7 +204,7 @@ Validates against the schema (required keys, correct types, artifact files exist
 skills/plab-guide/scripts/regression-test.sh
 ```
 
-Re-renders the locked baseline quick-reference HTMLs to PDF and checks each still renders and clears gate G-8. The baseline bundles are not shipped with this plugin; point the script at your own before running it.
+Re-renders the locked baseline quick-reference HTMLs to PDF and checks each still renders and clears gate G-8. The baseline bundles are not shipped with this plugin; point the script at your own before running it. A bundle whose page count cannot be checked, because `pdfinfo` is missing, is reported as SKIP rather than PASS, and a run that verifies no bundle exits 2.
 
 ### Check toolchain readiness
 
@@ -246,7 +246,8 @@ Detects a Chromium-based browser; prints the resolved path or an install hint.
 
 | Version | Date | Notes |
 |---------|------|-------|
-| 2.2.2 | 2026-08-23 | Current version. Corrects three internal contradictions with the v2.0.0 one-or-two-page contract. |
+| 2.2.3 | 2026-10-30 | Current version. Fixes five defects from the 2026-08-29 audit: the PDF renderer no longer reports success without a PDF, the regression test no longer passes a page count it could not check, the manifest validator accepts the confidence value the skill tells the agent to write, and the scripts are executable on Linux and macOS. |
+| 2.2.2 | 2026-08-23 | Corrects three internal contradictions with the v2.0.0 one-or-two-page contract. |
 | 2.2.1 | 2026-08-14 | First version released in this plugin. See [`skills/plab-guide/HISTORY.md`](../../../skills/plab-guide/HISTORY.md). |
 
 Versions before 2.2.1 were released in a private upstream library; that history is not reproduced here.

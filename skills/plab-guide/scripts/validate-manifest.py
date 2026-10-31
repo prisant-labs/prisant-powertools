@@ -36,7 +36,10 @@ REQUIRED_TOP_KEYS = {
 }
 
 ALLOWED_INPUT_TYPES = {"repo-url", "tool", "concept"}
-ALLOWED_CONFIDENCE = {"high", "medium", "low-confidence"}
+# "low-confidence draft" is the value SKILL.md, both templates and the references
+# tell the agent to write. "low-confidence" is still accepted so that manifests
+# written before 2.2.3 keep validating.
+ALLOWED_CONFIDENCE = {"high", "medium", "low-confidence draft", "low-confidence"}
 ALLOWED_CREDIBILITY = {"A", "B", "C"}
 # Core artifact types every bundle should produce.
 RECOMMENDED_ARTIFACT_TYPES = {

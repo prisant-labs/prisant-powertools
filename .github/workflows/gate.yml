@@ -208,6 +208,14 @@ jobs:
         if: always()
         run: python3 skills/plab-current-status/scripts/test-derive-status-facts.py
 
+      # plab-guide. The PDF renderer and the regression test run against a fake
+      # browser and a fake pdfinfo, so no real browser is needed here. The
+      # manifest validator needs pyyaml, which setup-python does not ship.
+      # Exit 2 means the test could not run. Never read it as clean.
+      - name: The guide renderer, regression test and manifest validator
+        if: always()
+        run: python3 -m pip install --quiet pyyaml && python3 skills/plab-guide/scripts/test-guide-scripts.py
+
       # plab-usage-audit (UA-01). The bundle checker's self-test proves each of
       # its nine rules fails on a mutation of the committed sample, so exit 2
       # means a rule has gone blind; never read it as clean. The collector's

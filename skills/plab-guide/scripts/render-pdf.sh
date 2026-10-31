@@ -23,6 +23,7 @@
 #   2 - no Chrome / Chromium / Edge binary found
 #   3 - content overflows 2 pages even at the minimum fit-scale (genuinely too much)
 #   4 - one or more pages below the ink-density floor (G-8)
+#   5 - the browser produced no PDF at the output path
 #
 # Page-count + density checks require pdfinfo + pdftoppm (poppler-utils) and Python 3.
 
@@ -115,24 +116,40 @@ fi
 
 OUTPUT_ABS="$(to_out_arg "$OUTPUT")"
 
+# The file, not the browser's exit code, is the proof of a render. A missing, empty
+# or non-PDF file exits 5, whatever the browser returned. A non-zero exit that still
+# wrote a PDF is reported and not treated as a failure.
+require_pdf() {
+  local rc="$1"
+  if [[ ! -s "$OUTPUT" || "$(head -c 5 "$OUTPUT")" != "%PDF-" ]]; then
+    echo "error: the browser exited $rc and produced no PDF at $OUTPUT_ABS" >&2
+    exit 5
+  fi
+  if [[ "$rc" -ne 0 ]]; then
+    echo "note: the browser exited $rc but wrote a PDF; continuing" >&2
+  fi
+}
+
 # Render the input at a given --fit-scale into $OUTPUT. For scale 1.00 the authored
 # HTML is rendered directly; for any smaller scale a throwaway copy is made with a
 # :root override injected before </head> so the authored file is never mutated.
+# Any earlier PDF at the output path is removed first, so a stale file cannot pass.
 render_scale() {
-  local scale="$1" src="$INPUT" tmp=""
+  local scale="$1" src="$INPUT" tmp="" rc=0
   if [[ "$scale" != "1.00" ]]; then
     tmp="$(mktemp).html"
     awk -v s="$scale" '/<\/head>/{print "<style>:root{--fit-scale:" s ";}</style>"} {print}' "$INPUT" > "$tmp"
     src="$tmp"
   fi
+  rm -f "$OUTPUT"
   "$BROWSER" \
     --headless=new \
     --disable-gpu \
     --no-pdf-header-footer \
     "--print-to-pdf=$(to_out_arg "$OUTPUT")" \
-    "$(to_file_url "$src")" >/dev/null 2>&1 || true
-  [[ -n "$tmp" ]] && rm -f "$tmp"
-  return 0
+    "$(to_file_url "$src")" >/dev/null 2>&1 || rc=$?
+  if [[ -n "$tmp" ]]; then rm -f "$tmp"; fi
+  require_pdf "$rc"
 }
 
 if command -v pdfinfo >/dev/null 2>&1; then

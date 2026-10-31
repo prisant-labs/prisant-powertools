@@ -15,7 +15,11 @@
 # Exit codes:
 #   0 - all baselines pass
 #   1 - one or more baselines failed
-#   2 - prerequisite missing (browser not found, examples folder missing)
+#   2 - prerequisite missing (browser not found, examples folder missing), or
+#       nothing was verified (every bundle skipped, or pdfinfo missing)
+#
+# A bundle whose page count could not be checked is reported as SKIP, never as
+# PASS, and a run that passes no bundle exits 2 rather than 0.
 
 set -uo pipefail
 
@@ -50,6 +54,7 @@ BUNDLES=(
 
 PASS=0
 FAIL=0
+SKIP=0
 FAILED_BUNDLES=()
 
 echo "=== plab-guide regression test ==="
@@ -60,6 +65,7 @@ for bundle in "${BUNDLES[@]}"; do
   html="$EXAMPLES_DIR/$bundle"
   if [[ ! -f "$html" ]]; then
     echo "[SKIP] $bundle (file not found)"
+    SKIP=$((SKIP + 1))
     continue
   fi
 
@@ -79,9 +85,9 @@ for bundle in "${BUNDLES[@]}"; do
         FAILED_BUNDLES+=("$bundle")
       fi
     else
-      # No pdfinfo: render-pdf.sh succeeded, assume pass
-      echo "[PASS] $bundle (rendered; pdfinfo not available for page-count check)"
-      PASS=$((PASS + 1))
+      # No pdfinfo: the page count is unchecked, so this is not a pass.
+      echo "[SKIP] $bundle (rendered, but pdfinfo is not installed, so the page count is unchecked)"
+      SKIP=$((SKIP + 1))
     fi
   else
     echo "[FAIL] $bundle (render failed)"
@@ -97,6 +103,7 @@ echo
 echo "=== summary ==="
 echo "passed: $PASS"
 echo "failed: $FAIL"
+echo "skipped: $SKIP"
 
 if [[ $FAIL -gt 0 ]]; then
   echo
@@ -108,6 +115,13 @@ if [[ $FAIL -gt 0 ]]; then
   echo "investigate: re-render manually with scripts/render-pdf.sh"
   echo "  (the bundle's HTML may have been edited and now overflows 2 pages)"
   exit 1
+fi
+
+if [[ $PASS -eq 0 ]]; then
+  echo
+  echo "error: no bundle was verified, so this run proves nothing" >&2
+  echo "  install poppler-utils for pdfinfo, or point PLAB_GUIDE_EXAMPLES_DIR at your baselines" >&2
+  exit 2
 fi
 
 echo
