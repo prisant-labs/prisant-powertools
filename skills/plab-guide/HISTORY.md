@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 2.2.3 | 2026-10-30 | unreleased | fix | Five defects from the 2026-08-29 audit. `render-pdf.sh` no longer reports success without a PDF, `regression-test.sh` no longer passes a page count it could not check, and `validate-manifest.py` accepts `low-confidence draft`. `SKILL.md` stops claiming four templates and stops requiring an unshipped `CREATION_NOTES.md`. A `.gitattributes` keeps shell scripts LF, and every script is now executable in git. |
+| 2.2.3 | 2026-10-30 | v0.11.0 | fix | Five defects from the 2026-08-29 audit. `render-pdf.sh` no longer reports success without a PDF, `regression-test.sh` no longer passes a page count it could not check, and `validate-manifest.py` accepts `low-confidence draft`. `SKILL.md` stops claiming four templates and stops requiring an unshipped `CREATION_NOTES.md`. A `.gitattributes` keeps shell scripts LF, and every script is now executable in git. |
 | 2.2.2 | 2026-08-23 | v0.3.0 | fix | Three internal contradictions with the v2.0.0 one-or-two-page contract, plus vestigial em-dash-sweep wording. |
 | 2.2.1 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 2.2.1; prior history remains there. |
 

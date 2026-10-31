@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 1.6.1 | 2026-10-30 | unreleased | fixed | Codex now honors manual-only too: `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, which Codex reads in place of `disable-model-invocation`. |
+| 1.6.1 | 2026-10-30 | v0.11.0 | fixed | Codex now honors manual-only too: `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, which Codex reads in place of `disable-model-invocation`. |
 | 1.6.0 | 2026-10-19 | v0.8.1 | changed | Restored `disable-model-invocation: true`. The skill runs only when typed as `/plab-release-plan`, by the maintainer's provisional ruling of 2026-10-17. |
 | 1.5.1 | 2026-09-01 | v0.5.3 | fixed | Removed every pointer to `/superpowers:writing-plans`, including the stale-plan gate's failure message. The skill names no external plugin. |
 | 1.5.0 | 2026-08-27 | v0.5.0 | changed | Release folders are named by sequence and theme, not by version. The version moves to `target-version:` frontmatter. |

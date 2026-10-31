@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-30
+
+Two new manual-only skills, `plab-usage-audit` and `plab-project-pulse`, and fixes for the defects the 2026-08-29 audit found in `plab-guide`, `plab-init-project` and `plab-spec`. It ships as a MINOR release because it adds two skills. The six manual-only skills are now manual-only in Codex as well as in Claude Code.
+
+**Shipped before their first live runs.** Both new skills are fully tested against fixtures and CI, and their specs stay `committed` rather than `fulfilled`: UA-01 (usage audit skill) still needs its first live weekly run (AC-24), and PP-01 (project pulse skill) still needs a live `--week` run (AC-16, AC-19 and AC-26). Both are manual-only, so an untried skill cannot run unless you invoke it. Their eleven design decisions run on working defaults that are not yet ratified.
+
 ### Added
 
 - **`plab-usage-audit` 1.0.0, a new manual-only skill.** It runs the owner's weekly audit of their own Claude Code usage and writes a dated, scrubbed bundle: spend by lane and by the model that actually ran, routing against the owner's rules, a reconciliation of last week, a scorecard of past recommendations, configuration drift, lessons from session logs, and ranked recommendations. A fixture-proven collector flags a model family whose newest model never ran; a facts script reads credential files for key names and dates only; every agent names a model and may not open a credential file; a verifier checks every number and every claimed approval before the bundle is done. A self-testing bundle checker gates the output, and CI runs its self-test. Specified by UA-01 (usage audit skill), whose six design decisions are built on working defaults and await ratification.

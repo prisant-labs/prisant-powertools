@@ -16,9 +16,9 @@ Six of the thirteen ship with `disable-model-invocation: true` and run only when
 
 `plab-current-status` ships gated from its first version, 1.0.0 (v0.10.0), under CS-01 (current status skill). `plab-continue-session` and `plab-resolve-open-items` both answer a status question such as "where are we" directly, and a status skill that fired on those phrases would break that contract. The argument that a manual-only skill cannot displace a manual habit is weaker here than for `plab-audit`, because the habit it replaces is the maintainer typing a request for exactly this document.
 
-`plab-usage-audit` ships gated from its first version, 1.0.0, under UA-01 (usage audit skill). A weekly run launches up to nine agents and writes ledger rows, so an accidental run costs real money and pollutes the owner's history; and "how much have I spent" is a question `/usage` answers live, which a skill that fired on it would pre-empt.
+`plab-usage-audit` ships gated from its first version, 1.0.0 (v0.11.0), under UA-01 (usage audit skill). A weekly run launches up to nine agents and writes ledger rows, so an accidental run costs real money and pollutes the owner's history; and "how much have I spent" is a question `/usage` answers live, which a skill that fired on it would pre-empt.
 
-`plab-project-pulse` ships gated from its first version, 1.0.0, under PP-01 (project pulse skill). "What's next?" is an ordinary status question that `plab-continue-session` and `plab-resolve-open-items` answer directly, and a `--week` run launches up to ten agents across every repository.
+`plab-project-pulse` ships gated from its first version, 1.0.0 (v0.11.0), under PP-01 (project pulse skill). "What's next?" is an ordinary status question that `plab-continue-session` and `plab-resolve-open-items` answer directly, and a `--week` run launches up to ten agents across every repository.
 
 `plab-spec` carried the same flag through v0.4.3 and no longer does. Its description now carries an explicit do-NOT-fire clause instead, which is the mechanism that took `plab-continue-session` from over-triggering to correct: a narrowed description is a better instrument than a binary gate, because it can distinguish a request from a mention.
 

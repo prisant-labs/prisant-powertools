@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 1.3.1 | 2026-10-30 | unreleased | fix | Two contradictions from the 2026-08-29 audit. The inert `--agents claude,codex` argument is removed, and so is the undefined instruction to append to an existing `AGENTS.md`; `.gitignore` is again the only existing file the skill changes. |
+| 1.3.1 | 2026-10-30 | v0.11.0 | fix | Two contradictions from the 2026-08-29 audit. The inert `--agents claude,codex` argument is removed, and so is the undefined instruction to append to an existing `AGENTS.md`; `.gitignore` is again the only existing file the skill changes. |
 | 1.3.0 | 2026-08-24 | v0.3.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.3.0; prior history remains there. |
 
 ## 1.3.1 - 2026-10-30
