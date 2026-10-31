@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 2.2.3 | 2026-10-30 | unreleased | fix | Five defects from the 2026-08-29 audit. `render-pdf.sh` no longer reports success without a PDF, `regression-test.sh` no longer passes a page count it could not check, and `validate-manifest.py` accepts `low-confidence draft`. `SKILL.md` stops claiming four templates and stops requiring an unshipped `CREATION_NOTES.md`. A `.gitattributes` keeps shell scripts LF. |
+| 2.2.3 | 2026-10-30 | unreleased | fix | Five defects from the 2026-08-29 audit. `render-pdf.sh` no longer reports success without a PDF, `regression-test.sh` no longer passes a page count it could not check, and `validate-manifest.py` accepts `low-confidence draft`. `SKILL.md` stops claiming four templates and stops requiring an unshipped `CREATION_NOTES.md`. A `.gitattributes` keeps shell scripts LF, and every script is now executable in git. |
 | 2.2.2 | 2026-08-23 | v0.3.0 | fix | Three internal contradictions with the v2.0.0 one-or-two-page contract, plus vestigial em-dash-sweep wording. |
 | 2.2.1 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 2.2.1; prior history remains there. |
 
@@ -16,8 +16,9 @@ Correctness only. All five defects were found by the 2026-08-29 audit and re-con
 - **`SKILL.md` said "Four templates".** Three ship, and three have shipped since the migration in 2.2.1. The text now says three.
 - **Acceptance item 5 required `CREATION_NOTES.md`.** The 2.2.1 entry below records that the file deliberately does not ship. The item is removed.
 - **Line endings.** The repository gains a `.gitattributes` that pins `*.sh` to LF. The scripts were already LF in git, but a Windows checkout with `core.autocrlf` set turned them CRLF on disk, and bash fails on the stray carriage returns.
+- **No script was executable in git.** All nine files in `scripts/` were stored as mode 100644, so on Linux and macOS `regression-test.sh` could not run `check-toolchain.sh` or `render-pdf.sh`, and the direct calls the docs show, such as `skills/plab-guide/scripts/render-pdf.sh <file>`, failed with "permission denied". Windows never shows this, which is how it survived; CI found it the first time it ran the new test. All nine are now 100755.
 
-**Tests:** the new `scripts/test-guide-scripts.py` runs both shell scripts against a fake browser and a fake `pdfinfo` placed first on `PATH`, and runs the validator against fixture manifests: 12 of 12 checks pass, and CI runs it. Canary: with `|| true`, `return 0` and the stale-file removal restored in `render_scale()`, and the no-bundle exit removed from `regression-test.sh`, five checks fail by name (7 of 12 pass).
+**Tests:** the new `scripts/test-guide-scripts.py` runs both shell scripts against a fake browser and a fake `pdfinfo` placed first on `PATH`, and runs the validator against fixture manifests: 13 of 13 checks pass, and CI runs it. The empty-run case requires the script's own "no bundle was verified" message, because a missing browser or a non-executable helper also exits 2. Canary: with `|| true`, `return 0` and the stale-file removal restored in `render_scale()`, and the no-bundle exit removed from `regression-test.sh`, six checks fail by name (7 of 13 pass).
 
 ## 2.2.2 - 2026-08-23
 

@@ -121,7 +121,10 @@ def regression_cases(bash: str, root: Path, shims: Path) -> None:
     empty = root / "no-baselines"
     empty.mkdir()
     r = run(bash, REGRESSION, [], shims, root, {"PLAB_GUIDE_EXAMPLES_DIR": str(empty)})
+    # Exit 2 alone is not enough: a missing browser or a non-executable helper also
+    # exits 2, so the check requires the no-bundle message itself.
     check("regression run that verifies nothing: exit 2", r.returncode == 2, f"exit {r.returncode}; stdout tail: {r.stdout.strip()[-160:]}")
+    check("regression run that verifies nothing: says so", "no bundle was verified" in r.stderr, f"stderr tail: {r.stderr.strip()[-200:]}")
     check("regression run that verifies nothing: counts skips", "skipped: 7" in r.stdout, r.stdout.strip()[-160:])
 
 

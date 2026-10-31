@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **`plab-guide` 2.2.3 fixes five defects from the 2026-08-29 audit.** `render-pdf.sh` could report success when the browser wrote no PDF; it now exits 5 unless a fresh PDF exists. `regression-test.sh` printed PASS for a page count it never checked, and exited 0 when no bundle was found; both now count as skips, and a run that verifies nothing exits 2. `validate-manifest.py` rejected `low-confidence draft`, the value the skill tells the agent to write for a guide with no sources. `SKILL.md` claimed four templates where three ship, and required a `CREATION_NOTES.md` that does not ship. A new `.gitattributes` keeps shell scripts LF on Windows checkouts. A new fixture test covers the scripts, and CI runs it.
+- **`plab-guide` 2.2.3 fixes five defects from the 2026-08-29 audit.** `render-pdf.sh` could report success when the browser wrote no PDF; it now exits 5 unless a fresh PDF exists. `regression-test.sh` printed PASS for a page count it never checked, and exited 0 when no bundle was found; both now count as skips, and a run that verifies nothing exits 2. `validate-manifest.py` rejected `low-confidence draft`, the value the skill tells the agent to write for a guide with no sources. `SKILL.md` claimed four templates where three ship, and required a `CREATION_NOTES.md` that does not ship. A new `.gitattributes` keeps shell scripts LF on Windows checkouts, and the skill's scripts are now executable in git, which they never were, so on Linux and macOS the regression test could not run the renderer at all. A new fixture test covers the scripts, and CI runs it.
 
 ## [0.10.1] - 2026-10-30
 

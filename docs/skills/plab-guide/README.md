@@ -246,7 +246,7 @@ Detects a Chromium-based browser; prints the resolved path or an install hint.
 
 | Version | Date | Notes |
 |---------|------|-------|
-| 2.2.3 | 2026-10-30 | Current version. Fixes five defects from the 2026-08-29 audit: the PDF renderer no longer reports success without a PDF, the regression test no longer passes a page count it could not check, and the manifest validator accepts the confidence value the skill tells the agent to write. |
+| 2.2.3 | 2026-10-30 | Current version. Fixes five defects from the 2026-08-29 audit: the PDF renderer no longer reports success without a PDF, the regression test no longer passes a page count it could not check, the manifest validator accepts the confidence value the skill tells the agent to write, and the scripts are executable on Linux and macOS. |
 | 2.2.2 | 2026-08-23 | Corrects three internal contradictions with the v2.0.0 one-or-two-page contract. |
 | 2.2.1 | 2026-08-14 | First version released in this plugin. See [`skills/plab-guide/HISTORY.md`](../../../skills/plab-guide/HISTORY.md). |
 
