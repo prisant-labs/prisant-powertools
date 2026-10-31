@@ -41,6 +41,7 @@ import argparse
 import datetime as dt
 import html
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -60,6 +61,14 @@ class Broken(Exception):
 
 def esc(text):
     return html.escape("" if text is None else str(text), quote=True)
+
+
+def md_inline(text):
+    """Escape, then render the two inline Markdown forms status items use: **bold** and `code`."""
+    out = esc(text)
+    out = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", out)
+    out = re.sub(r"`([^`]+)`", r"<code>\1</code>", out)
+    return out
 
 
 def month_day(iso_date):
@@ -100,7 +109,7 @@ def whats_next_html(items):
     for item in items:
         rows.append(
             '      <li>%s <span class="badge">%s</span> <span class="meta">%s - %s</span></li>'
-            % (esc(item.get("item")), esc(item.get("who")), esc(item.get("repo")), esc(item.get("source")))
+            % (md_inline(item.get("item")), esc(item.get("who")), esc(item.get("repo")), esc(item.get("source")))
         )
     return "\n".join(rows)
 
@@ -113,7 +122,7 @@ def waiting_on_you_html(items):
         rows.append(
             '      <li>%s <span class="age-badge">%s day(s)</span> '
             '<span class="meta">%s - %s</span></li>'
-            % (esc(item.get("item")), esc(item.get("age_days")), esc(item.get("repo")), esc(item.get("source")))
+            % (md_inline(item.get("item")), esc(item.get("age_days")), esc(item.get("repo")), esc(item.get("source")))
         )
     return "\n".join(rows)
 
@@ -126,8 +135,9 @@ def status_source_detail(repo):
     source = repo.get("status_source")
     label = STATUS_LABELS.get(source, esc(source))
     if source == "snapshot":
-        snap_date = ((repo.get("sweep") or {}).get("snapshot_utc") or "")[:10]
-        return "%s (%s)" % (label, esc(snap_date)) if snap_date else label
+        return "fresh /plab-current-status snapshot"
+    if source == "scout" and not (repo.get("status") or {}).get("summary"):
+        return "not scouted"
     if source == "carried":
         carried_from = repo.get("carried_from")
         return "%s since %s" % (label, esc(carried_from)) if carried_from else label
@@ -139,7 +149,11 @@ def render_card(repo):
     status = repo.get("status") or {}
     waiting = status.get("waiting_on_you") or []
     tags = sweep.get("tags_in_window") or []
-    tags_label = ", ".join("%s (%s)" % (t.get("tag"), t.get("date")) for t in tags) if tags else "none"
+    tags_label = ", ".join("%s (%s)" % (esc(t.get("tag")), esc(t.get("date"))) for t in tags) if tags else "none"
+    if sweep and sweep.get("has_upstream") is False:
+        ahead_behind = "no upstream"
+    else:
+        ahead_behind = "%s / %s" % (esc(sweep.get("ahead", 0)), esc(sweep.get("behind", 0)))
     activity = repo.get("activity") or "dormant"
     activity_class = "badge-active" if activity == "active" else "badge-dormant"
 
@@ -156,7 +170,7 @@ def render_card(repo):
     if repo.get("current_status_candidate"):
         hint_html = '<p class="hint">Run /plab-current-status here.</p>'
 
-    short_name = repo.get("repo", "").split("/")[-1]
+    short_name = repo.get("repo", "")
 
     return (
         '<article class="repo-card" data-repo="%s" data-activity="%s" data-folder="%s" data-waiting-count="%d">\n'
@@ -164,7 +178,7 @@ def render_card(repo):
         '  <dl>\n'
         '    <dt>Commits</dt><dd>%s</dd>\n'
         '    <dt>Tags</dt><dd>%s</dd>\n'
-        '    <dt>Ahead / behind</dt><dd>%s / %s</dd>\n'
+        '    <dt>Ahead / behind</dt><dd>%s</dd>\n'
         '    <dt>Dirty files</dt><dd>%s</dd>\n'
         '    <dt>Status source</dt><dd>%s</dd>\n'
         '  </dl>\n'
@@ -175,7 +189,7 @@ def render_card(repo):
         esc(repo.get("repo")), esc(activity), esc(repo.get("folder")), len(waiting),
         esc(short_name), activity_class, esc(activity),
         esc(sweep.get("commits_focus", 0)), tags_label,
-        esc(sweep.get("ahead", 0)), esc(sweep.get("behind", 0)),
+        ahead_behind,
         esc(sweep.get("dirty_files", 0)), status_source_detail(repo),
         markers_html, hint_html,
     )
@@ -192,8 +206,12 @@ def cards_html(repos):
         folders[folder].append(repo)
 
     blocks = []
+    def card_order(r):
+        sweep = r.get("sweep") or {}
+        return (0 if r.get("activity") == "active" else 1, -(sweep.get("commits_focus") or 0), r.get("repo") or "")
+
     for folder in order:
-        cards = "\n".join(render_card(r) for r in folders[folder])
+        cards = "\n".join(render_card(r) for r in sorted(folders[folder], key=card_order))
         blocks.append(
             '<div class="folder-group" data-folder="%s">\n'
             '  <h3>%s</h3>\n'
