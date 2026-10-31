@@ -1,0 +1,29 @@
+{
+ "as_of": "2026-10-06",
+ "source": "claude-api skill model table",
+ "notes": "2026-10-09: added claude-haiku-5-5 from the skill table cached 2026-10-06 (input/output at the up-to-100K-prompt tier; $0.50/$2.50 above 100K is not modelled). The skill gives no Haiku 5.5 cache-read rate; 0.01 assumes the usual 0.1x of input (inferred). All other rows re-checked against that table unchanged.",
+ "cache_write_multiplier": {"5m": 1.25, "1h": 2.0},
+ "families_order": "newest_first",
+ "families": {
+  "fable": ["claude-fable-5-1", "claude-fable-5", "claude-mythos-5-1", "claude-mythos-5"],
+  "opus": ["claude-opus-5-5", "claude-opus-5", "claude-opus-4-8", "claude-opus-4-7", "claude-opus-4-6"],
+  "sonnet": ["claude-sonnet-5-5", "claude-sonnet-5", "claude-sonnet-4-6"],
+  "haiku": ["claude-haiku-5-5", "claude-haiku-4-5"]
+ },
+ "models": {
+  "claude-fable-5-1": {"input": 10, "output": 50, "cache_read": 0.25},
+  "claude-mythos-5-1": {"input": 10, "output": 50, "cache_read": 0.25},
+  "claude-fable-5": {"input": 10, "output": 50, "cache_read": 1.0},
+  "claude-mythos-5": {"input": 10, "output": 50, "cache_read": 1.0},
+  "claude-opus-5-5": {"input": 4, "output": 20, "cache_read": 0.20},
+  "claude-opus-5": {"input": 5, "output": 25, "cache_read": 0.50},
+  "claude-opus-4-8": {"input": 5, "output": 25, "cache_read": 0.50},
+  "claude-opus-4-7": {"input": 5, "output": 25, "cache_read": 0.50},
+  "claude-opus-4-6": {"input": 5, "output": 25, "cache_read": 0.50},
+  "claude-sonnet-5-5": {"input": 2, "output": 10, "cache_read": 0.20},
+  "claude-sonnet-5": {"input": 2, "output": 10, "cache_read": 0.20},
+  "claude-sonnet-4-6": {"input": 3, "output": 15, "cache_read": 0.30},
+  "claude-haiku-5-5": {"input": 0.10, "output": 0.50, "cache_read": 0.01},
+  "claude-haiku-4-5": {"input": 1, "output": 5, "cache_read": 0.10}
+ }
+}

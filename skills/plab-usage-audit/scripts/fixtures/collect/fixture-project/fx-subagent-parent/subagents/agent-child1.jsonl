@@ -1,0 +1,1 @@
+{"type": "assistant", "timestamp": "2026-01-15T16:00:01Z", "requestId": "req_fx_child_1", "message": {"role": "assistant", "model": "claude-haiku-4-5", "id": "msg_fx_child_1", "content": [{"type": "text", "text": "ok"}], "usage": {"input_tokens": 2000, "output_tokens": 300, "cache_read_input_tokens": 0, "cache_creation_input_tokens": 0}}}
