@@ -2,7 +2,15 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.3.1 | 2026-10-30 | unreleased | fix | Two contradictions from the 2026-08-29 audit. The inert `--agents claude,codex` argument is removed, and so is the undefined instruction to append to an existing `AGENTS.md`; `.gitignore` is again the only existing file the skill changes. |
 | 1.3.0 | 2026-08-24 | v0.3.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.3.0; prior history remains there. |
+
+## 1.3.1 - 2026-10-30
+
+Documentation only: no script ships with this skill, so its contract is its text, and the text contradicted itself in two places. Both were found by the 2026-08-29 audit and re-confirmed on 2026-10-30.
+
+- **`--agents claude,codex` did nothing.** The argument hint advertised it, but the input table, the workflow and every reference ignored it. It is removed rather than wired in, because removing it leaves every run's behavior unchanged. The audit's wider remedy, a Codex-only minimal profile that creates `AGENTS.md` instead of `CLAUDE.md`, is new behavior and is not part of this fix.
+- **The skill both promised and broke "never modify existing files".** `SKILL.md`'s constraints allow one exception, the `.gitignore` merge, and the description says the skill is non-destructive. Workflow step 5 also said "append to AGENTS.md", `references/reconciliation-rules.md` promised "two exceptions" while documenting one, and its Reporting section counted `AGENTS.md` as a possible update. No text said what the append would add or how a re-run would avoid adding it twice. The append is removed, the rules now name the single exception and say explicitly that an existing `AGENTS.md` is skipped, and the summary line counts only `.gitignore`.
 
 ## 1.3.0 - 2026-08-24
 

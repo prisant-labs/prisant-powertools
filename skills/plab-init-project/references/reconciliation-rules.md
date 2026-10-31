@@ -8,15 +8,19 @@ For every file or directory the skill would create:
 
 - **If it exists:** skip and report `Exists: [path]`
 - **If it doesn't exist:** create and report `Created: [path]`
-- **Never modify, merge, or overwrite** existing content (except the two exceptions below)
+- **Never modify, merge, or overwrite** existing content (one exception: the `.gitignore` merge below)
 
-## Exceptions
+## Exception
 
 ### .gitignore - Merge
 
 If `.gitignore` exists, append any missing entries from the base template and project-type-specific entries. Do not duplicate existing entries. Do not remove existing entries. Report as `Updated: .gitignore (appended N entries)`.
 
 **`_local/` is always ensured.** If the existing `.gitignore` does not include `_local/`, append it. This is non-negotiable - `_local/` is always gitignored and init-project guarantees this invariant on every run.
+
+### AGENTS.md is not an exception
+
+An existing `AGENTS.md` is skipped and reported `Exists: AGENTS.md`, like any other file. It holds a repository's highest-priority agent instructions, and no rule defines what a merge into it would add or how a re-run would avoid adding it twice. Earlier text said the workflow appends to it; that instruction had no defined content, so it is removed rather than guessed at.
 
 ## Scenarios
 
@@ -79,4 +83,4 @@ Every init run ends with a summary line:
 Summary: Created N files/directories, skipped M existing[, updated K].
 ```
 
-The `updated K` portion only appears when .gitignore or AGENTS.md were modified.
+The `updated K` portion only appears when `.gitignore` was modified.

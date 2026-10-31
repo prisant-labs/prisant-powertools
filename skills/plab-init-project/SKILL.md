@@ -9,12 +9,12 @@ description: "Initialize agentic development infrastructure in a project. Create
   Explicit invocation only: run /plab-init-project; it does not fire on its own. Pairs with
   /plab-wrap-session and /plab-continue-session, which write and read the session logs it
   scaffolds."
-argument-hint: "[--profile minimal|standard|public] [--type general|code-python|code-node] [--agents claude,codex] [--license apache|--no-license] [--no-onboard] [--dry-run]"
+argument-hint: "[--profile minimal|standard|public] [--type general|code-python|code-node] [--license apache|--no-license] [--no-onboard] [--dry-run]"
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.3.0"
-  updated: 2026-08-24
+  version: "1.3.1"
+  updated: 2026-10-30
 ---
 
 # Init Project
@@ -58,7 +58,7 @@ Session logs are local-only working notes. They are written to `_local/_session-
 2. **Pre-flight checks** -- verify project root exists and is writable. Check if git is initialized (warn if not, proceed anyway). Scan for existing agentic structure.
 3. **Create structure** -- follow the creation sequence in `references/folder-spine.md`. Directories before files, parent before child. Apply project type additions from `references/project-types.md`.
 4. **Populate seed files** -- use templates from `references/seed-templates.md`. Replace all `{{VARIABLE}}` placeholders with actual values.
-5. **Reconcile with existing** -- follow rules in `references/reconciliation-rules.md`. Skip existing files, merge .gitignore (always appends `_local/`), append to AGENTS.md.
+5. **Reconcile with existing** -- follow rules in `references/reconciliation-rules.md`. Skip existing files, including an existing AGENTS.md, and merge .gitignore (always appends `_local/`).
 6. **Report results** -- print Created/Exists/Updated for each item, then summary line.
 7. **Onboarding** (unless `--no-onboard`) -- walk user through customizing seed files. Save report to `_local/plab-init-project/plab-init-project_onboard_YYYY-MM-DD.md`.
 

@@ -1,6 +1,6 @@
 # plab-init-project
 
-**Version:** 1.3.0
+**Version:** 1.3.1
 **Source:** [`skills/plab-init-project/`](../../../skills/plab-init-project/)
 
 Initialize agentic development infrastructure in a project. Three profiles (minimal / standard / public), non-destructive, and idempotent.
@@ -281,6 +281,7 @@ Both reports live in `_local/`, which is gitignored, so they stay per-machine.
 
 | Version | Date | Notable change |
 |---------|------|----------------|
+| 1.3.1 | 2026-10-30 | Removes the inert `--agents` argument and the undefined `AGENTS.md` append, so the only existing file the skill ever changes is `.gitignore`. |
 | 1.3.0 | 2026-08-24 | First release in prisant-utilities. Migrated from a private upstream at version 1.3.0; prior history remains there. Seed templates now name `plab-wrap-session` and `plab-continue-session`, and generated decision records credit `prisant-utilities plab-init-project`. |
 
 Full notes in [`HISTORY.md`](../../../skills/plab-init-project/HISTORY.md).
