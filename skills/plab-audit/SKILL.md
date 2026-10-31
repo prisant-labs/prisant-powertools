@@ -15,8 +15,8 @@ argument-hint: "<path> [--appraise|--audit|--roadmap] [--type=agent-plugin|tauri
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.1.0"
-  updated: 2026-10-06
+  version: "1.1.1"
+  updated: 2026-10-30
 ---
 
 # Audit

@@ -13,8 +13,8 @@ argument-hint: "--create vX.Y.Z [--theme <text>] | --promote --from _unassigned 
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.6.0"
-  updated: 2026-10-19
+  version: "1.6.1"
+  updated: 2026-10-30
 ---
 
 # Release Plan

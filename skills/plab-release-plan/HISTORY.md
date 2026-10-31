@@ -2,6 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.6.1 | 2026-10-30 | unreleased | fixed | Codex now honors manual-only too: `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, which Codex reads in place of `disable-model-invocation`. |
 | 1.6.0 | 2026-10-19 | v0.8.1 | changed | Restored `disable-model-invocation: true`. The skill runs only when typed as `/plab-release-plan`, by the maintainer's provisional ruling of 2026-10-17. |
 | 1.5.1 | 2026-09-01 | v0.5.3 | fixed | Removed every pointer to `/superpowers:writing-plans`, including the stale-plan gate's failure message. The skill names no external plugin. |
 | 1.5.0 | 2026-08-27 | v0.5.0 | changed | Release folders are named by sequence and theme, not by version. The version moves to `target-version:` frontmatter. |
@@ -9,6 +10,10 @@
 | 1.3.0 | 2026-08-24 | v0.3.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.3.0; prior history remains there. |
 
 
+
+## 1.6.1 - 2026-10-30
+
+**Fixed: manual-only in Codex.** Codex ignored the skill's manual-only flag. `disable-model-invocation: true` is a Claude Code field, so in Codex the skill sat in the model's skill list and could fire on its own. The 2026-08-29 audit found this for every manual-only skill here. The new `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, which Codex reads instead: it hides the skill from the model and keeps it callable by name. `scripts/codex-invocation-check.py` fails CI when a skill carries either flag without the other.
 
 ## 1.6.0 - 2026-10-19
 

@@ -2,7 +2,12 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.0.1 | 2026-10-30 | unreleased | fixed | Codex now honors manual-only too: `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, which Codex reads in place of `disable-model-invocation`. |
 | 1.0.0 | 2026-10-28 | v0.10.0 | added | First version, specified by CS-01 (current status skill). Writes a dated, ranked status snapshot of any git repository to `_local/_status/YYYY-MM-DD_<model>_<byline>.md`, from one facts-script call, and checks it with a self-testing checker. Manual invocation only. Built on four working-default decisions, D1 to D4 in the CS-01 spec, all still `Open` pending the maintainer's ratification. |
+
+## 1.0.1 - 2026-10-30
+
+**Fixed: manual-only in Codex.** Codex ignored the skill's manual-only flag. `disable-model-invocation: true` is a Claude Code field, so in Codex the skill sat in the model's skill list and could fire on its own. The 2026-08-29 audit found this for every manual-only skill here. The new `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, which Codex reads instead: it hides the skill from the model and keeps it callable by name. `scripts/codex-invocation-check.py` fails CI when a skill carries either flag without the other.
 
 ## 1.0.0 - 2026-10-28
 

@@ -1,6 +1,6 @@
 # plab-current-status
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Source:** [`skills/plab-current-status/`](../../../skills/plab-current-status/)
 
 Write a dated status snapshot of the current repository: the answer first, what changed since the last snapshot, what waits on you, what is next, pending and recent decisions ranked with reasons, what was accomplished, and what is still unknown. Manual invocation only.
