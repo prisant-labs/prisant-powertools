@@ -20,7 +20,7 @@ spec-dependencies: ["PP-01"]
 
 ## Task Summary
 
-**Status:** committed, built on `feat/audit-skills`; the first live weekly run (AC-24) is still to come
+**Status:** committed, shipped in v0.11.0; the first live weekly run (AC-24) is still to come
 **Last updated:** 2026-10-30 by claude (Opus 5.5), written under the maintainer's instruction to enrich the two audit-skill specs and build them
 **Linked plan:** `implementation-plan.md` in this folder
 **Open questions:** 6, each built on its recommendation as a working default and awaiting ratification (see Open Questions / Decisions)

@@ -19,7 +19,7 @@ priority: P2
 
 ## Task Summary
 
-**Status:** committed, built on `feat/audit-skills`; scout escalation (AC-16), the digest (AC-19) and the first `--week` run (AC-26) are still to be shown
+**Status:** committed, shipped in v0.11.0; scout escalation (AC-16), the digest (AC-19) and the first `--week` run (AC-26) are still to be shown
 **Last updated:** 2026-10-30 by claude (Opus 5.5), written under the maintainer's instruction to enrich the two audit-skill specs and build them
 **Linked plan:** `implementation-plan.md` in this folder
 **Open questions:** 5, each built on its recommendation as a working default and awaiting ratification (see Open Questions / Decisions)

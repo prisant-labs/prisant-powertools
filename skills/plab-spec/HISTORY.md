@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 1.3.4 | 2026-10-30 | unreleased | fixed | Every reference example now uses the per-effort folder layout the skill writes. Twenty-four lines across six reference files still showed the retired `docs/internal/efforts/` layout, and `spec-template.md` still named the output `<id>_spec.md`. |
+| 1.3.4 | 2026-10-30 | v0.11.0 | fixed | Every reference example now uses the per-effort folder layout the skill writes. Twenty-four lines across six reference files still showed the retired `docs/internal/efforts/` layout, and `spec-template.md` still named the output `<id>_spec.md`. |
 | 1.3.3 | 2026-09-01 | v0.5.3 | fixed | Removed every pointer to `/superpowers:writing-plans`. The implementation-plan stage is now an in-repo template, so the skill names no external plugin. |
 | 1.3.2 | 2026-08-28 | v0.5.2 | changed | Supersession is documented as symmetric: `superseded-by` and `supersedes` are both written, and a cross-file gate enforces the pair. |
 | 1.3.1 | 2026-08-28 | v0.5.1 | changed | `linked-effort` documented as a string, not a path. A tracked artifact must not cite an untracked one. |

@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 1.0.1 | 2026-10-30 | unreleased | fixed | Codex now honors manual-only too: `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, which Codex reads in place of `disable-model-invocation`. |
+| 1.0.1 | 2026-10-30 | v0.11.0 | fixed | Codex now honors manual-only too: `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, which Codex reads in place of `disable-model-invocation`. |
 | 1.0.0 | 2026-10-28 | v0.10.0 | added | First version, specified by CS-01 (current status skill). Writes a dated, ranked status snapshot of any git repository to `_local/_status/YYYY-MM-DD_<model>_<byline>.md`, from one facts-script call, and checks it with a self-testing checker. Manual invocation only. Built on four working-default decisions, D1 to D4 in the CS-01 spec, all still `Open` pending the maintainer's ratification. |
 
 ## 1.0.1 - 2026-10-30
