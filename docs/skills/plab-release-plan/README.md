@@ -1,6 +1,6 @@
 # plab-release-plan
 
-**Version:** 1.6.0
+**Version:** 1.6.1
 **Source:** [`skills/plab-release-plan/`](../../../skills/plab-release-plan/)
 
 Manage a version-scoped release plan. Owns the release folder, the `_unassigned/` -> release promotion ceremony, the aggregation table, hygiene gates, and the doc-update checklist that gates the tag.

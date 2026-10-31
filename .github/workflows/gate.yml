@@ -141,6 +141,15 @@ jobs:
         if: always()
         run: python3 scripts/skill-drift-check.py
 
+      # Manual-only has to be said twice, once per harness: Claude Code reads
+      # disable-model-invocation in SKILL.md, and Codex reads
+      # policy.allow_implicit_invocation in agents/openai.yaml. A skill that
+      # carries one without the other fires on its own in the other harness.
+      # Exit 2 means the checker could not prove itself. Never read it as clean.
+      - name: Manual-only skills are manual-only in Codex too
+        if: always()
+        run: python3 scripts/codex-invocation-check.py
+
       # plab-audit's own output gate, run against the committed sample bundle.
       #
       # WHY IT LIVES IN THIS JOB RATHER THAN ITS OWN. Branch protection on

@@ -13,3 +13,6 @@
 - **`scripts/bundle-check.py`** enforces nine rules on the bundle, including a mandatory verification section and the rule that a claimed approval names its record; its self-test proves each rule fails on a mutation of the committed sample.
 - **Every agent names a model and opens with a shared rules block** that forbids opening a credential file; `scripts/test-workflow-reference.py` proves it.
 - **Manual-only** (`disable-model-invocation: true`), because a run launches up to nine agents and writes ledger rows.
+
+**Also: manual-only in Codex.** `disable-model-invocation: true` is a Claude Code field that Codex ignores, so without more the skill would sit in the Codex model's skill list and could fire on its own. The 2026-08-29 audit found that gap in every manual-only skill that existed then. This skill's `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, which Codex reads instead: it hides the skill from the model and keeps it callable by name. `scripts/codex-invocation-check.py` fails CI when a skill carries either flag without the other.
+

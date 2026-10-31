@@ -5,8 +5,8 @@ argument-hint: "[<byline>] [--no-fetch]"
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.0.0"
-  updated: 2026-10-28
+  version: "1.0.1"
+  updated: 2026-10-30
 ---
 
 # Current Status

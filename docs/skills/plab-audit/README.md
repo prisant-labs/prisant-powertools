@@ -1,6 +1,6 @@
 # plab-audit
 
-**Version:** 1.1.0
+**Version:** 1.1.1
 **Source:** [`skills/plab-audit/`](../../../skills/plab-audit/)
 
 Audit a repository and produce a five-file bundle: what it is and is worth, what is wrong with it with a file path on every finding, and what to do next ranked and traceable to those findings. Manual invocation only.

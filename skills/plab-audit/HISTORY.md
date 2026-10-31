@@ -2,9 +2,14 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.1.1 | 2026-10-30 | unreleased | fixed | Codex now honors manual-only too: `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, which Codex reads in place of `disable-model-invocation`. |
 | 1.1.0 | 2026-10-06 | v0.7.0 | added | Every appraisal now ends with a big-picture section, "Standing back", by maintainer ruling. `bundle-check.py` gains rule R8 to enforce its structure, and the committed sample is rewritten to the seven sections the skill writes. |
 | 1.0.1 | 2026-10-06 | v0.6.1 | fixed | Its first full run on another repository found three defects in the skill: an output folder that could land inside the audited repository, a vendored-copy comparison that asked the wrong question, and a misattributed tier-ceiling marker. Also adds the first-party plugin validator to the agent-plugin pack. |
 | 1.0.0 | 2026-09-20 | v0.6.0 | added | First version. Three composable modes, three type packs, one docs lens, a coverage statement, and a canary-proven bundle self-check. |
+
+## 1.1.1 - 2026-10-30
+
+**Fixed: manual-only in Codex.** Codex ignored the skill's manual-only flag. `disable-model-invocation: true` is a Claude Code field, so in Codex the skill sat in the model's skill list and could fire on its own. The 2026-08-29 audit found this for every manual-only skill here. The new `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, which Codex reads instead: it hides the skill from the model and keeps it callable by name. `scripts/codex-invocation-check.py` fails CI when a skill carries either flag without the other.
 
 ## 1.1.0 - 2026-10-06
 

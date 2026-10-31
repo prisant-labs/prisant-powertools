@@ -12,3 +12,6 @@
 - **`scripts/build-pulse.py`** assembles `pulse.json` and writes the state file only after validation; **`scripts/render.py`** writes a self-contained dashboard.
 - **`scripts/pulse-check.py`** enforces the schema, the coverage headings and the dashboard card count; its self-test proves each of its ten rules fails on a mutation of the committed sample.
 - **Manual-only** (`disable-model-invocation: true`), because "what's next?" is a status question two other skills answer directly.
+
+**Also: manual-only in Codex.** `disable-model-invocation: true` is a Claude Code field that Codex ignores, so without more the skill would sit in the Codex model's skill list and could fire on its own. The 2026-08-29 audit found that gap in every manual-only skill that existed then. This skill's `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, which Codex reads instead: it hides the skill from the model and keeps it callable by name. `scripts/codex-invocation-check.py` fails CI when a skill carries either flag without the other.
+
