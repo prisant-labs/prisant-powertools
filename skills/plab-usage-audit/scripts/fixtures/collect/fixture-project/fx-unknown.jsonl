@@ -1,0 +1,2 @@
+{"type": "user", "timestamp": "2026-01-15T16:00:00Z", "message": {"role": "user", "content": "use a model that does not exist in the price file"}}
+{"type": "assistant", "timestamp": "2026-01-15T16:00:01Z", "requestId": "req_fx_unk_1", "message": {"role": "assistant", "model": "claude-unknown-test-model", "id": "msg_fx_unk_1", "content": [{"type": "text", "text": "ok"}], "usage": {"input_tokens": 777, "output_tokens": 333, "cache_read_input_tokens": 111, "cache_creation_input_tokens": 0}}}

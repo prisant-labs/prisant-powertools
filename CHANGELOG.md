@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`plab-usage-audit` 1.0.0, a new manual-only skill.** It runs the owner's weekly audit of their own Claude Code usage and writes a dated, scrubbed bundle: spend by lane and by the model that actually ran, routing against the owner's rules, a reconciliation of last week, a scorecard of past recommendations, configuration drift, lessons from session logs, and ranked recommendations. A fixture-proven collector flags a model family whose newest model never ran; a facts script reads credential files for key names and dates only; every agent names a model and may not open a credential file; a verifier checks every number and every claimed approval before the bundle is done. A self-testing bundle checker gates the output, and CI runs its self-test. Specified by UA-01 (usage audit skill), whose six design decisions are built on working defaults and await ratification.
+- **`plab-project-pulse` 1.0.0, a new manual-only skill.** It rolls every repository under the configured roots into one private weekly pulse: what shipped, what is next, and what waits on the owner, ranked with the age of each waiting item. One script gathers every deterministic fact, reads fresh `plab-current-status` snapshots instead of scouting, and carries dormant repositories forward; a self-testing checker validates `pulse.json`, the coverage statement and the dashboard's card count, and CI runs its self-test. Specified by PP-01 (project pulse skill), whose five design decisions are built on working defaults and await ratification.
+
 ## [0.10.1] - 2026-10-30
 
 A metadata-only release: the plugin is now credited to Prisant Labs and named Prisant Power Tools. No skill changed.

@@ -1,0 +1,43 @@
+{
+  "window": {
+    "focus_week_start": "2026-10-19",
+    "focus_week_end": "2026-10-25",
+    "zone": "America/Los_Angeles",
+    "cutoff_local": "2026-10-25T09:00:00"
+  },
+  "totals_usd": {
+    "main_loop": 86.40,
+    "advisor": 21.10,
+    "subagents": 34.80,
+    "total": 142.30
+  },
+  "by_project_usd": {
+    "alpha-app": 97.10,
+    "beta-lib": 16.90,
+    "unassigned": 28.30
+  },
+  "advisor_calls_raw": 14,
+  "advisor_avg_usd": 1.51,
+  "routing_share": {
+    "sonnet": 0.73,
+    "haiku": 0.19,
+    "opus": 0.08
+  },
+  "model_drift": {
+    "sonnet": {
+      "pinned_id": "claude-sonnet-4-5",
+      "current_id": "claude-sonnet-5",
+      "weeks_drifted": 6
+    }
+  },
+  "unpriced": [],
+  "copied_folders_skipped": [
+    "sessions-copy-2026-10-20"
+  ],
+  "user_prompts_dedup": 211,
+  "responses_dedup": 486,
+  "cost_by_half": {
+    "half_1": 71.15,
+    "half_2": 71.15
+  }
+}

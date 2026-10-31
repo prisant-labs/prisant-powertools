@@ -89,6 +89,8 @@ An effort ID is a series letter, a number, and a slug: `D-07_waiting-on-blocker-
 | `H-` | Hygiene, repo-wide rather than tied to one skill | Proposed, none scheduled yet |
 | `AU-` | Audit-skill roadmap item | `_unassigned/`; AU-01 shipped outside the release-plan chain, as v0.6.0 |
 | `WD-` | Resolve-open-items skill roadmap item. The letter comes from its working name, walk-decisions | `_unassigned/` |
+| `UA-` | Usage-audit skill roadmap item | `_unassigned/` |
+| `PP-` | Project-pulse skill roadmap item | `_unassigned/` |
 
 Six series existed before this table did, and nothing anywhere said what any of the letters meant. That is the most likely thing the folder being called hard to navigate actually referred to: not the file count, which is small, but six opaque prefixes with no key. `INDEX.md` in this folder is generated and reproduces this legend beside every effort, so the two cannot drift apart by hand.
 

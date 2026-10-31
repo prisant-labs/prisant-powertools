@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-10-23T16:00:00Z",
+  "repos": {
+    "work/epsilon-archive": {
+      "status": {
+        "summary": "The retention script works; nothing has moved since.",
+        "whats_next": [
+          {
+            "text": "decide the retention window",
+            "source": "docs/retention.md"
+          }
+        ],
+        "waiting_on_you": [
+          {
+            "text": "confirm the archive retention policy",
+            "source": "docs/retention.md",
+            "first_seen": "2026-10-09",
+            "age_days": 7
+          }
+        ],
+        "pending_decisions": [
+          {
+            "id": "D3",
+            "handle": "retention window",
+            "home": "docs/retention.md",
+            "source": "docs/retention.md"
+          }
+        ],
+        "risks": []
+      },
+      "refreshed": "2026-10-16",
+      "head": "e5f6a7b"
+    },
+    "side/zeta-notes": {
+      "status": {
+        "summary": "The notes vault is unchanged.",
+        "whats_next": [],
+        "waiting_on_you": [
+          {
+            "text": "decide whether to delete the notes vault",
+            "source": "docs/vault.md",
+            "first_seen": "2026-10-02",
+            "age_days": 7
+          }
+        ],
+        "pending_decisions": [],
+        "risks": []
+      },
+      "refreshed": "2026-10-09",
+      "head": "22a33bb"
+    }
+  },
+  "first_seen": {
+    "work/epsilon-archive::confirm the archive retention policy": "2026-10-09",
+    "side/zeta-notes::decide whether to delete the notes vault": "2026-10-02",
+    "work/beta-lib::approve the new logging format": "2026-10-23"
+  }
+}

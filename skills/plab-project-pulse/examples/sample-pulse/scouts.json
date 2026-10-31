@@ -1,0 +1,91 @@
+[
+  {
+    "repo": "work/beta-lib",
+    "scouted_by": {
+      "model": "sonnet",
+      "agent": "scout-1"
+    },
+    "summary": "The retry queue shipped; the logging format change is unreviewed.",
+    "whats_next": [
+      {
+        "text": "add integration tests for the retry queue",
+        "source": "docs/plan.md"
+      }
+    ],
+    "waiting_on_you": [
+      {
+        "text": "approve the new logging format",
+        "source": "_local/_session-logs/2026-10-23_11-40_sonnet-5_logging-format.md"
+      },
+      {
+        "text": "pick a retry backoff ceiling",
+        "source": "_local/_session-logs/2026-10-28_09-05_sonnet-5_retry-ceiling.md",
+        "since": "2026-10-20"
+      }
+    ],
+    "pending_decisions": [
+      {
+        "id": "D7",
+        "handle": "logging format",
+        "home": "docs/logging.md",
+        "source": "docs/plan.md"
+      }
+    ],
+    "risks": [
+      {
+        "text": "the retry queue has no backpressure test",
+        "source": "docs/plan.md"
+      }
+    ],
+    "conflicts": [
+      {
+        "fact": "branch feat/retry-queue",
+        "git_says": "merged into main",
+        "doc_says": "blocked on review",
+        "source": "_local/_session-logs/2026-10-28_09-05_sonnet-5_retry-ceiling.md"
+      }
+    ]
+  },
+  {
+    "repo": "work/gamma-service",
+    "scouted_by": {
+      "model": "haiku",
+      "agent": "scout-2"
+    },
+    "summary": "The deploy pipeline is green; two notes files changed outside the session logs.",
+    "whats_next": [
+      {
+        "text": "move the deploy notes into the session log",
+        "source": "_local/_session-logs/2026-10-27_deploy-notes.md"
+      }
+    ],
+    "waiting_on_you": [
+      {
+        "text": "confirm the new staging URL",
+        "source": "_local/_session-logs/2026-10-27_deploy-notes.md",
+        "since": "2026-10-26"
+      }
+    ],
+    "pending_decisions": [],
+    "risks": [],
+    "conflicts": []
+  },
+  {
+    "repo": "work/delta-tool",
+    "scouted_by": {
+      "model": "haiku",
+      "agent": "scout-2"
+    },
+    "summary": "Small fixes landed; nothing is blocking.",
+    "whats_next": [
+      {
+        "text": "cut a patch release",
+        "source": "_local/_session-logs/2026-10-29_08-15_haiku-4-5_patch-fixes.md"
+      }
+    ],
+    "waiting_on_you": [],
+    "pending_decisions": [],
+    "risks": [],
+    "conflicts": []
+  }
+]

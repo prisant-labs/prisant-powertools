@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Pulse</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --panel: #ffffff;
+    --text: #1b1d1f;
+    --muted: #5b6168;
+    --border: #d9dcdf;
+    --accent: #2b5fa8;
+    --accent-weak: #e7eefb;
+    --warn-bg: #fdecea;
+    --warn-text: #7a1f14;
+    --ok-bg: #e9f5ea;
+    --ok-text: #1e5c27;
+    --badge-bg: #eef0f2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.45;
+  }
+  a { color: var(--accent); }
+  header {
+    padding: 1.25rem 1.5rem;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 { margin: 0 0 0.15rem; font-size: 1.4rem; }
+  header p.window { margin: 0; color: var(--muted); }
+  ul.totals {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 0.9rem 0 0;
+    padding: 0;
+  }
+  ul.totals li {
+    background: var(--accent-weak);
+    border-radius: 0.4rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.9rem;
+  }
+  ul.totals li strong { display: block; font-size: 1.1rem; }
+  main { padding: 0 1.5rem 2rem; max-width: 70rem; margin: 0 auto; }
+  section { margin-top: 1.75rem; }
+  section h2 { font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.35rem; }
+  ol { padding-left: 1.25rem; }
+  ol li { margin-bottom: 0.4rem; }
+  .meta { color: var(--muted); font-size: 0.85rem; }
+  .age-badge {
+    display: inline-block;
+    background: var(--warn-bg);
+    color: var(--warn-text);
+    border-radius: 0.3rem;
+    padding: 0.05rem 0.4rem;
+    font-size: 0.8rem;
+    margin-left: 0.35rem;
+  }
+  form.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+  }
+  form.controls label { display: inline-flex; align-items: center; gap: 0.35rem; }
+  .folder-group { margin-top: 1rem; }
+  .folder-group h3 { font-size: 1rem; color: var(--muted); margin-bottom: 0.5rem; }
+  #cards { display: flex; flex-direction: column; gap: 1.5rem; }
+  .card-row { display: flex; flex-wrap: wrap; gap: 0.9rem; }
+  .repo-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.85rem 1rem;
+    width: 19rem;
+    flex: 1 1 19rem;
+  }
+  .repo-card h4 { margin: 0 0 0.4rem; font-size: 1rem; display: flex; align-items: center; gap: 0.4rem; }
+  .repo-card dl { margin: 0.4rem 0; display: grid; grid-template-columns: auto 1fr; gap: 0.15rem 0.5rem; font-size: 0.85rem; }
+  .repo-card dt { color: var(--muted); }
+  .repo-card dd { margin: 0; }
+  .badge {
+    display: inline-block;
+    background: var(--badge-bg);
+    border-radius: 0.3rem;
+    padding: 0.05rem 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .badge-active { background: var(--ok-bg); color: var(--ok-text); }
+  .badge-dormant { background: var(--badge-bg); color: var(--muted); }
+  .markers { margin: 0.5rem 0 0; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .marker { font-size: 0.75rem; border-radius: 0.3rem; padding: 0.05rem 0.4rem; }
+  .marker-conflict { background: var(--warn-bg); color: var(--warn-text); }
+  .marker-unprotected { background: var(--warn-bg); color: var(--warn-text); }
+  .marker-alias { background: var(--badge-bg); color: var(--muted); }
+  .hint { margin-top: 0.5rem; font-size: 0.8rem; color: var(--accent); }
+  .empty { color: var(--muted); font-style: italic; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a;
+      --panel: #1e2124;
+      --text: #eceef0;
+      --muted: #a2a8ae;
+      --border: #30343a;
+      --accent-weak: #1d2a3f;
+      --warn-bg: #3a211d;
+      --warn-text: #f3b4a7;
+      --ok-bg: #1d3420;
+      --ok-text: #a8dcae;
+      --badge-bg: #272b2f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15171a;
+    --panel: #1e2124;
+    --text: #eceef0;
+    --muted: #a2a8ae;
+    --border: #30343a;
+    --accent-weak: #1d2a3f;
+    --warn-bg: #3a211d;
+    --warn-text: #f3b4a7;
+    --ok-bg: #1d3420;
+    --ok-text: #a8dcae;
+    --badge-bg: #272b2f;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Project Pulse</h1>
+  <p class="window">Oct 24 to Oct 30, 2026 (America/Los_Angeles)</p>
+  <ul class="totals" aria-label="Totals for the window">
+      <li><strong>9</strong>Repositories</li>
+      <li><strong>4</strong>Active</li>
+      <li><strong>5</strong>Dormant</li>
+      <li><strong>1</strong>Aliases</li>
+      <li><strong>14</strong>Commits</li>
+      <li><strong>1</strong>Tags</li>
+      <li><strong>6</strong>Waiting on you</li>
+      <li><strong>1</strong>Fresh snapshots</li>
+  </ul>
+</header>
+
+<main>
+  <section id="whats-next" aria-labelledby="whats-next-heading">
+    <h2 id="whats-next-heading">What's Next</h2>
+    <ol>
+      <li>wire the retry queue into the export job <span class="badge">owner</span> <span class="meta">work/alpha-app - _local/_status/2026-10-29_opus-5-5_ship-export-next.md</span></li>
+      <li>add integration tests for the retry queue <span class="badge">agent</span> <span class="meta">work/beta-lib - docs/plan.md</span></li>
+      <li>move the deploy notes into the session log <span class="badge">owner</span> <span class="meta">work/gamma-service - _local/_session-logs/2026-10-27_deploy-notes.md</span></li>
+      <li>cut a patch release <span class="badge">agent-after-yes</span> <span class="meta">work/delta-tool - _local/_session-logs/2026-10-29_08-15_haiku-4-5_patch-fixes.md</span></li>
+      <li>add a second export format <span class="badge">owner</span> <span class="meta">work/alpha-app - _local/_status/2026-10-29_opus-5-5_ship-export-next.md</span></li>
+    </ol>
+  </section>
+
+  <section id="waiting-on-you" aria-labelledby="waiting-heading">
+    <h2 id="waiting-heading">Waiting on You</h2>
+    <ol>
+      <li>decide whether to delete the notes vault <span class="age-badge">28 day(s)</span> <span class="meta">side/zeta-notes - docs/vault.md</span></li>
+      <li>confirm the archive retention policy <span class="age-badge">21 day(s)</span> <span class="meta">work/epsilon-archive - docs/retention.md</span></li>
+      <li>pick a retry backoff ceiling <span class="age-badge">10 day(s)</span> <span class="meta">work/beta-lib - _local/_session-logs/2026-10-28_09-05_sonnet-5_retry-ceiling.md</span></li>
+      <li>approve the new logging format <span class="age-badge">7 day(s)</span> <span class="meta">work/beta-lib - _local/_session-logs/2026-10-23_11-40_sonnet-5_logging-format.md</span></li>
+      <li>confirm the new staging URL <span class="age-badge">4 day(s)</span> <span class="meta">work/gamma-service - _local/_session-logs/2026-10-27_deploy-notes.md</span></li>
+      <li>approve the export schema change <span class="age-badge">0 day(s)</span> <span class="meta">work/alpha-app - _local/_status/2026-10-29_opus-5-5_ship-export-next.md</span></li>
+    </ol>
+  </section>
+
+  <section id="filters" aria-labelledby="filters-heading">
+    <h2 id="filters-heading">Filter repositories</h2>
+    <form class="controls">
+      <label><input type="checkbox" id="filter-active"> Active only</label>
+      <label><input type="checkbox" id="filter-waiting"> Has waiting items</label>
+      <label for="filter-folder">Folder</label>
+      <select id="filter-folder">
+        <option value="">All folders</option>
+        <option value="side">side</option>
+        <option value="work">work</option>
+      </select>
+    </form>
+  </section>
+
+  <section id="repositories" aria-labelledby="repositories-heading">
+    <h2 id="repositories-heading">Repositories</h2>
+    <div id="cards">
+<div class="folder-group" data-folder="work">
+  <h3>work</h3>
+  <div class="card-row">
+<article class="repo-card" data-repo="work/alpha-app" data-activity="active" data-folder="work" data-waiting-count="1">
+  <h4>work/alpha-app <span class="badge badge-active">active</span></h4>
+  <dl>
+    <dt>Commits</dt><dd>7</dd>
+    <dt>Tags</dt><dd>v1.4.0 (2026-10-28)</dd>
+    <dt>Ahead / behind</dt><dd>0 / 0</dd>
+    <dt>Dirty files</dt><dd>0</dd>
+    <dt>Status source</dt><dd>fresh /plab-current-status snapshot</dd>
+  </dl>
+  
+  
+</article>
+<article class="repo-card" data-repo="work/beta-lib" data-activity="active" data-folder="work" data-waiting-count="2">
+  <h4>work/beta-lib <span class="badge badge-active">active</span></h4>
+  <dl>
+    <dt>Commits</dt><dd>4</dd>
+    <dt>Tags</dt><dd>none</dd>
+    <dt>Ahead / behind</dt><dd>0 / 0</dd>
+    <dt>Dirty files</dt><dd>0</dd>
+    <dt>Status source</dt><dd>scouted</dd>
+  </dl>
+  <p class="markers"><span class="marker marker-conflict">1 conflict(s)</span></p>
+  <p class="hint">Run /plab-current-status here.</p>
+</article>
+<article class="repo-card" data-repo="work/gamma-service" data-activity="active" data-folder="work" data-waiting-count="1">
+  <h4>work/gamma-service <span class="badge badge-active">active</span></h4>
+  <dl>
+    <dt>Commits</dt><dd>2</dd>
+    <dt>Tags</dt><dd>none</dd>
+    <dt>Ahead / behind</dt><dd>0 / 0</dd>
+    <dt>Dirty files</dt><dd>0</dd>
+    <dt>Status source</dt><dd>scouted</dd>
+  </dl>
+  <p class="markers"><span class="marker marker-unprotected">unprotected work</span></p>
+  <p class="hint">Run /plab-current-status here.</p>
+</article>
+<article class="repo-card" data-repo="work/delta-tool" data-activity="active" data-folder="work" data-waiting-count="0">
+  <h4>work/delta-tool <span class="badge badge-active">active</span></h4>
+  <dl>
+    <dt>Commits</dt><dd>1</dd>
+    <dt>Tags</dt><dd>none</dd>
+    <dt>Ahead / behind</dt><dd>0 / 0</dd>
+    <dt>Dirty files</dt><dd>0</dd>
+    <dt>Status source</dt><dd>scouted</dd>
+  </dl>
+  
+  <p class="hint">Run /plab-current-status here.</p>
+</article>
+<article class="repo-card" data-repo="work/epsilon-archive" data-activity="dormant" data-folder="work" data-waiting-count="1">
+  <h4>work/epsilon-archive <span class="badge badge-dormant">dormant</span></h4>
+  <dl>
+    <dt>Commits</dt><dd>0</dd>
+    <dt>Tags</dt><dd>none</dd>
+    <dt>Ahead / behind</dt><dd>0 / 0</dd>
+    <dt>Dirty files</dt><dd>0</dd>
+    <dt>Status source</dt><dd>carried since 2026-10-16</dd>
+  </dl>
+  
+  
+</article>
+  </div>
+</div>
+<div class="folder-group" data-folder="side">
+  <h3>side</h3>
+  <div class="card-row">
+<article class="repo-card" data-repo="side/eta-sandbox" data-activity="dormant" data-folder="side" data-waiting-count="0">
+  <h4>side/eta-sandbox <span class="badge badge-dormant">dormant</span></h4>
+  <dl>
+    <dt>Commits</dt><dd>0</dd>
+    <dt>Tags</dt><dd>none</dd>
+    <dt>Ahead / behind</dt><dd>0 / 0</dd>
+    <dt>Dirty files</dt><dd>0</dd>
+    <dt>Status source</dt><dd>sweep-only</dd>
+  </dl>
+  
+  
+</article>
+<article class="repo-card" data-repo="side/theta-experiment" data-activity="dormant" data-folder="side" data-waiting-count="0">
+  <h4>side/theta-experiment <span class="badge badge-dormant">dormant</span></h4>
+  <dl>
+    <dt>Commits</dt><dd>0</dd>
+    <dt>Tags</dt><dd>none</dd>
+    <dt>Ahead / behind</dt><dd>0 / 0</dd>
+    <dt>Dirty files</dt><dd>0</dd>
+    <dt>Status source</dt><dd>sweep-only</dd>
+  </dl>
+  
+  
+</article>
+<article class="repo-card" data-repo="side/theta-mirror" data-activity="dormant" data-folder="side" data-waiting-count="0">
+  <h4>side/theta-mirror <span class="badge badge-dormant">dormant</span></h4>
+  <dl>
+    <dt>Commits</dt><dd>0</dd>
+    <dt>Tags</dt><dd>none</dd>
+    <dt>Ahead / behind</dt><dd>0 / 0</dd>
+    <dt>Dirty files</dt><dd>0</dd>
+    <dt>Status source</dt><dd>sweep-only</dd>
+  </dl>
+  <p class="markers"><span class="marker marker-alias">alias of side/theta-experiment</span></p>
+  
+</article>
+<article class="repo-card" data-repo="side/zeta-notes" data-activity="dormant" data-folder="side" data-waiting-count="1">
+  <h4>side/zeta-notes <span class="badge badge-dormant">dormant</span></h4>
+  <dl>
+    <dt>Commits</dt><dd>0</dd>
+    <dt>Tags</dt><dd>none</dd>
+    <dt>Ahead / behind</dt><dd>no upstream</dd>
+    <dt>Dirty files</dt><dd>0</dd>
+    <dt>Status source</dt><dd>carried since 2026-10-09</dd>
+  </dl>
+  
+  
+</article>
+  </div>
+</div>
+    </div>
+  </section>
+</main>
+
+<script type="application/json" id="pulse-data">{"schema_version": 1, "generated_at": "2026-10-31T00:04:28Z", "mode": "week", "window": {"start": "2026-10-24", "end": "2026-10-30", "prior_start": "2026-10-17", "timezone": "America/Los_Angeles"}, "totals": {"repos": 9, "active": 4, "dormant": 5, "aliases": 1, "commits_focus": 14, "tags_in_window": 1, "waiting_on_you": 6, "snapshots_fresh": 1}, "repos": [{"repo": "work/alpha-app", "path": "/home/owner/src/work/alpha-app", "folder": "work", "alias_of": null, "activity": "active", "status_source": "snapshot", "carried_from": null, "sweep": {"repo": "work/alpha-app", "path": "/home/owner/src/work/alpha-app", "folder": "work", "remote": "git@example.com:owner/alpha-app.git", "branch": "main", "head": "a1b2c3d", "commits_prior": 6, "commits_focus": 7, "active_days_focus": 4, "last_commit_date": "2026-10-29", "tags_in_window": [{"tag": "v1.4.0", "date": "2026-10-28"}], "dirty_files": 0, "staged_files": 0, "untracked_files": 0, "ahead": 0, "behind": 0, "has_upstream": true, "remote_state_as_of": "2026-10-30T12:00:00Z", "unmerged_branches": [], "worktrees": [], "stashes": [], "alias_of": null, "snapshot_utc": "2026-10-30T16:00:00Z"}, "gh": {"visibility": "private", "releases_in_window": [{"tag": "v1.4.0", "date": "2026-10-28"}], "open_prs": 1}, "status": {"summary": null, "whats_next": [{"text": "wire the retry queue into the export job", "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"}, {"text": "add a second export format", "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"}], "waiting_on_you": [{"text": "approve the export schema change", "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md", "first_seen": "2026-10-30", "age_days": 0}], "pending_decisions": [{"id": "D1", "handle": "export schema", "home": "docs/export-schema.md", "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"}], "risks": []}, "conflicts": [], "unprotected_work": [], "current_status_candidate": false, "spend_usd": null}, {"repo": "work/beta-lib", "path": "/home/owner/src/work/beta-lib", "folder": "work", "alias_of": null, "activity": "active", "status_source": "scout", "carried_from": null, "sweep": {"repo": "work/beta-lib", "path": "/home/owner/src/work/beta-lib", "folder": "work", "remote": "git@example.com:owner/beta-lib.git", "branch": "main", "head": "b2c3d4e", "commits_prior": 3, "commits_focus": 4, "active_days_focus": 3, "last_commit_date": "2026-10-29", "tags_in_window": [], "dirty_files": 0, "staged_files": 0, "untracked_files": 0, "ahead": 0, "behind": 0, "has_upstream": true, "remote_state_as_of": "2026-10-30T12:00:00Z", "unmerged_branches": [], "worktrees": [], "stashes": [], "alias_of": null, "snapshot_utc": "2026-10-30T16:00:00Z"}, "gh": {"visibility": "private", "releases_in_window": [], "open_prs": 2}, "status": {"summary": "The retry queue shipped; the logging format change is unreviewed.", "whats_next": [{"text": "add integration tests for the retry queue", "source": "docs/plan.md"}], "waiting_on_you": [{"text": "approve the new logging format", "source": "_local/_session-logs/2026-10-23_11-40_sonnet-5_logging-format.md", "first_seen": "2026-10-23", "age_days": 7}, {"text": "pick a retry backoff ceiling", "source": "_local/_session-logs/2026-10-28_09-05_sonnet-5_retry-ceiling.md", "since": "2026-10-20", "first_seen": "2026-10-20", "age_days": 10}], "pending_decisions": [{"id": "D7", "handle": "logging format", "home": "docs/logging.md", "source": "docs/plan.md"}], "risks": [{"text": "the retry queue has no backpressure test", "source": "docs/plan.md"}]}, "conflicts": [{"fact": "branch feat/retry-queue", "git_says": "merged into main", "doc_says": "blocked on review", "source": "_local/_session-logs/2026-10-28_09-05_sonnet-5_retry-ceiling.md"}], "unprotected_work": [], "current_status_candidate": true, "spend_usd": null}, {"repo": "work/gamma-service", "path": "/home/owner/src/work/gamma-service", "folder": "work", "alias_of": null, "activity": "active", "status_source": "scout", "carried_from": null, "sweep": {"repo": "work/gamma-service", "path": "/home/owner/src/work/gamma-service", "folder": "work", "remote": "git@example.com:owner/gamma-service.git", "branch": "main", "head": "c3d4e5f", "commits_prior": 1, "commits_focus": 2, "active_days_focus": 1, "last_commit_date": "2026-10-29", "tags_in_window": [], "dirty_files": 0, "staged_files": 0, "untracked_files": 0, "ahead": 0, "behind": 0, "has_upstream": true, "remote_state_as_of": "2026-10-30T12:00:00Z", "unmerged_branches": [], "worktrees": [], "stashes": [], "alias_of": null, "snapshot_utc": "2026-10-30T16:00:00Z"}, "gh": {"visibility": "public", "releases_in_window": [], "open_prs": 0}, "status": {"summary": "The deploy pipeline is green; two notes files changed outside the session logs.", "whats_next": [{"text": "move the deploy notes into the session log", "source": "_local/_session-logs/2026-10-27_deploy-notes.md"}], "waiting_on_you": [{"text": "confirm the new staging URL", "source": "_local/_session-logs/2026-10-27_deploy-notes.md", "since": "2026-10-26", "first_seen": "2026-10-26", "age_days": 4}], "pending_decisions": [], "risks": []}, "conflicts": [], "unprotected_work": [{"folder": "_local/notes", "files_changed": 2, "newest_mtime": "2026-10-29T18:40:00Z"}], "current_status_candidate": true, "spend_usd": null}, {"repo": "work/delta-tool", "path": "/home/owner/src/work/delta-tool", "folder": "work", "alias_of": null, "activity": "active", "status_source": "scout", "carried_from": null, "sweep": {"repo": "work/delta-tool", "path": "/home/owner/src/work/delta-tool", "folder": "work", "remote": "git@example.com:owner/delta-tool.git", "branch": "main", "head": "d4e5f6a", "commits_prior": 0, "commits_focus": 1, "active_days_focus": 1, "last_commit_date": "2026-10-29", "tags_in_window": [], "dirty_files": 0, "staged_files": 0, "untracked_files": 0, "ahead": 0, "behind": 0, "has_upstream": true, "remote_state_as_of": "2026-10-30T12:00:00Z", "unmerged_branches": [], "worktrees": [], "stashes": [], "alias_of": null, "snapshot_utc": "2026-10-30T16:00:00Z"}, "gh": null, "status": {"summary": "Small fixes landed; nothing is blocking.", "whats_next": [{"text": "cut a patch release", "source": "_local/_session-logs/2026-10-29_08-15_haiku-4-5_patch-fixes.md"}], "waiting_on_you": [], "pending_decisions": [], "risks": []}, "conflicts": [], "unprotected_work": [], "current_status_candidate": true, "spend_usd": null}, {"repo": "work/epsilon-archive", "path": "/home/owner/src/work/epsilon-archive", "folder": "work", "alias_of": null, "activity": "dormant", "status_source": "carried", "carried_from": "2026-10-16", "sweep": {"repo": "work/epsilon-archive", "path": "/home/owner/src/work/epsilon-archive", "folder": "work", "remote": "git@example.com:owner/epsilon-archive.git", "branch": "main", "head": "e5f6a7b", "commits_prior": 0, "commits_focus": 0, "active_days_focus": 0, "last_commit_date": "2026-10-14", "tags_in_window": [], "dirty_files": 0, "staged_files": 0, "untracked_files": 0, "ahead": 0, "behind": 0, "has_upstream": true, "remote_state_as_of": "2026-10-30T12:00:00Z", "unmerged_branches": [], "worktrees": [], "stashes": [], "alias_of": null, "snapshot_utc": "2026-10-30T16:00:00Z"}, "gh": null, "status": {"summary": "The retention script works; nothing has moved since.", "whats_next": [{"text": "decide the retention window", "source": "docs/retention.md"}], "waiting_on_you": [{"text": "confirm the archive retention policy", "source": "docs/retention.md", "first_seen": "2026-10-09", "age_days": 21}], "pending_decisions": [{"id": "D3", "handle": "retention window", "home": "docs/retention.md", "source": "docs/retention.md"}], "risks": []}, "conflicts": [], "unprotected_work": [], "current_status_candidate": false, "spend_usd": null}, {"repo": "side/zeta-notes", "path": "/home/owner/src/side/zeta-notes", "folder": "side", "alias_of": null, "activity": "dormant", "status_source": "carried", "carried_from": "2026-10-09", "sweep": {"repo": "side/zeta-notes", "path": "/home/owner/src/side/zeta-notes", "folder": "side", "remote": null, "branch": "main", "head": "22a33bb", "commits_prior": 0, "commits_focus": 0, "active_days_focus": 0, "last_commit_date": "2026-09-30", "tags_in_window": [], "dirty_files": 0, "staged_files": 0, "untracked_files": 0, "ahead": 0, "behind": 0, "has_upstream": false, "remote_state_as_of": null, "unmerged_branches": [], "worktrees": [], "stashes": [], "alias_of": null, "snapshot_utc": "2026-10-30T16:00:00Z"}, "gh": null, "status": {"summary": "The notes vault is unchanged.", "whats_next": [], "waiting_on_you": [{"text": "decide whether to delete the notes vault", "source": "docs/vault.md", "first_seen": "2026-10-02", "age_days": 28}], "pending_decisions": [], "risks": []}, "conflicts": [], "unprotected_work": [], "current_status_candidate": false, "spend_usd": null}, {"repo": "side/eta-sandbox", "path": "/home/owner/src/side/eta-sandbox", "folder": "side", "alias_of": null, "activity": "dormant", "status_source": "sweep-only", "carried_from": null, "sweep": {"repo": "side/eta-sandbox", "path": "/home/owner/src/side/eta-sandbox", "folder": "side", "remote": "git@example.com:owner/eta-sandbox.git", "branch": "main", "head": "77c88dd", "commits_prior": 0, "commits_focus": 0, "active_days_focus": 0, "last_commit_date": "2026-08-02", "tags_in_window": [], "dirty_files": 0, "staged_files": 0, "untracked_files": 0, "ahead": 0, "behind": 0, "has_upstream": true, "remote_state_as_of": "2026-10-30T12:00:00Z", "unmerged_branches": [], "worktrees": [], "stashes": [], "alias_of": null, "snapshot_utc": "2026-10-30T16:00:00Z"}, "gh": null, "status": {"summary": null, "whats_next": [], "waiting_on_you": [], "pending_decisions": [], "risks": []}, "conflicts": [], "unprotected_work": [], "current_status_candidate": false, "spend_usd": null}, {"repo": "side/theta-experiment", "path": "/home/owner/src/side/theta-experiment", "folder": "side", "alias_of": null, "activity": "dormant", "status_source": "sweep-only", "carried_from": null, "sweep": {"repo": "side/theta-experiment", "path": "/home/owner/src/side/theta-experiment", "folder": "side", "remote": "git@example.com:owner/theta-experiment.git", "branch": "main", "head": "99e00ff", "commits_prior": 0, "commits_focus": 0, "active_days_focus": 0, "last_commit_date": "2026-07-18", "tags_in_window": [], "dirty_files": 0, "staged_files": 0, "untracked_files": 0, "ahead": 0, "behind": 0, "has_upstream": true, "remote_state_as_of": "2026-10-30T12:00:00Z", "unmerged_branches": [], "worktrees": [], "stashes": [], "alias_of": null, "snapshot_utc": "2026-10-30T16:00:00Z"}, "gh": null, "status": {"summary": null, "whats_next": [], "waiting_on_you": [], "pending_decisions": [], "risks": []}, "conflicts": [], "unprotected_work": [], "current_status_candidate": false, "spend_usd": null}, {"repo": "side/theta-mirror", "path": "/home/owner/src/side/theta-mirror", "folder": "side", "alias_of": "side/theta-experiment", "activity": "dormant", "status_source": "sweep-only", "carried_from": null, "sweep": {"repo": "side/theta-mirror", "path": "/home/owner/src/side/theta-mirror", "folder": "side", "remote": "git@example.com:owner/theta-mirror.git", "branch": "main", "head": "99e00ff", "commits_prior": 0, "commits_focus": 0, "active_days_focus": 0, "last_commit_date": "2026-07-18", "tags_in_window": [], "dirty_files": 0, "staged_files": 0, "untracked_files": 0, "ahead": 0, "behind": 0, "has_upstream": true, "remote_state_as_of": "2026-10-30T12:00:00Z", "unmerged_branches": [], "worktrees": [], "stashes": [], "alias_of": "side/theta-experiment", "snapshot_utc": "2026-10-30T16:00:00Z"}, "gh": null, "status": {"summary": null, "whats_next": [], "waiting_on_you": [], "pending_decisions": [], "risks": []}, "conflicts": [], "unprotected_work": [], "current_status_candidate": false, "spend_usd": null}], "whats_next": [{"rank": 1, "repo": "work/alpha-app", "item": "wire the retry queue into the export job", "who": "owner", "why": "blocks the next release", "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"}, {"rank": 2, "repo": "work/beta-lib", "item": "add integration tests for the retry queue", "who": "agent", "why": "covers a feature that already merged", "source": "docs/plan.md"}, {"rank": 3, "repo": "work/gamma-service", "item": "move the deploy notes into the session log", "who": "owner", "why": "keeps the note out of an unprotected folder", "source": "_local/_session-logs/2026-10-27_deploy-notes.md"}, {"rank": 4, "repo": "work/delta-tool", "item": "cut a patch release", "who": "agent-after-yes", "why": "small fixes are queued and low-risk", "source": "_local/_session-logs/2026-10-29_08-15_haiku-4-5_patch-fixes.md"}, {"rank": 5, "repo": "work/alpha-app", "item": "add a second export format", "who": "owner", "why": "requested twice this month", "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"}], "waiting_on_you": [{"rank": 1, "repo": "side/zeta-notes", "item": "decide whether to delete the notes vault", "age_days": 28, "source": "docs/vault.md"}, {"rank": 2, "repo": "work/epsilon-archive", "item": "confirm the archive retention policy", "age_days": 21, "source": "docs/retention.md"}, {"rank": 3, "repo": "work/beta-lib", "item": "pick a retry backoff ceiling", "age_days": 10, "source": "_local/_session-logs/2026-10-28_09-05_sonnet-5_retry-ceiling.md"}, {"rank": 4, "repo": "work/beta-lib", "item": "approve the new logging format", "age_days": 7, "source": "_local/_session-logs/2026-10-23_11-40_sonnet-5_logging-format.md"}, {"rank": 5, "repo": "work/gamma-service", "item": "confirm the new staging URL", "age_days": 4, "source": "_local/_session-logs/2026-10-27_deploy-notes.md"}, {"rank": 6, "repo": "work/alpha-app", "item": "approve the export schema change", "age_days": 0, "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"}], "agents": [{"stage": "scout", "label": "scout-1", "model": "sonnet", "assigned": 1, "returned": 1, "escalated": false}, {"stage": "scout", "label": "scout-2", "model": "haiku", "assigned": 2, "returned": 2, "escalated": false}], "gaps": [{"source": "gh", "detail": "gh timed out for work/delta-tool"}]}</script>
+<script>
+(function () {
+  "use strict";
+  var dataEl = document.getElementById("pulse-data");
+  var pulse = null;
+  try { pulse = JSON.parse(dataEl.textContent); } catch (e) { pulse = null; }
+
+  var activeOnly = document.getElementById("filter-active");
+  var waitingOnly = document.getElementById("filter-waiting");
+  var folderSelect = document.getElementById("filter-folder");
+  var cards = Array.prototype.slice.call(document.querySelectorAll(".repo-card"));
+  var groups = Array.prototype.slice.call(document.querySelectorAll(".folder-group"));
+
+  function applyFilters() {
+    var wantActive = activeOnly.checked;
+    var wantWaiting = waitingOnly.checked;
+    var wantFolder = folderSelect.value;
+    cards.forEach(function (card) {
+      var isActive = card.getAttribute("data-activity") === "active";
+      var waitingCount = parseInt(card.getAttribute("data-waiting-count") || "0", 10);
+      var folder = card.getAttribute("data-folder") || "";
+      var show = true;
+      if (wantActive && !isActive) { show = false; }
+      if (wantWaiting && waitingCount < 1) { show = false; }
+      if (wantFolder && folder !== wantFolder) { show = false; }
+      card.hidden = !show;
+    });
+    groups.forEach(function (group) {
+      var visible = Array.prototype.slice.call(group.querySelectorAll(".repo-card"))
+        .some(function (card) { return !card.hidden; });
+      group.hidden = !visible;
+    });
+  }
+
+  [activeOnly, waitingOnly, folderSelect].forEach(function (el) {
+    el.addEventListener("change", applyFilters);
+  });
+
+  // Nothing above needs `pulse` to run (every card already carries its own
+  // data-* attributes), but a page with no network access should still be
+  // able to recover its own data on request, so a future control can read
+  // it without another render pass.
+  window.__pulseData = pulse;
+})();
+</script>
+</body>
+</html>

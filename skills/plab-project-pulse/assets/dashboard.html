@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --panel: #ffffff;
+    --text: #1b1d1f;
+    --muted: #5b6168;
+    --border: #d9dcdf;
+    --accent: #2b5fa8;
+    --accent-weak: #e7eefb;
+    --warn-bg: #fdecea;
+    --warn-text: #7a1f14;
+    --ok-bg: #e9f5ea;
+    --ok-text: #1e5c27;
+    --badge-bg: #eef0f2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.45;
+  }
+  a { color: var(--accent); }
+  header {
+    padding: 1.25rem 1.5rem;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 { margin: 0 0 0.15rem; font-size: 1.4rem; }
+  header p.window { margin: 0; color: var(--muted); }
+  ul.totals {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 0.9rem 0 0;
+    padding: 0;
+  }
+  ul.totals li {
+    background: var(--accent-weak);
+    border-radius: 0.4rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.9rem;
+  }
+  ul.totals li strong { display: block; font-size: 1.1rem; }
+  main { padding: 0 1.5rem 2rem; max-width: 70rem; margin: 0 auto; }
+  section { margin-top: 1.75rem; }
+  section h2 { font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.35rem; }
+  ol { padding-left: 1.25rem; }
+  ol li { margin-bottom: 0.4rem; }
+  .meta { color: var(--muted); font-size: 0.85rem; }
+  .age-badge {
+    display: inline-block;
+    background: var(--warn-bg);
+    color: var(--warn-text);
+    border-radius: 0.3rem;
+    padding: 0.05rem 0.4rem;
+    font-size: 0.8rem;
+    margin-left: 0.35rem;
+  }
+  form.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+  }
+  form.controls label { display: inline-flex; align-items: center; gap: 0.35rem; }
+  .folder-group { margin-top: 1rem; }
+  .folder-group h3 { font-size: 1rem; color: var(--muted); margin-bottom: 0.5rem; }
+  #cards { display: flex; flex-direction: column; gap: 1.5rem; }
+  .card-row { display: flex; flex-wrap: wrap; gap: 0.9rem; }
+  .repo-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.85rem 1rem;
+    width: 19rem;
+    flex: 1 1 19rem;
+  }
+  .repo-card h4 { margin: 0 0 0.4rem; font-size: 1rem; display: flex; align-items: center; gap: 0.4rem; }
+  .repo-card dl { margin: 0.4rem 0; display: grid; grid-template-columns: auto 1fr; gap: 0.15rem 0.5rem; font-size: 0.85rem; }
+  .repo-card dt { color: var(--muted); }
+  .repo-card dd { margin: 0; }
+  .badge {
+    display: inline-block;
+    background: var(--badge-bg);
+    border-radius: 0.3rem;
+    padding: 0.05rem 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .badge-active { background: var(--ok-bg); color: var(--ok-text); }
+  .badge-dormant { background: var(--badge-bg); color: var(--muted); }
+  .markers { margin: 0.5rem 0 0; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .marker { font-size: 0.75rem; border-radius: 0.3rem; padding: 0.05rem 0.4rem; }
+  .marker-conflict { background: var(--warn-bg); color: var(--warn-text); }
+  .marker-unprotected { background: var(--warn-bg); color: var(--warn-text); }
+  .marker-alias { background: var(--badge-bg); color: var(--muted); }
+  .hint { margin-top: 0.5rem; font-size: 0.8rem; color: var(--accent); }
+  .empty { color: var(--muted); font-style: italic; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a;
+      --panel: #1e2124;
+      --text: #eceef0;
+      --muted: #a2a8ae;
+      --border: #30343a;
+      --accent-weak: #1d2a3f;
+      --warn-bg: #3a211d;
+      --warn-text: #f3b4a7;
+      --ok-bg: #1d3420;
+      --ok-text: #a8dcae;
+      --badge-bg: #272b2f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15171a;
+    --panel: #1e2124;
+    --text: #eceef0;
+    --muted: #a2a8ae;
+    --border: #30343a;
+    --accent-weak: #1d2a3f;
+    --warn-bg: #3a211d;
+    --warn-text: #f3b4a7;
+    --ok-bg: #1d3420;
+    --ok-text: #a8dcae;
+    --badge-bg: #272b2f;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Project Pulse</h1>
+  <p class="window">__WINDOW_LABEL__</p>
+  <ul class="totals" aria-label="Totals for the window">
+__TOTALS__
+  </ul>
+</header>
+
+<main>
+  <section id="whats-next" aria-labelledby="whats-next-heading">
+    <h2 id="whats-next-heading">What's Next</h2>
+    <ol>
+__WHATS_NEXT__
+    </ol>
+  </section>
+
+  <section id="waiting-on-you" aria-labelledby="waiting-heading">
+    <h2 id="waiting-heading">Waiting on You</h2>
+    <ol>
+__WAITING_ON_YOU__
+    </ol>
+  </section>
+
+  <section id="filters" aria-labelledby="filters-heading">
+    <h2 id="filters-heading">Filter repositories</h2>
+    <form class="controls">
+      <label><input type="checkbox" id="filter-active"> Active only</label>
+      <label><input type="checkbox" id="filter-waiting"> Has waiting items</label>
+      <label for="filter-folder">Folder</label>
+      <select id="filter-folder">
+        <option value="">All folders</option>
+__FOLDER_OPTIONS__
+      </select>
+    </form>
+  </section>
+
+  <section id="repositories" aria-labelledby="repositories-heading">
+    <h2 id="repositories-heading">Repositories</h2>
+    <div id="cards">
+__CARDS__
+    </div>
+  </section>
+</main>
+
+<script type="application/json" id="pulse-data">__PULSE_JSON__</script>
+<script>
+(function () {
+  "use strict";
+  var dataEl = document.getElementById("pulse-data");
+  var pulse = null;
+  try { pulse = JSON.parse(dataEl.textContent); } catch (e) { pulse = null; }
+
+  var activeOnly = document.getElementById("filter-active");
+  var waitingOnly = document.getElementById("filter-waiting");
+  var folderSelect = document.getElementById("filter-folder");
+  var cards = Array.prototype.slice.call(document.querySelectorAll(".repo-card"));
+  var groups = Array.prototype.slice.call(document.querySelectorAll(".folder-group"));
+
+  function applyFilters() {
+    var wantActive = activeOnly.checked;
+    var wantWaiting = waitingOnly.checked;
+    var wantFolder = folderSelect.value;
+    cards.forEach(function (card) {
+      var isActive = card.getAttribute("data-activity") === "active";
+      var waitingCount = parseInt(card.getAttribute("data-waiting-count") || "0", 10);
+      var folder = card.getAttribute("data-folder") || "";
+      var show = true;
+      if (wantActive && !isActive) { show = false; }
+      if (wantWaiting && waitingCount < 1) { show = false; }
+      if (wantFolder && folder !== wantFolder) { show = false; }
+      card.hidden = !show;
+    });
+    groups.forEach(function (group) {
+      var visible = Array.prototype.slice.call(group.querySelectorAll(".repo-card"))
+        .some(function (card) { return !card.hidden; });
+      group.hidden = !visible;
+    });
+  }
+
+  [activeOnly, waitingOnly, folderSelect].forEach(function (el) {
+    el.addEventListener("change", applyFilters);
+  });
+
+  // Nothing above needs `pulse` to run (every card already carries its own
+  // data-* attributes), but a page with no network access should still be
+  // able to recover its own data on request, so a future control can read
+  // it without another render pass.
+  window.__pulseData = pulse;
+})();
+</script>
+</body>
+</html>

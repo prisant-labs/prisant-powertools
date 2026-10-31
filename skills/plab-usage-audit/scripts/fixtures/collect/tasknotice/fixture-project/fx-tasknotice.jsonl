@@ -1,0 +1,4 @@
+{"type": "user", "timestamp": "2026-01-15T16:00:00Z", "message": {"role": "user", "content": "please review the open pull requests"}}
+{"type": "user", "timestamp": "2026-01-15T16:01:00Z", "message": {"role": "user", "content": "<task-notification>agent def456 finished: 3 files changed</task-notification>"}, "turnOrigin": "task_notification", "origin": {"kind": "task-notification", "producer": "session-task"}}
+{"type": "user", "timestamp": "2026-01-15T16:02:00Z", "message": {"role": "user", "content": "<task-notification>agent abc123 finished: nothing to report</task-notification>"}}
+{"type": "assistant", "timestamp": "2026-01-15T16:00:01Z", "requestId": "req_fx_tn_1", "message": {"role": "assistant", "model": "claude-sonnet-5", "id": "msg_fx_tn_1", "content": [{"type": "text", "text": "ok"}], "usage": {"input_tokens": 100, "output_tokens": 20, "cache_read_input_tokens": 0, "cache_creation_input_tokens": 0}}}

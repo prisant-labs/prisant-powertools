@@ -1,0 +1,680 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-31T00:04:28Z",
+  "mode": "week",
+  "window": {
+    "start": "2026-10-24",
+    "end": "2026-10-30",
+    "prior_start": "2026-10-17",
+    "timezone": "America/Los_Angeles"
+  },
+  "totals": {
+    "repos": 9,
+    "active": 4,
+    "dormant": 5,
+    "aliases": 1,
+    "commits_focus": 14,
+    "tags_in_window": 1,
+    "waiting_on_you": 6,
+    "snapshots_fresh": 1
+  },
+  "repos": [
+    {
+      "repo": "work/alpha-app",
+      "path": "/home/owner/src/work/alpha-app",
+      "folder": "work",
+      "alias_of": null,
+      "activity": "active",
+      "status_source": "snapshot",
+      "carried_from": null,
+      "sweep": {
+        "repo": "work/alpha-app",
+        "path": "/home/owner/src/work/alpha-app",
+        "folder": "work",
+        "remote": "git@example.com:owner/alpha-app.git",
+        "branch": "main",
+        "head": "a1b2c3d",
+        "commits_prior": 6,
+        "commits_focus": 7,
+        "active_days_focus": 4,
+        "last_commit_date": "2026-10-29",
+        "tags_in_window": [
+          {
+            "tag": "v1.4.0",
+            "date": "2026-10-28"
+          }
+        ],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": true,
+        "remote_state_as_of": "2026-10-30T12:00:00Z",
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": null,
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": {
+        "visibility": "private",
+        "releases_in_window": [
+          {
+            "tag": "v1.4.0",
+            "date": "2026-10-28"
+          }
+        ],
+        "open_prs": 1
+      },
+      "status": {
+        "summary": null,
+        "whats_next": [
+          {
+            "text": "wire the retry queue into the export job",
+            "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"
+          },
+          {
+            "text": "add a second export format",
+            "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"
+          }
+        ],
+        "waiting_on_you": [
+          {
+            "text": "approve the export schema change",
+            "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md",
+            "first_seen": "2026-10-30",
+            "age_days": 0
+          }
+        ],
+        "pending_decisions": [
+          {
+            "id": "D1",
+            "handle": "export schema",
+            "home": "docs/export-schema.md",
+            "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"
+          }
+        ],
+        "risks": []
+      },
+      "conflicts": [],
+      "unprotected_work": [],
+      "current_status_candidate": false,
+      "spend_usd": null
+    },
+    {
+      "repo": "work/beta-lib",
+      "path": "/home/owner/src/work/beta-lib",
+      "folder": "work",
+      "alias_of": null,
+      "activity": "active",
+      "status_source": "scout",
+      "carried_from": null,
+      "sweep": {
+        "repo": "work/beta-lib",
+        "path": "/home/owner/src/work/beta-lib",
+        "folder": "work",
+        "remote": "git@example.com:owner/beta-lib.git",
+        "branch": "main",
+        "head": "b2c3d4e",
+        "commits_prior": 3,
+        "commits_focus": 4,
+        "active_days_focus": 3,
+        "last_commit_date": "2026-10-29",
+        "tags_in_window": [],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": true,
+        "remote_state_as_of": "2026-10-30T12:00:00Z",
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": null,
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": {
+        "visibility": "private",
+        "releases_in_window": [],
+        "open_prs": 2
+      },
+      "status": {
+        "summary": "The retry queue shipped; the logging format change is unreviewed.",
+        "whats_next": [
+          {
+            "text": "add integration tests for the retry queue",
+            "source": "docs/plan.md"
+          }
+        ],
+        "waiting_on_you": [
+          {
+            "text": "approve the new logging format",
+            "source": "_local/_session-logs/2026-10-23_11-40_sonnet-5_logging-format.md",
+            "first_seen": "2026-10-23",
+            "age_days": 7
+          },
+          {
+            "text": "pick a retry backoff ceiling",
+            "source": "_local/_session-logs/2026-10-28_09-05_sonnet-5_retry-ceiling.md",
+            "since": "2026-10-20",
+            "first_seen": "2026-10-20",
+            "age_days": 10
+          }
+        ],
+        "pending_decisions": [
+          {
+            "id": "D7",
+            "handle": "logging format",
+            "home": "docs/logging.md",
+            "source": "docs/plan.md"
+          }
+        ],
+        "risks": [
+          {
+            "text": "the retry queue has no backpressure test",
+            "source": "docs/plan.md"
+          }
+        ]
+      },
+      "conflicts": [
+        {
+          "fact": "branch feat/retry-queue",
+          "git_says": "merged into main",
+          "doc_says": "blocked on review",
+          "source": "_local/_session-logs/2026-10-28_09-05_sonnet-5_retry-ceiling.md"
+        }
+      ],
+      "unprotected_work": [],
+      "current_status_candidate": true,
+      "spend_usd": null
+    },
+    {
+      "repo": "work/gamma-service",
+      "path": "/home/owner/src/work/gamma-service",
+      "folder": "work",
+      "alias_of": null,
+      "activity": "active",
+      "status_source": "scout",
+      "carried_from": null,
+      "sweep": {
+        "repo": "work/gamma-service",
+        "path": "/home/owner/src/work/gamma-service",
+        "folder": "work",
+        "remote": "git@example.com:owner/gamma-service.git",
+        "branch": "main",
+        "head": "c3d4e5f",
+        "commits_prior": 1,
+        "commits_focus": 2,
+        "active_days_focus": 1,
+        "last_commit_date": "2026-10-29",
+        "tags_in_window": [],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": true,
+        "remote_state_as_of": "2026-10-30T12:00:00Z",
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": null,
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": {
+        "visibility": "public",
+        "releases_in_window": [],
+        "open_prs": 0
+      },
+      "status": {
+        "summary": "The deploy pipeline is green; two notes files changed outside the session logs.",
+        "whats_next": [
+          {
+            "text": "move the deploy notes into the session log",
+            "source": "_local/_session-logs/2026-10-27_deploy-notes.md"
+          }
+        ],
+        "waiting_on_you": [
+          {
+            "text": "confirm the new staging URL",
+            "source": "_local/_session-logs/2026-10-27_deploy-notes.md",
+            "since": "2026-10-26",
+            "first_seen": "2026-10-26",
+            "age_days": 4
+          }
+        ],
+        "pending_decisions": [],
+        "risks": []
+      },
+      "conflicts": [],
+      "unprotected_work": [
+        {
+          "folder": "_local/notes",
+          "files_changed": 2,
+          "newest_mtime": "2026-10-29T18:40:00Z"
+        }
+      ],
+      "current_status_candidate": true,
+      "spend_usd": null
+    },
+    {
+      "repo": "work/delta-tool",
+      "path": "/home/owner/src/work/delta-tool",
+      "folder": "work",
+      "alias_of": null,
+      "activity": "active",
+      "status_source": "scout",
+      "carried_from": null,
+      "sweep": {
+        "repo": "work/delta-tool",
+        "path": "/home/owner/src/work/delta-tool",
+        "folder": "work",
+        "remote": "git@example.com:owner/delta-tool.git",
+        "branch": "main",
+        "head": "d4e5f6a",
+        "commits_prior": 0,
+        "commits_focus": 1,
+        "active_days_focus": 1,
+        "last_commit_date": "2026-10-29",
+        "tags_in_window": [],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": true,
+        "remote_state_as_of": "2026-10-30T12:00:00Z",
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": null,
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": null,
+      "status": {
+        "summary": "Small fixes landed; nothing is blocking.",
+        "whats_next": [
+          {
+            "text": "cut a patch release",
+            "source": "_local/_session-logs/2026-10-29_08-15_haiku-4-5_patch-fixes.md"
+          }
+        ],
+        "waiting_on_you": [],
+        "pending_decisions": [],
+        "risks": []
+      },
+      "conflicts": [],
+      "unprotected_work": [],
+      "current_status_candidate": true,
+      "spend_usd": null
+    },
+    {
+      "repo": "work/epsilon-archive",
+      "path": "/home/owner/src/work/epsilon-archive",
+      "folder": "work",
+      "alias_of": null,
+      "activity": "dormant",
+      "status_source": "carried",
+      "carried_from": "2026-10-16",
+      "sweep": {
+        "repo": "work/epsilon-archive",
+        "path": "/home/owner/src/work/epsilon-archive",
+        "folder": "work",
+        "remote": "git@example.com:owner/epsilon-archive.git",
+        "branch": "main",
+        "head": "e5f6a7b",
+        "commits_prior": 0,
+        "commits_focus": 0,
+        "active_days_focus": 0,
+        "last_commit_date": "2026-10-14",
+        "tags_in_window": [],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": true,
+        "remote_state_as_of": "2026-10-30T12:00:00Z",
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": null,
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": null,
+      "status": {
+        "summary": "The retention script works; nothing has moved since.",
+        "whats_next": [
+          {
+            "text": "decide the retention window",
+            "source": "docs/retention.md"
+          }
+        ],
+        "waiting_on_you": [
+          {
+            "text": "confirm the archive retention policy",
+            "source": "docs/retention.md",
+            "first_seen": "2026-10-09",
+            "age_days": 21
+          }
+        ],
+        "pending_decisions": [
+          {
+            "id": "D3",
+            "handle": "retention window",
+            "home": "docs/retention.md",
+            "source": "docs/retention.md"
+          }
+        ],
+        "risks": []
+      },
+      "conflicts": [],
+      "unprotected_work": [],
+      "current_status_candidate": false,
+      "spend_usd": null
+    },
+    {
+      "repo": "side/zeta-notes",
+      "path": "/home/owner/src/side/zeta-notes",
+      "folder": "side",
+      "alias_of": null,
+      "activity": "dormant",
+      "status_source": "carried",
+      "carried_from": "2026-10-09",
+      "sweep": {
+        "repo": "side/zeta-notes",
+        "path": "/home/owner/src/side/zeta-notes",
+        "folder": "side",
+        "remote": null,
+        "branch": "main",
+        "head": "22a33bb",
+        "commits_prior": 0,
+        "commits_focus": 0,
+        "active_days_focus": 0,
+        "last_commit_date": "2026-09-30",
+        "tags_in_window": [],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": false,
+        "remote_state_as_of": null,
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": null,
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": null,
+      "status": {
+        "summary": "The notes vault is unchanged.",
+        "whats_next": [],
+        "waiting_on_you": [
+          {
+            "text": "decide whether to delete the notes vault",
+            "source": "docs/vault.md",
+            "first_seen": "2026-10-02",
+            "age_days": 28
+          }
+        ],
+        "pending_decisions": [],
+        "risks": []
+      },
+      "conflicts": [],
+      "unprotected_work": [],
+      "current_status_candidate": false,
+      "spend_usd": null
+    },
+    {
+      "repo": "side/eta-sandbox",
+      "path": "/home/owner/src/side/eta-sandbox",
+      "folder": "side",
+      "alias_of": null,
+      "activity": "dormant",
+      "status_source": "sweep-only",
+      "carried_from": null,
+      "sweep": {
+        "repo": "side/eta-sandbox",
+        "path": "/home/owner/src/side/eta-sandbox",
+        "folder": "side",
+        "remote": "git@example.com:owner/eta-sandbox.git",
+        "branch": "main",
+        "head": "77c88dd",
+        "commits_prior": 0,
+        "commits_focus": 0,
+        "active_days_focus": 0,
+        "last_commit_date": "2026-08-02",
+        "tags_in_window": [],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": true,
+        "remote_state_as_of": "2026-10-30T12:00:00Z",
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": null,
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": null,
+      "status": {
+        "summary": null,
+        "whats_next": [],
+        "waiting_on_you": [],
+        "pending_decisions": [],
+        "risks": []
+      },
+      "conflicts": [],
+      "unprotected_work": [],
+      "current_status_candidate": false,
+      "spend_usd": null
+    },
+    {
+      "repo": "side/theta-experiment",
+      "path": "/home/owner/src/side/theta-experiment",
+      "folder": "side",
+      "alias_of": null,
+      "activity": "dormant",
+      "status_source": "sweep-only",
+      "carried_from": null,
+      "sweep": {
+        "repo": "side/theta-experiment",
+        "path": "/home/owner/src/side/theta-experiment",
+        "folder": "side",
+        "remote": "git@example.com:owner/theta-experiment.git",
+        "branch": "main",
+        "head": "99e00ff",
+        "commits_prior": 0,
+        "commits_focus": 0,
+        "active_days_focus": 0,
+        "last_commit_date": "2026-07-18",
+        "tags_in_window": [],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": true,
+        "remote_state_as_of": "2026-10-30T12:00:00Z",
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": null,
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": null,
+      "status": {
+        "summary": null,
+        "whats_next": [],
+        "waiting_on_you": [],
+        "pending_decisions": [],
+        "risks": []
+      },
+      "conflicts": [],
+      "unprotected_work": [],
+      "current_status_candidate": false,
+      "spend_usd": null
+    },
+    {
+      "repo": "side/theta-mirror",
+      "path": "/home/owner/src/side/theta-mirror",
+      "folder": "side",
+      "alias_of": "side/theta-experiment",
+      "activity": "dormant",
+      "status_source": "sweep-only",
+      "carried_from": null,
+      "sweep": {
+        "repo": "side/theta-mirror",
+        "path": "/home/owner/src/side/theta-mirror",
+        "folder": "side",
+        "remote": "git@example.com:owner/theta-mirror.git",
+        "branch": "main",
+        "head": "99e00ff",
+        "commits_prior": 0,
+        "commits_focus": 0,
+        "active_days_focus": 0,
+        "last_commit_date": "2026-07-18",
+        "tags_in_window": [],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": true,
+        "remote_state_as_of": "2026-10-30T12:00:00Z",
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": "side/theta-experiment",
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": null,
+      "status": {
+        "summary": null,
+        "whats_next": [],
+        "waiting_on_you": [],
+        "pending_decisions": [],
+        "risks": []
+      },
+      "conflicts": [],
+      "unprotected_work": [],
+      "current_status_candidate": false,
+      "spend_usd": null
+    }
+  ],
+  "whats_next": [
+    {
+      "rank": 1,
+      "repo": "work/alpha-app",
+      "item": "wire the retry queue into the export job",
+      "who": "owner",
+      "why": "blocks the next release",
+      "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"
+    },
+    {
+      "rank": 2,
+      "repo": "work/beta-lib",
+      "item": "add integration tests for the retry queue",
+      "who": "agent",
+      "why": "covers a feature that already merged",
+      "source": "docs/plan.md"
+    },
+    {
+      "rank": 3,
+      "repo": "work/gamma-service",
+      "item": "move the deploy notes into the session log",
+      "who": "owner",
+      "why": "keeps the note out of an unprotected folder",
+      "source": "_local/_session-logs/2026-10-27_deploy-notes.md"
+    },
+    {
+      "rank": 4,
+      "repo": "work/delta-tool",
+      "item": "cut a patch release",
+      "who": "agent-after-yes",
+      "why": "small fixes are queued and low-risk",
+      "source": "_local/_session-logs/2026-10-29_08-15_haiku-4-5_patch-fixes.md"
+    },
+    {
+      "rank": 5,
+      "repo": "work/alpha-app",
+      "item": "add a second export format",
+      "who": "owner",
+      "why": "requested twice this month",
+      "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"
+    }
+  ],
+  "waiting_on_you": [
+    {
+      "rank": 1,
+      "repo": "side/zeta-notes",
+      "item": "decide whether to delete the notes vault",
+      "age_days": 28,
+      "source": "docs/vault.md"
+    },
+    {
+      "rank": 2,
+      "repo": "work/epsilon-archive",
+      "item": "confirm the archive retention policy",
+      "age_days": 21,
+      "source": "docs/retention.md"
+    },
+    {
+      "rank": 3,
+      "repo": "work/beta-lib",
+      "item": "pick a retry backoff ceiling",
+      "age_days": 10,
+      "source": "_local/_session-logs/2026-10-28_09-05_sonnet-5_retry-ceiling.md"
+    },
+    {
+      "rank": 4,
+      "repo": "work/beta-lib",
+      "item": "approve the new logging format",
+      "age_days": 7,
+      "source": "_local/_session-logs/2026-10-23_11-40_sonnet-5_logging-format.md"
+    },
+    {
+      "rank": 5,
+      "repo": "work/gamma-service",
+      "item": "confirm the new staging URL",
+      "age_days": 4,
+      "source": "_local/_session-logs/2026-10-27_deploy-notes.md"
+    },
+    {
+      "rank": 6,
+      "repo": "work/alpha-app",
+      "item": "approve the export schema change",
+      "age_days": 0,
+      "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"
+    }
+  ],
+  "agents": [
+    {
+      "stage": "scout",
+      "label": "scout-1",
+      "model": "sonnet",
+      "assigned": 1,
+      "returned": 1,
+      "escalated": false
+    },
+    {
+      "stage": "scout",
+      "label": "scout-2",
+      "model": "haiku",
+      "assigned": 2,
+      "returned": 2,
+      "escalated": false
+    }
+  ],
+  "gaps": [
+    {
+      "source": "gh",
+      "detail": "gh timed out for work/delta-tool"
+    }
+  ]
+}

@@ -1,0 +1,530 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-30T16:00:00Z",
+  "mode": "week",
+  "window": {
+    "start": "2026-10-24",
+    "end": "2026-10-30",
+    "prior_start": "2026-10-17",
+    "timezone": "America/Los_Angeles"
+  },
+  "roots": [
+    "/home/owner/src/work",
+    "/home/owner/src/side"
+  ],
+  "repos": [
+    {
+      "repo": "work/alpha-app",
+      "path": "/home/owner/src/work/alpha-app",
+      "folder": "work",
+      "alias_of": null,
+      "sweep": {
+        "repo": "work/alpha-app",
+        "path": "/home/owner/src/work/alpha-app",
+        "folder": "work",
+        "remote": "git@example.com:owner/alpha-app.git",
+        "branch": "main",
+        "head": "a1b2c3d",
+        "commits_prior": 6,
+        "commits_focus": 7,
+        "active_days_focus": 4,
+        "last_commit_date": "2026-10-29",
+        "tags_in_window": [
+          {
+            "tag": "v1.4.0",
+            "date": "2026-10-28"
+          }
+        ],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": true,
+        "remote_state_as_of": "2026-10-30T12:00:00Z",
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": null,
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": {
+        "visibility": "private",
+        "releases_in_window": [
+          {
+            "tag": "v1.4.0",
+            "date": "2026-10-28"
+          }
+        ],
+        "open_prs": 1
+      },
+      "activity": "active",
+      "logs_in_window": [
+        "/home/owner/src/work/alpha-app/_local/_session-logs/2026-10-29_14-02_opus-5-5_ship-export.md"
+      ],
+      "snapshot": {
+        "path": "/home/owner/src/work/alpha-app/_local/_status/2026-10-29_opus-5-5_ship-export-next.md",
+        "date": "2026-10-29",
+        "head": "a1b2c3d",
+        "fresh": true,
+        "waiting_on_you": [
+          {
+            "text": "approve the export schema change",
+            "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"
+          }
+        ],
+        "whats_next": [
+          {
+            "text": "wire the retry queue into the export job",
+            "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"
+          },
+          {
+            "text": "add a second export format",
+            "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"
+          }
+        ],
+        "pending_decisions": [
+          {
+            "id": "D1",
+            "handle": "export schema",
+            "home": "docs/export-schema.md",
+            "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md"
+          }
+        ],
+        "waiting_count": 1,
+        "next_count": 2,
+        "pending_decisions_count": 1
+      },
+      "status_source": "snapshot",
+      "carried": null,
+      "unprotected_work": [],
+      "to_scout": false,
+      "current_status_candidate": false
+    },
+    {
+      "repo": "work/beta-lib",
+      "path": "/home/owner/src/work/beta-lib",
+      "folder": "work",
+      "alias_of": null,
+      "sweep": {
+        "repo": "work/beta-lib",
+        "path": "/home/owner/src/work/beta-lib",
+        "folder": "work",
+        "remote": "git@example.com:owner/beta-lib.git",
+        "branch": "main",
+        "head": "b2c3d4e",
+        "commits_prior": 3,
+        "commits_focus": 4,
+        "active_days_focus": 3,
+        "last_commit_date": "2026-10-29",
+        "tags_in_window": [],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": true,
+        "remote_state_as_of": "2026-10-30T12:00:00Z",
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": null,
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": {
+        "visibility": "private",
+        "releases_in_window": [],
+        "open_prs": 2
+      },
+      "activity": "active",
+      "logs_in_window": [
+        "/home/owner/src/work/beta-lib/_local/_session-logs/2026-10-23_11-40_sonnet-5_logging-format.md",
+        "/home/owner/src/work/beta-lib/_local/_session-logs/2026-10-28_09-05_sonnet-5_retry-ceiling.md"
+      ],
+      "snapshot": null,
+      "status_source": "scout",
+      "carried": null,
+      "unprotected_work": [],
+      "to_scout": true,
+      "current_status_candidate": true
+    },
+    {
+      "repo": "work/gamma-service",
+      "path": "/home/owner/src/work/gamma-service",
+      "folder": "work",
+      "alias_of": null,
+      "sweep": {
+        "repo": "work/gamma-service",
+        "path": "/home/owner/src/work/gamma-service",
+        "folder": "work",
+        "remote": "git@example.com:owner/gamma-service.git",
+        "branch": "main",
+        "head": "c3d4e5f",
+        "commits_prior": 1,
+        "commits_focus": 2,
+        "active_days_focus": 1,
+        "last_commit_date": "2026-10-29",
+        "tags_in_window": [],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": true,
+        "remote_state_as_of": "2026-10-30T12:00:00Z",
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": null,
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": {
+        "visibility": "public",
+        "releases_in_window": [],
+        "open_prs": 0
+      },
+      "activity": "active",
+      "logs_in_window": [
+        "/home/owner/src/work/gamma-service/_local/_session-logs/2026-10-27_deploy-notes.md"
+      ],
+      "snapshot": null,
+      "status_source": "scout",
+      "carried": null,
+      "unprotected_work": [
+        {
+          "folder": "_local/notes",
+          "files_changed": 2,
+          "newest_mtime": "2026-10-29T18:40:00Z"
+        }
+      ],
+      "to_scout": true,
+      "current_status_candidate": true
+    },
+    {
+      "repo": "work/delta-tool",
+      "path": "/home/owner/src/work/delta-tool",
+      "folder": "work",
+      "alias_of": null,
+      "sweep": {
+        "repo": "work/delta-tool",
+        "path": "/home/owner/src/work/delta-tool",
+        "folder": "work",
+        "remote": "git@example.com:owner/delta-tool.git",
+        "branch": "main",
+        "head": "d4e5f6a",
+        "commits_prior": 0,
+        "commits_focus": 1,
+        "active_days_focus": 1,
+        "last_commit_date": "2026-10-29",
+        "tags_in_window": [],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": true,
+        "remote_state_as_of": "2026-10-30T12:00:00Z",
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": null,
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": null,
+      "activity": "active",
+      "logs_in_window": [
+        "/home/owner/src/work/delta-tool/_local/_session-logs/2026-10-29_08-15_haiku-4-5_patch-fixes.md"
+      ],
+      "snapshot": null,
+      "status_source": "scout",
+      "carried": null,
+      "unprotected_work": [],
+      "to_scout": true,
+      "current_status_candidate": true
+    },
+    {
+      "repo": "work/epsilon-archive",
+      "path": "/home/owner/src/work/epsilon-archive",
+      "folder": "work",
+      "alias_of": null,
+      "sweep": {
+        "repo": "work/epsilon-archive",
+        "path": "/home/owner/src/work/epsilon-archive",
+        "folder": "work",
+        "remote": "git@example.com:owner/epsilon-archive.git",
+        "branch": "main",
+        "head": "e5f6a7b",
+        "commits_prior": 0,
+        "commits_focus": 0,
+        "active_days_focus": 0,
+        "last_commit_date": "2026-10-14",
+        "tags_in_window": [],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": true,
+        "remote_state_as_of": "2026-10-30T12:00:00Z",
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": null,
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": null,
+      "activity": "dormant",
+      "logs_in_window": [],
+      "snapshot": null,
+      "status_source": "carried",
+      "carried": {
+        "summary": "The retention script works; nothing has moved since.",
+        "whats_next": [
+          {
+            "text": "decide the retention window",
+            "source": "docs/retention.md"
+          }
+        ],
+        "waiting_on_you": [
+          {
+            "text": "confirm the archive retention policy",
+            "source": "docs/retention.md"
+          }
+        ],
+        "pending_decisions": [
+          {
+            "id": "D3",
+            "handle": "retention window",
+            "home": "docs/retention.md",
+            "source": "docs/retention.md"
+          }
+        ],
+        "risks": [],
+        "carried_from": "2026-10-16"
+      },
+      "unprotected_work": [],
+      "to_scout": false,
+      "current_status_candidate": false
+    },
+    {
+      "repo": "side/zeta-notes",
+      "path": "/home/owner/src/side/zeta-notes",
+      "folder": "side",
+      "alias_of": null,
+      "sweep": {
+        "repo": "side/zeta-notes",
+        "path": "/home/owner/src/side/zeta-notes",
+        "folder": "side",
+        "remote": null,
+        "branch": "main",
+        "head": "22a33bb",
+        "commits_prior": 0,
+        "commits_focus": 0,
+        "active_days_focus": 0,
+        "last_commit_date": "2026-09-30",
+        "tags_in_window": [],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": false,
+        "remote_state_as_of": null,
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": null,
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": null,
+      "activity": "dormant",
+      "logs_in_window": [],
+      "snapshot": null,
+      "status_source": "carried",
+      "carried": {
+        "summary": "The notes vault is unchanged.",
+        "whats_next": [],
+        "waiting_on_you": [
+          {
+            "text": "decide whether to delete the notes vault",
+            "source": "docs/vault.md"
+          }
+        ],
+        "pending_decisions": [],
+        "risks": [],
+        "carried_from": "2026-10-09"
+      },
+      "unprotected_work": [],
+      "to_scout": false,
+      "current_status_candidate": false
+    },
+    {
+      "repo": "side/eta-sandbox",
+      "path": "/home/owner/src/side/eta-sandbox",
+      "folder": "side",
+      "alias_of": null,
+      "sweep": {
+        "repo": "side/eta-sandbox",
+        "path": "/home/owner/src/side/eta-sandbox",
+        "folder": "side",
+        "remote": "git@example.com:owner/eta-sandbox.git",
+        "branch": "main",
+        "head": "77c88dd",
+        "commits_prior": 0,
+        "commits_focus": 0,
+        "active_days_focus": 0,
+        "last_commit_date": "2026-08-02",
+        "tags_in_window": [],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": true,
+        "remote_state_as_of": "2026-10-30T12:00:00Z",
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": null,
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": null,
+      "activity": "dormant",
+      "logs_in_window": [],
+      "snapshot": null,
+      "status_source": "sweep-only",
+      "carried": null,
+      "unprotected_work": [],
+      "to_scout": false,
+      "current_status_candidate": false
+    },
+    {
+      "repo": "side/theta-experiment",
+      "path": "/home/owner/src/side/theta-experiment",
+      "folder": "side",
+      "alias_of": null,
+      "sweep": {
+        "repo": "side/theta-experiment",
+        "path": "/home/owner/src/side/theta-experiment",
+        "folder": "side",
+        "remote": "git@example.com:owner/theta-experiment.git",
+        "branch": "main",
+        "head": "99e00ff",
+        "commits_prior": 0,
+        "commits_focus": 0,
+        "active_days_focus": 0,
+        "last_commit_date": "2026-07-18",
+        "tags_in_window": [],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": true,
+        "remote_state_as_of": "2026-10-30T12:00:00Z",
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": null,
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": null,
+      "activity": "dormant",
+      "logs_in_window": [],
+      "snapshot": null,
+      "status_source": "sweep-only",
+      "carried": null,
+      "unprotected_work": [],
+      "to_scout": false,
+      "current_status_candidate": false
+    },
+    {
+      "repo": "side/theta-mirror",
+      "path": "/home/owner/src/side/theta-mirror",
+      "folder": "side",
+      "alias_of": "side/theta-experiment",
+      "sweep": {
+        "repo": "side/theta-mirror",
+        "path": "/home/owner/src/side/theta-mirror",
+        "folder": "side",
+        "remote": "git@example.com:owner/theta-mirror.git",
+        "branch": "main",
+        "head": "99e00ff",
+        "commits_prior": 0,
+        "commits_focus": 0,
+        "active_days_focus": 0,
+        "last_commit_date": "2026-07-18",
+        "tags_in_window": [],
+        "dirty_files": 0,
+        "staged_files": 0,
+        "untracked_files": 0,
+        "ahead": 0,
+        "behind": 0,
+        "has_upstream": true,
+        "remote_state_as_of": "2026-10-30T12:00:00Z",
+        "unmerged_branches": [],
+        "worktrees": [],
+        "stashes": [],
+        "alias_of": "side/theta-experiment",
+        "snapshot_utc": "2026-10-30T16:00:00Z"
+      },
+      "gh": null,
+      "activity": "dormant",
+      "logs_in_window": [],
+      "snapshot": null,
+      "status_source": "sweep-only",
+      "carried": null,
+      "unprotected_work": [],
+      "to_scout": false,
+      "current_status_candidate": false
+    }
+  ],
+  "logs": [
+    {
+      "file": "/home/owner/src/work/alpha-app/_local/_session-logs/2026-10-29_14-02_opus-5-5_ship-export.md",
+      "repo": "work/alpha-app",
+      "date": "2026-10-29",
+      "time": "14-02",
+      "nonstandard_name": false
+    },
+    {
+      "file": "/home/owner/src/work/beta-lib/_local/_session-logs/2026-10-23_11-40_sonnet-5_logging-format.md",
+      "repo": "work/beta-lib",
+      "date": "2026-10-23",
+      "time": "11-40",
+      "nonstandard_name": false
+    },
+    {
+      "file": "/home/owner/src/work/beta-lib/_local/_session-logs/2026-10-28_09-05_sonnet-5_retry-ceiling.md",
+      "repo": "work/beta-lib",
+      "date": "2026-10-28",
+      "time": "09-05",
+      "nonstandard_name": false
+    },
+    {
+      "file": "/home/owner/src/work/gamma-service/_local/_session-logs/2026-10-27_deploy-notes.md",
+      "repo": "work/gamma-service",
+      "date": "2026-10-27",
+      "time": null,
+      "nonstandard_name": true
+    },
+    {
+      "file": "/home/owner/src/work/delta-tool/_local/_session-logs/2026-10-29_08-15_haiku-4-5_patch-fixes.md",
+      "repo": "work/delta-tool",
+      "date": "2026-10-29",
+      "time": "08-15",
+      "nonstandard_name": false
+    }
+  ],
+  "gaps": [
+    {
+      "source": "gh",
+      "detail": "gh timed out for work/delta-tool"
+    }
+  ],
+  "timings": {
+    "discover_seconds": 9.4,
+    "sweep_seconds": 21.7
+  },
+  "max_depth": 2
+}

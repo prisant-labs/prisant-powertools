@@ -208,6 +208,62 @@ jobs:
         if: always()
         run: python3 skills/plab-current-status/scripts/test-derive-status-facts.py
 
+      # plab-usage-audit (UA-01). The bundle checker's self-test proves each of
+      # its nine rules fails on a mutation of the committed sample, so exit 2
+      # means a rule has gone blind; never read it as clean. The collector's
+      # tests run on synthetic transcripts only, and the facts script's tests
+      # point every credential path at a temporary fixture.
+      - name: The usage-audit bundle checker, against its committed sample
+        if: always()
+        run: python3 skills/plab-usage-audit/scripts/bundle-check.py --self-test
+
+      - name: The usage-audit collector, against its fixture transcripts
+        if: always()
+        run: python3 skills/plab-usage-audit/scripts/test-collect.py
+
+      - name: The usage-audit ledger
+        if: always()
+        run: python3 skills/plab-usage-audit/scripts/test-ledger.py
+
+      - name: The usage-audit facts script, with fixture credential files
+        if: always()
+        run: python3 skills/plab-usage-audit/scripts/test-derive-audit-facts.py
+
+      - name: The usage-audit scrub and placement check
+        if: always()
+        run: python3 skills/plab-usage-audit/scripts/test-scrub.py
+
+      - name: The usage-audit shipped-work sweep
+        if: always()
+        run: python3 skills/plab-usage-audit/scripts/test-shipped.py
+
+      - name: The usage-audit agent workflow names a model and the credential rule
+        if: always()
+        run: python3 skills/plab-usage-audit/scripts/test-workflow-reference.py
+
+      # plab-project-pulse (PP-01). Same reasoning: the checker's self-test
+      # proves each of its ten rules can fail. The discovery and facts tests
+      # build throwaway git repositories and never fetch or call gh.
+      - name: The pulse checker, against its committed sample
+        if: always()
+        run: python3 skills/plab-project-pulse/scripts/pulse-check.py --self-test
+
+      - name: The pulse discovery and sweep, against fixture repositories
+        if: always()
+        run: python3 skills/plab-project-pulse/scripts/test-discover-sweep.py
+
+      - name: The pulse facts script, against fixture repositories
+        if: always()
+        run: python3 skills/plab-project-pulse/scripts/test-derive-pulse-facts.py
+
+      - name: The pulse assembly and dashboard
+        if: always()
+        run: python3 skills/plab-project-pulse/scripts/test-build-render.py
+
+      - name: The pulse agent workflow names a model and the credential rule
+        if: always()
+        run: python3 skills/plab-project-pulse/scripts/test-workflow-reference.py
+
       # plab-ai-review's dispatch helper (A-02). This is the one script in this
       # job that talks to a subprocess at all, but that subprocess is a fake
       # codex-companion.mjs the test writes into a tempdir itself - never the

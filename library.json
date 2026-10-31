@@ -2,7 +2,7 @@
   "name": "prisant-powertools",
   "displayName": "Prisant Power Tools",
   "version": "0.10.1",
-  "description": "General-purpose agent skills for the work around the work: session continuity, structured analysis, guide authoring, cross-LLM peer review, repository auditing, resolving open questions and decisions, status snapshots, and the specification and release-planning documents that sit between an idea and a tag. Use when wrapping or resuming a coding session, turning raw thinking into a decision-ready brief, generating a guide bundle, getting a second-model review of a document, auditing a repository, walking through the questions and decisions a session left open, writing a status snapshot of a repository, writing a feature spec, managing a version-scoped release plan, or scaffolding agent infrastructure into a repository.",
+  "description": "General-purpose agent skills for the work around the work: session continuity, structured analysis, guide authoring, cross-LLM peer review, repository auditing, resolving open questions and decisions, status snapshots, weekly usage audits and a cross-repository pulse, and the specification and release-planning documents that sit between an idea and a tag. Use when wrapping or resuming a coding session, turning raw thinking into a decision-ready brief, generating a guide bundle, getting a second-model review of a document, auditing a repository, walking through the questions and decisions a session left open, writing a status snapshot of a repository, auditing a week of one's own Claude Code usage, rolling every repository up into one weekly pulse, writing a feature spec, managing a version-scoped release plan, or scaffolding agent infrastructure into a repository.",
   "standard": "0.14",
   "tier": "universal",
   "prefix": "plab-",
@@ -100,6 +100,20 @@
       {
         "name": "plab-current-status",
         "path": "skills/plab-current-status/SKILL.md",
+        "version": "1.0.0",
+        "tier": "universal",
+        "status": "active"
+      },
+      {
+        "name": "plab-usage-audit",
+        "path": "skills/plab-usage-audit/SKILL.md",
+        "version": "1.0.0",
+        "tier": "universal",
+        "status": "active"
+      },
+      {
+        "name": "plab-project-pulse",
+        "path": "skills/plab-project-pulse/SKILL.md",
         "version": "1.0.0",
         "tier": "universal",
         "status": "active"

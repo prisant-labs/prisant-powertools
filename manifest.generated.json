@@ -35,6 +35,11 @@
       "description": "Initialize agentic development infrastructure in a project. Creates standardized folders and seed files: AGENTS.md (open standard agent instructions), CLAUDE.md (Claude-specific overlay), session logs written to gitignored _local/_session-logs/, and MADR v4 decision records. Three profiles: minimal (experiments), standard (working projects), public (open source). Non-destructive and idempotent - safe to run against an existing repository. Use when setting up a new project for AI-assisted development, or when adding agent support to an existing repo. Explicit invocation only: run /plab-init-project; it does not fire on its own. Pairs with /plab-wrap-session and /plab-continue-session, which write and read the session logs it scaffolds."
     },
     {
+      "name": "plab-project-pulse",
+      "path": "skills/plab-project-pulse/SKILL.md",
+      "description": "Roll up every repository under the owner's configured roots into one private weekly pulse: what shipped, what each project says is next, and what waits on the owner, ranked across projects with the age of each waiting item. Reads fresh /plab-current-status snapshots instead of re-scouting, carries dormant repositories forward, and writes pulse.json, a readout and a self-contained dashboard. For one repository in depth use /plab-current-status. Use when the owner runs /plab-project-pulse for the weekly review; it never fires on its own."
+    },
+    {
       "name": "plab-release-plan",
       "path": "skills/plab-release-plan/SKILL.md",
       "description": "Create and manage a version-scoped release plan folder: scaffold it, promote or demote whole effort folders between _unassigned/ and a release, regenerate the aggregation table from disk, and report whether a version can be tagged yet against hygiene gates and a doc-update checklist. Use when scoping a release, moving efforts in or out of one, or checking release readiness: 'create the release plan', 'promote these efforts into v0.5.0', 'can we tag yet', 'check release readiness'. Do NOT fire on general planning talk, on requests for release notes or a changelog, or on questions about what already shipped. Refuses to invent or modify acceptance criteria - those live in specs written by /plab-spec; the release plan only aggregates. Explicit invocation only: run /plab-release-plan; it does not fire on its own."
@@ -53,6 +58,11 @@
       "name": "plab-strategy-brief",
       "path": "skills/plab-strategy-brief/SKILL.md",
       "description": "Transform messy thinking into structured, decision-ready analysis documents. Use when a user provides raw, unstructured thoughts and wants them organized, expanded, and turned into an actionable artifact. Triggers on: 'help me think through', 'brain dump', 'summarize and expand', 'make sense of this', requests combining pros/cons with approaches and recommendations, or any stream-of-consciousness input needing structure. Also triggers on 'strategy primer', 'structured analysis', or '80/20 analysis'. Do NOT use for simple summarization of existing structured documents, editing polished prose, or pure research queries with no raw thinking provided."
+    },
+    {
+      "name": "plab-usage-audit",
+      "path": "skills/plab-usage-audit/SKILL.md",
+      "description": "Run the owner's weekly audit of their own Claude Code usage and write a dated, scrubbed bundle: spend by lane and by the model that actually ran, routing against the owner's rules, a reconciliation of last week, a scorecard of past recommendations, configuration drift, lessons from session logs, and ranked recommendations, each fact-checked by a verifier. Goes beyond /usage, /insights and session-report by keeping weekly history and checking whether past changes worked. Use when the owner runs /plab-usage-audit for the weekly review; it never fires on its own."
     },
     {
       "name": "plab-wrap-session",
