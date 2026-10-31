@@ -2,7 +2,7 @@
 
 The current configuration of every skill in `prisant-powertools`, as declared in the repository. One row per skill, plus the setup each one needs and where its output lands.
 
-**Plugin version:** 0.10.1 **Skills:** 11 (7 auto-discoverable, 4 explicit-invocation only) **Verified against:** `library.json`, `manifest.generated.json`, and each `skills/*/SKILL.md` **As of:** 2026-10-30
+**Plugin version:** 0.10.1 **Skills:** 13 (7 auto-discoverable, 6 explicit-invocation only) **Verified against:** `library.json`, `manifest.generated.json`, and each `skills/*/SKILL.md` **As of:** 2026-10-30
 
 > This file describes what the repository declares, not what is installed on any given machine. To check a local install, read `~/.claude/plugins/installed_plugins.json`.
 
@@ -15,6 +15,8 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 | `plab-ai-review` | 1.3.0 | Auto + explicit | `<doc.md> [--reviewer codex\|gpt\|gemini] [--dispatch] [--respond] [--collect] [--close]` | Beside the source doc, plus `_archive/` on `--close` |
 | `plab-audit` | 1.1.0 | **Explicit only** | `<path> [--appraise\|--audit\|--roadmap] [--type ...] [--lens=docs] [--out <path>]` | `_output/plab-audit/<repo>_<YYYY-MM-DD>/` |
 | `plab-current-status` | 1.0.0 | **Explicit only** | `[<byline>] [--no-fetch]` | `_local/_status/YYYY-MM-DD_<model>_<byline>.md` (gitignored) |
+| `plab-project-pulse` | 1.0.0 | **Explicit only** | `[--quick\|--week] [--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD/`, private, outside any repository or ignored by it |
+| `plab-usage-audit` | 1.0.0 | **Explicit only** | `[--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD_claude-usage/`; a tracked folder only when the settings allow it |
 | `plab-continue-session` | 1.6.0 | Auto + explicit | `[--log <path>]` | Nothing. Displays context only |
 | `plab-guide` | 2.2.2 | Auto + explicit | `<topic-or-repo-url> [--type repo-url\|tool\|concept] [--out <dir>] [--force]` | `_output/plab-guide/` |
 | `plab-init-project` | 1.3.0 | **Explicit only** | `[--profile minimal\|standard\|public] [--type ...] [--agents ...] [--dry-run]` | The target repository root |
@@ -24,7 +26,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 | `plab-strategy-brief` | 1.1.1 | Auto + explicit | `[paste raw thinking]` | `_output/plab-strategy-brief/` |
 | `plab-wrap-session` | 1.8.1 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
 
-**Explicit only** means the skill carries `disable-model-invocation: true`. It never fires on its own and is absent from the auto-loaded skill listing. It runs when you type its name and only then. **`plab-init-project`, `plab-audit`, `plab-release-plan` and `plab-current-status` carry it now.** `plab-release-plan` carried it through 1.3.0, was auto-discoverable from 1.4.0 to 1.5.1, and carries it again from 1.6.0, provisionally. `plab-spec` carried it through 1.2.1 and is now auto-discoverable, using an explicit do-NOT-fire clause in its description instead of the binary flag.
+**Explicit only** means the skill carries `disable-model-invocation: true`. It never fires on its own and is absent from the auto-loaded skill listing. It runs when you type its name and only then. **`plab-init-project`, `plab-audit`, `plab-release-plan`, `plab-current-status`, `plab-usage-audit` and `plab-project-pulse` carry it now.** `plab-release-plan` carried it through 1.3.0, was auto-discoverable from 1.4.0 to 1.5.1, and carries it again from 1.6.0, provisionally. `plab-spec` carried it through 1.2.1 and is now auto-discoverable, using an explicit do-NOT-fire clause in its description instead of the binary flag.
 
 ---
 
@@ -210,6 +212,40 @@ Writes a dated, ranked status snapshot of the current repository.
 | References | 1 file |
 
 **A ranked list, not an inventory.** Each ranked section shows at most ten items, each with a `Why here:` clause, and names where the rest are. The frontmatter carries the counts, the level and the previous snapshot, so another tool can read the file without parsing its prose.
+
+---
+
+### `plab-usage-audit` 1.0.0, explicit only
+
+Audits a week of the owner's own Claude Code usage and writes a scrubbed bundle.
+
+| Property | Value |
+|---|---|
+| Invocation | `disable-model-invocation: true`, from 1.0.0 |
+| Output | `<output_dir>/YYYY-MM-DD_claude-usage/`: README, `01` to `05`, `data/`; new ledger rows; an updated state file |
+| Scripts | `collect.py`, `ledger.py`, `derive-audit-facts.py`, `sweep.py`, `scrub.py`, `check-placement.py`, `bundle-check.py` (its own output gate, self-testing against the committed sample), with tests for each |
+| Agents | At most eight plus a verifier, each with an explicit model; none may open a credential file |
+| Setup required | Python 3.11+, and a settings file at `.claude/plab-usage-audit.local.md` |
+| References | 8 files |
+
+**What it adds over the native tools.** `/usage`, `/insights` and `session-report` each describe the present. This skill keeps weekly history, prices responses by the model that actually ran, reconciles last week, and scores whether past recommendations happened; `references/positioning.md` has the comparison.
+
+---
+
+### `plab-project-pulse` 1.0.0, explicit only
+
+Rolls every repository under the configured roots into one private weekly pulse.
+
+| Property | Value |
+|---|---|
+| Invocation | `disable-model-invocation: true`, from 1.0.0 |
+| Modes | `--week` (default; log readers and scouts for active repositories without a fresh snapshot), `--quick` (no agents) |
+| Output | `<output_dir>/YYYY-MM-DD/`: `pulse-facts.json`, `pulse.json`, `coverage.md`, `readout.md`, `dashboard.html`, and the scout and curation files; an updated state file |
+| Scripts | `discover.py`, `sweep.py`, `derive-pulse-facts.py`, `build-pulse.py`, `render.py`, `check-placement.py`, `pulse-check.py` (its own output gate, self-testing against the committed sample), with tests |
+| Setup required | Python 3.11+ and git; `gh` optional. A settings file at `.claude/plab-project-pulse.local.md` |
+| References | 6 files |
+
+**Reads `plab-current-status`, never writes it.** A repository whose newest snapshot is newer than its last commit takes its status from the snapshot and costs no agent.
 
 ---
 

@@ -4,9 +4,9 @@ Agent navigation entrypoint for the `prisant-powertools` plugin.
 
 ## What this is
 
-Eleven general-purpose agent skills for the work around the work: scaffolding a repository for agent-assisted development, closing and resuming coding sessions, turning raw thinking into a decision-ready brief, producing guide bundles, getting a second model to review a document, auditing a repository and reordering its backlog on evidence, carrying a feature from written specification through to a taggable release plan, walking the maintainer through the questions and decisions a session leaves open, and writing a dated, ranked status snapshot of a repository.
+Thirteen general-purpose agent skills for the work around the work: scaffolding a repository for agent-assisted development, closing and resuming coding sessions, turning raw thinking into a decision-ready brief, producing guide bundles, getting a second model to review a document, auditing a repository and reordering its backlog on evidence, carrying a feature from written specification through to a taggable release plan, walking the maintainer through the questions and decisions a session leaves open, writing a dated, ranked status snapshot of a repository, auditing a week of the owner's own Claude Code usage, and rolling every repository the owner keeps into one weekly pulse.
 
-Four of the eleven ship with `disable-model-invocation: true` and run only when invoked by name.
+Six of the thirteen ship with `disable-model-invocation: true` and run only when invoked by name.
 
 `plab-init-project` scaffolds files into a repository root, its trigger phrases ("init", "initialize", "set up") are among the most common words in ordinary conversation, and it is run once per repository rather than routinely.
 
@@ -15,6 +15,10 @@ Four of the eleven ship with `disable-model-invocation: true` and run only when 
 `plab-release-plan` is gated again from 1.6.0 (v0.8.1), by maintainer ruling of 2026-10-17, recorded as provisional pending a review of the wider release plan. The skill has never been run here, it was built for release plans numbered in advance while versions are now assigned at ship time, and its hygiene gate (f) cites two files this repository does not have, so a readiness check it ran unprompted would fail for reasons unrelated to the release. It dropped the flag in 1.4.0 on the argument below; that argument assumed a skill in use, and this one is not yet.
 
 `plab-current-status` ships gated from its first version, 1.0.0 (v0.10.0), under CS-01 (current status skill). `plab-continue-session` and `plab-resolve-open-items` both answer a status question such as "where are we" directly, and a status skill that fired on those phrases would break that contract. The argument that a manual-only skill cannot displace a manual habit is weaker here than for `plab-audit`, because the habit it replaces is the maintainer typing a request for exactly this document.
+
+`plab-usage-audit` ships gated from its first version, 1.0.0, under UA-01 (usage audit skill). A weekly run launches up to nine agents and writes ledger rows, so an accidental run costs real money and pollutes the owner's history; and "how much have I spent" is a question `/usage` answers live, which a skill that fired on it would pre-empt.
+
+`plab-project-pulse` ships gated from its first version, 1.0.0, under PP-01 (project pulse skill). "What's next?" is an ordinary status question that `plab-continue-session` and `plab-resolve-open-items` answer directly, and a `--week` run launches up to ten agents across every repository.
 
 `plab-spec` carried the same flag through v0.4.3 and no longer does. Its description now carries an explicit do-NOT-fire clause instead, which is the mechanism that took `plab-continue-session` from over-triggering to correct: a narrowed description is a better instrument than a binary gate, because it can distinguish a request from a mention.
 
@@ -137,6 +141,22 @@ Walk the maintainer through the open questions, decisions and tasks a session ha
 Write a dated, ranked status snapshot of the current repository to `_local/_status/YYYY-MM-DD_<model>_<byline>.md`: the answer first, what changed since the previous snapshot, what waits on the maintainer, what is next, pending and recent decisions each with a `Why here:` reason, what was accomplished, where the project is, and what is unknown. Every repository fact comes from one call to `skills/plab-current-status/scripts/derive-status-facts.py`, which reports a level (`git-only`, `logs`, `decisions`) and names every missing source as a gap, so the skill works in any git repository. Decisions come from `plab-resolve-open-items`'s `gather-backlog.py --answered-since`. Each snapshot is checked by `skills/plab-current-status/scripts/status-check.py`, whose self-test CI runs against the committed sample under `skills/plab-current-status/examples/sample-status/`. Each run writes a new file and never edits an old one.
 
 **Invocation:** manual only (`disable-model-invocation: true`). `/plab-current-status`.
+
+---
+
+### plab-usage-audit
+
+Run the owner's weekly audit of their own Claude Code usage and write a dated, scrubbed bundle: spend by lane and by the model that actually ran, routing against the owner's rules, a reconciliation of last week against its published figure, a scorecard of past recommendations with the number of audits each open ask has waited, configuration drift against the owner's change register, lessons from the window's session logs, and ranked recommendations each tagged with who acts and a mechanism. `scripts/collect.py` measures transcripts with fixture-proven accounting rules and flags a model family whose newest model never ran; `scripts/derive-audit-facts.py` gathers every other fact in one call and reads credential files for key names and dates only; every agent names a model and receives a shared rules block that forbids opening a credential file; a verifier checks every number and every claim of an approval before the bundle is done. `references/positioning.md` sets out what it adds over `/usage`, `/insights` and the `session-report` plugin. Its output is gated by `skills/plab-usage-audit/scripts/bundle-check.py`, whose self-test CI runs against the committed sample under `skills/plab-usage-audit/examples/sample-bundle/`.
+
+**Invocation:** manual only (`disable-model-invocation: true`). `/plab-usage-audit`.
+
+---
+
+### plab-project-pulse
+
+Roll up every repository under the owner's configured roots into one private weekly pulse: what shipped, what each project says is next, and what waits on the owner, ranked across projects with the age of each waiting item. `scripts/derive-pulse-facts.py` runs discovery, a read-only git sweep, optional `gh` enrichment, activity classification, carry-forward of dormant repositories, and the reading of fresh `plab-current-status` snapshots in one call, so a repository with a current snapshot costs no agent. Scouts read only the remaining active repositories, with a count check and one-tier escalation. `scripts/build-pulse.py` assembles `pulse.json` and writes the state file only after validation; `scripts/render.py` writes a self-contained dashboard. Output is checked by `skills/plab-project-pulse/scripts/pulse-check.py`, whose self-test CI runs against the committed sample under `skills/plab-project-pulse/examples/sample-pulse/`. For one repository in depth, `plab-current-status` is the tool; the pulse reads its snapshots and never writes one.
+
+**Invocation:** manual only (`disable-model-invocation: true`). `/plab-project-pulse`.
 
 ---
 
