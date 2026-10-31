@@ -1,6 +1,6 @@
 # prisant-powertools
 
-Eleven agent skills for the work around the work: scaffolding a repository for agent-assisted development, closing and resuming coding sessions, turning raw thinking into a decision-ready brief, producing guide bundles, getting a second model to review a document, auditing a repository and reordering its backlog on evidence, carrying a feature from written specification through to a taggable release plan, walking the maintainer through the questions and decisions a session leaves open, and writing a dated, ranked status snapshot of a repository.
+Thirteen agent skills for the work around the work: scaffolding a repository for agent-assisted development, closing and resuming coding sessions, turning raw thinking into a decision-ready brief, producing guide bundles, getting a second model to review a document, auditing a repository and reordering its backlog on evidence, carrying a feature from written specification through to a taggable release plan, walking the maintainer through the questions and decisions a session leaves open, writing a dated, ranked status snapshot of a repository, auditing a week of your own Claude Code usage, and rolling every repository you keep into one weekly pulse.
 
 Works with Claude Code and Codex.
 

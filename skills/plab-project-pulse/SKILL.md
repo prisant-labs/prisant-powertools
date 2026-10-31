@@ -1,6 +1,6 @@
 ---
 name: plab-project-pulse
-description: "Roll up every repository under the owner's configured roots into one private weekly pulse: what shipped, what each project says is next, and what waits on the owner, ranked across projects with the age of each waiting item. Reads fresh /plab-current-status snapshots instead of re-scouting, carries dormant repositories forward, and writes pulse.json, a readout and a self-contained dashboard. For one repository in depth use /plab-current-status. Explicit invocation only: run /plab-project-pulse; it does not fire on its own."
+description: "Roll up every repository under the owner's configured roots into one private weekly pulse: what shipped, what each project says is next, and what waits on the owner, ranked across projects with the age of each waiting item. Reads fresh /plab-current-status snapshots instead of re-scouting, carries dormant repositories forward, and writes pulse.json, a readout and a self-contained dashboard. For one repository in depth use /plab-current-status. Use when the owner runs /plab-project-pulse for the weekly review; it never fires on its own."
 argument-hint: "[--quick|--week] [--date YYYY-MM-DD] [--config <path>] [--digest <digest.jsonl>] [--out <dir>]"
 disable-model-invocation: true
 license: MIT

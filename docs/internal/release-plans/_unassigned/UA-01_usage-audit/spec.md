@@ -2,7 +2,7 @@
 id: UA-01
 title: "plab-usage-audit: what agent usage cost, whether past changes worked, and what to change next"
 type: spec
-status: draft
+status: committed
 created: 2026-10-30
 updated: 2026-10-30
 linked-effort: "the maintainer's instruction of 2026-10-30 in session to enrich and build the two audit skills, and the maintainer-local packaging analysis of 2026-10-16 with its ruling of 2026-10-30 (two skills, scripts first)"
@@ -20,42 +20,42 @@ spec-dependencies: ["PP-01"]
 
 ## Task Summary
 
-**Status:** draft
+**Status:** committed, built on `feat/audit-skills`; the first live weekly run (AC-24) is still to come
 **Last updated:** 2026-10-30 by claude (Opus 5.5), written under the maintainer's instruction to enrich the two audit-skill specs and build them
 **Linked plan:** `implementation-plan.md` in this folder
 **Open questions:** 6, each built on its recommendation as a working default and awaiting ratification (see Open Questions / Decisions)
-**Revisions:** 1
+**Revisions:** 2
 
 ### Acceptance Criteria Fulfillment
 
-- [ ] AC-1: The skill is manual-only and does not fire on a usage question
-- [ ] AC-2: A response split across content-block records counts once
-- [ ] AC-3: Advisor iterations are priced apart from executor tokens
-- [ ] AC-4: An unpriced model adds no dollars and makes the collector exit 1
-- [ ] AC-5: Local days follow the configured IANA zone across a daylight-saving change
-- [ ] AC-6: Copied transcript folders are counted once
-- [ ] AC-7: Task-notification records are not counted as user prompts
-- [ ] AC-8: Responses are reported by the model that ran, and an unseen newest model is flagged
-- [ ] AC-9: Every count field says whether it is de-duplicated
-- [ ] AC-10: A session spanning both weeks carries its cost per week
-- [ ] AC-11: No shipped file carries an owner-specific string
-- [ ] AC-12: Ledger rows follow schema 2 and a duplicate row is refused
-- [ ] AC-13: The ledger reader returns the newest row per week
-- [ ] AC-14: `--reproduce` re-runs a ledger row's method and names any difference
-- [ ] AC-15: The audit facts come from one script call and never contain a credential value
-- [ ] AC-16: Workflow costs that do not add up to the workflow lane are reported
-- [ ] AC-17: Every agent in the workflow reference names a model, and none may open a credential file
-- [ ] AC-18: The bundle carries a verification record listing every correction
-- [ ] AC-19: Every recommendation carries an id, a handle, who acts and a mechanism
-- [ ] AC-20: The scrub leaves no private pattern and every JSON file still parses
-- [ ] AC-21: The bundle checker proves each rule can fail against its committed sample
-- [ ] AC-22: Output inside an unignored folder of a git repository is refused unless opted in
-- [ ] AC-23: The positioning reference names each native tool and what the audit adds
+- [x] AC-1: The skill is manual-only and does not fire on a usage question
+- [x] AC-2: A response split across content-block records counts once
+- [x] AC-3: Advisor iterations are priced apart from executor tokens
+- [x] AC-4: An unpriced model adds no dollars and makes the collector exit 1
+- [x] AC-5: Local days follow the configured IANA zone across a daylight-saving change
+- [x] AC-6: Copied transcript folders are counted once
+- [x] AC-7: Task-notification records are not counted as user prompts
+- [x] AC-8: Responses are reported by the model that ran, and an unseen newest model is flagged
+- [x] AC-9: Every count field says whether it is de-duplicated
+- [x] AC-10: A session spanning both weeks carries its cost per week
+- [x] AC-11: No shipped file carries an owner-specific string
+- [x] AC-12: Ledger rows follow schema 2 and a duplicate row is refused
+- [x] AC-13: The ledger reader returns the newest row per week
+- [x] AC-14: `--reproduce` re-runs a ledger row's method and names any difference
+- [x] AC-15: The audit facts come from one script call and never contain a credential value
+- [x] AC-16: Workflow costs that do not add up to the workflow lane are reported
+- [x] AC-17: Every agent in the workflow reference names a model, and none may open a credential file
+- [x] AC-18: The bundle carries a verification record listing every correction
+- [x] AC-19: Every recommendation carries an id, a handle, who acts and a mechanism
+- [x] AC-20: The scrub leaves no private pattern and every JSON file still parses
+- [x] AC-21: The bundle checker proves each rule can fail against its committed sample
+- [x] AC-22: Output inside an unignored folder of a git repository is refused unless opted in
+- [x] AC-23: The positioning reference names each native tool and what the audit adds
 - [ ] AC-24: A live weekly run on the maintainer's machine produces a bundle the checker passes
 
 ### Currently In Progress
 
-Spec written 2026-10-30 on `feat/audit-skills`. The build follows `implementation-plan.md`.
+Built on 2026-10-30 on `feat/audit-skills`. Evidence: AC-2 to AC-11 by `test-collect.py` (76 checks, one synthetic fixture per accounting rule, the daylight-saving week included); AC-12 to AC-14 by `test-ledger.py` (27 checks); AC-15 and AC-16 by `test-derive-audit-facts.py` (59 checks); AC-17 by `test-workflow-reference.py`; AC-18, AC-19 and AC-21 by `bundle-check.py --self-test`, whose mutations make each of rules R1 to R9 fail against the committed sample; AC-20 and AC-22 by `test-scrub.py` (19 checks); AC-23 by `references/positioning.md`. A live run of the deterministic half on the maintainer's machine, over two weeks that had already been audited by hand, reproduced both weekly totals to the cent and found three defects that the fixtures had missed (an unexpanded `~`, a zero-token `<synthetic>` model, an ignored exclude list), each now fixed and tested. AC-1's eval case exists but the eval suite has not been run, because each case is a full session on the maintainer's credential. Still open: AC-24, the first live weekly run with agents, which waits for the owner's next audit day because it measures a real week.
 
 ---
 
@@ -239,6 +239,7 @@ A settings file pins the `sonnet` alias to an older model id. All Sonnet respons
 | Date | Author | Type | Description |
 |------|--------|------|-------------|
 | 2026-10-30 | claude | added | Initial spec, from the maintainer-local spec brief of 2026-10-16 and its review of 2026-10-30. Changes from the brief: the verification stage, the credential rule, the model-that-ran check, de-duplication labels, the copied-folder and task-notice rules, Pacific examples, the positioning against native tools, the plan-limit field, the self-cost row, and the scope narrowed to `--weekly`. The decisions below are built on their recommendations as working defaults and stay `Open` until the maintainer ratifies or overturns them. |
+| 2026-10-30 | claude | changed | Status moved to `committed` with AC-1 to AC-23 ticked on the evidence in Currently In Progress. AC-24 stays open for the first live weekly run. |
 
 ## Sources & Evidence
 

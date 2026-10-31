@@ -33,13 +33,13 @@ Steps use checkbox syntax and phases run in order unless marked parallel. A phas
 
 | Phase | Goal | Fulfills AC | Owner | Status |
 |---|---|---|---|---|
-| P1 | The collector is ported with every accounting rule proven by a fixture | AC-2 to AC-11 | agent (parallel) | Not started |
-| P2 | The ledger writes, refuses and reads schema 2 rows, and `--reproduce` works | AC-12 to AC-14 | agent (with P1) | Not started |
-| P3 | The audit facts come from one call | AC-15, AC-16 | agent (after P1) | Not started |
-| P4 | The scrub, the bundle checker and the sample bundle | AC-18 to AC-22 | agent (parallel) | Not started |
-| P5 | The skill, its references and its eval case | AC-1, AC-17, AC-23 | agent | Not started |
-| P6 | The plugin registers the skill and CI runs its checks | AC-21 (CI) | agent | Not started |
-| P7 | A live weekly run passes the checker | AC-24 | agent with the owner | Not started |
+| P1 | The collector is ported with every accounting rule proven by a fixture | AC-2 to AC-11 | agent (parallel) | Done |
+| P2 | The ledger writes, refuses and reads schema 2 rows, and `--reproduce` works | AC-12 to AC-14 | agent (with P1) | Done |
+| P3 | The audit facts come from one call | AC-15, AC-16 | agent (after P1) | Done |
+| P4 | The scrub, the bundle checker and the sample bundle | AC-18 to AC-22 | agent (parallel) | Done |
+| P5 | The skill, its references and its eval case | AC-1, AC-17, AC-23 | agent | Done |
+| P6 | The plugin registers the skill and CI runs its checks | AC-21 (CI) | agent | Done |
+| P7 | A live weekly run passes the checker | AC-24 | agent with the owner | Waiting for the owner's next audit day |
 
 ---
 
@@ -55,10 +55,10 @@ Steps use checkbox syntax and phases run in order unless marked parallel. A phas
 **Fulfills:** AC-2 to AC-11
 
 **Steps:**
-- [ ] Port the maintainer-local collector, version 2026-10-23, keeping every accounting rule and its tests, with owner values moved to a settings file read by `--config`.
-- [ ] Add the task-notification filter, the model-that-ran breakdown and `model_drift`, the `_dedup` and `_raw` suffixes, and `cost_by_half` and `responses_by_half`.
-- [ ] Document every output file and field in `references/collector-output.md`.
-- [ ] One synthetic fixture per rule, including the daylight-saving week under `America/Los_Angeles`.
+- [x] Port the maintainer-local collector, version 2026-10-23, keeping every accounting rule and its tests, with owner values moved to a settings file read by `--config`.
+- [x] Add the task-notification filter, the model-that-ran breakdown and `model_drift`, the `_dedup` and `_raw` suffixes, and `cost_by_half` and `responses_by_half`.
+- [x] Document every output file and field in `references/collector-output.md`.
+- [x] One synthetic fixture per rule, including the daylight-saving week under `America/Los_Angeles`.
 
 **Verification:** `python skills/plab-usage-audit/scripts/test-collect.py` exits 0; with the task-notice filter removed, it fails and names that case.
 

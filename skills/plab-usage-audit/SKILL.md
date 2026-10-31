@@ -1,6 +1,6 @@
 ---
 name: plab-usage-audit
-description: "Run the owner's weekly audit of their own Claude Code usage and write a dated, scrubbed bundle: spend by lane and by the model that actually ran, routing against the owner's rules, a reconciliation of last week, a scorecard of past recommendations, configuration drift, lessons from session logs, and ranked recommendations, each fact-checked by a verifier. Goes beyond /usage, /insights and session-report by keeping weekly history and checking whether past changes worked. Explicit invocation only: run /plab-usage-audit; it does not fire on its own."
+description: "Run the owner's weekly audit of their own Claude Code usage and write a dated, scrubbed bundle: spend by lane and by the model that actually ran, routing against the owner's rules, a reconciliation of last week, a scorecard of past recommendations, configuration drift, lessons from session logs, and ranked recommendations, each fact-checked by a verifier. Goes beyond /usage, /insights and session-report by keeping weekly history and checking whether past changes worked. Use when the owner runs /plab-usage-audit for the weekly review; it never fires on its own."
 argument-hint: "[--date YYYY-MM-DD] [--config <path>] [--digest <digest.jsonl>] [--out <dir>]"
 disable-model-invocation: true
 license: MIT

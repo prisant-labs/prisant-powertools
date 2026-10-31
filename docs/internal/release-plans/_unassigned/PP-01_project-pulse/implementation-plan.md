@@ -34,12 +34,12 @@ Steps use checkbox syntax and phases run in order unless marked parallel. A phas
 
 | Phase | Goal | Fulfills AC | Owner | Status |
 |---|---|---|---|---|
-| P1 | Discovery and the sweep follow C1 and C2 | AC-2 to AC-10 | agent (parallel) | Not started |
-| P2 | The facts script classifies, carries forward, reads snapshots, ages waiting items and finds unprotected work | AC-11 to AC-15 | agent (with P1) | Not started |
-| P3 | Assembly, the dashboard and the checker | AC-17, AC-18, AC-20 to AC-24 | agent (parallel) | Not started |
-| P4 | The skill, its references and its eval case | AC-1, AC-16, AC-19 | agent | Not started |
-| P5 | The plugin registers the skill and CI runs its checks | AC-24 (CI) | agent | Not started |
-| P6 | Live runs pass the checker | AC-25, AC-26 | agent | Not started |
+| P1 | Discovery and the sweep follow C1 and C2 | AC-2 to AC-10 | agent (parallel) | Done |
+| P2 | The facts script classifies, carries forward, reads snapshots, ages waiting items and finds unprotected work | AC-11 to AC-15 | agent (with P1) | Done |
+| P3 | Assembly, the dashboard and the checker | AC-17, AC-18, AC-20 to AC-24 | agent (parallel) | Done |
+| P4 | The skill, its references and its eval case | AC-1, AC-16, AC-19 | agent | Done; AC-16 and AC-19 wait for a `--week` run |
+| P5 | The plugin registers the skill and CI runs its checks | AC-24 (CI) | agent | Done |
+| P6 | Live runs pass the checker | AC-25, AC-26 | agent | `--quick` done (AC-25); `--week` waits for the owner's next audit day |
 
 ---
 
@@ -81,7 +81,7 @@ Steps use checkbox syntax and phases run in order unless marked parallel. A phas
 ## Phase 4: The skill
 
 **Files:**
-- Create `skills/plab-project-pulse/SKILL.md`, `HISTORY.md`, `references/workflow.md`, `references/carry-forward.md`, `references/coverage-statement.md`, `references/settings-example.md`, `references/digest-schema.json`, `references/scout-schema.json`
+- Create `skills/plab-project-pulse/SKILL.md`, `HISTORY.md`, `references/workflow.md`, `references/carry-forward.md`, `references/coverage-statement.md`, `references/settings-example.md`. The digest and scout formats live in `references/pulse-schema.md` beside the other contracts, instead of in two separate JSON schema files, so one file holds every format the scripts and agents exchange
 - Create `skills/plab-project-pulse/scripts/test-workflow-reference.py`
 - Create `evals/project-pulse-manual-no-fire/`
 

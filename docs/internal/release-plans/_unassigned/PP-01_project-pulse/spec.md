@@ -2,7 +2,7 @@
 id: PP-01
 title: "plab-project-pulse: what shipped, what is next, and what waits on the owner, across every repository"
 type: spec
-status: draft
+status: committed
 created: 2026-10-30
 updated: 2026-10-30
 linked-effort: "the maintainer's instruction of 2026-10-30 in session to enrich and build the two audit skills, and the maintainer-local packaging analysis of 2026-10-16 with its ruling of 2026-10-30 (two skills, the pulse kept clearly apart from plab-current-status)"
@@ -19,44 +19,44 @@ priority: P2
 
 ## Task Summary
 
-**Status:** draft
+**Status:** committed, built on `feat/audit-skills`; scout escalation (AC-16), the digest (AC-19) and the first `--week` run (AC-26) are still to be shown
 **Last updated:** 2026-10-30 by claude (Opus 5.5), written under the maintainer's instruction to enrich the two audit-skill specs and build them
 **Linked plan:** `implementation-plan.md` in this folder
 **Open questions:** 5, each built on its recommendation as a working default and awaiting ratification (see Open Questions / Decisions)
-**Revisions:** 1
+**Revisions:** 2
 
 ### Acceptance Criteria Fulfillment
 
-- [ ] AC-1: The skill is manual-only and does not fire on a status question
-- [ ] AC-2: Discovery finds repositories at each depth, including a root that is a repository
-- [ ] AC-3: Discovery never enters `node_modules`, `.git`, a link or a junction
-- [ ] AC-4: A link to another repository appears once, as an alias
-- [ ] AC-5: Session logs are found flat, in month folders and under `_LOCAL`, and skipped folders are skipped
-- [ ] AC-6: A log with a nonstandard name is read and listed as nonstandard
-- [ ] AC-7: Only the owner's commits are counted, by local day in the configured zone
-- [ ] AC-8: Ahead and behind are reported without fetching, with the age of the remote state
-- [ ] AC-9: A full sweep writes nothing to any repository
-- [ ] AC-10: A repository without an upstream is reported and listed
-- [ ] AC-11: Activity classification and carry-forward follow the dormant rule
-- [ ] AC-12: A fresh current-status snapshot is read instead of scouting the repository
-- [ ] AC-13: A hand-written file in `_local/_status/` is never read as a snapshot
-- [ ] AC-14: Every waiting item carries an age, from its source or its first-seen date
-- [ ] AC-15: Recent work in an unprotected folder is reported
+- [x] AC-1: The skill is manual-only and does not fire on a status question
+- [x] AC-2: Discovery finds repositories at each depth, including a root that is a repository
+- [x] AC-3: Discovery never enters `node_modules`, `.git`, a link or a junction
+- [x] AC-4: A link to another repository appears once, as an alias
+- [x] AC-5: Session logs are found flat, in month folders and under `_LOCAL`, and skipped folders are skipped
+- [x] AC-6: A log with a nonstandard name is read and listed as nonstandard
+- [x] AC-7: Only the owner's commits are counted, by local day in the configured zone
+- [x] AC-8: Ahead and behind are reported without fetching, with the age of the remote state
+- [x] AC-9: A full sweep writes nothing to any repository
+- [x] AC-10: A repository without an upstream is reported and listed
+- [x] AC-11: Activity classification and carry-forward follow the dormant rule
+- [x] AC-12: A fresh current-status snapshot is read instead of scouting the repository
+- [x] AC-13: A hand-written file in `_local/_status/` is never read as a snapshot
+- [x] AC-14: Every waiting item carries an age, from its source or its first-seen date
+- [x] AC-15: Recent work in an unprotected folder is reported
 - [ ] AC-16: Every agent call names a model, and a short scout is escalated once
-- [ ] AC-17: A contradiction between git and a document becomes a conflict entry
-- [ ] AC-18: Every next step and waiting item carries its source
+- [x] AC-17: A contradiction between git and a document becomes a conflict entry
+- [x] AC-18: Every next step and waiting item carries its source
 - [ ] AC-19: Each log yields one digest record with both field groups
-- [ ] AC-20: `pulse.json` validates against its schema
-- [ ] AC-21: The dashboard takes every label and date from data
-- [ ] AC-22: The dashboard's card count matches `pulse.json`
-- [ ] AC-23: Output inside an unignored folder of a git repository is refused
-- [ ] AC-24: The checker proves each rule can fail against its committed sample
-- [ ] AC-25: `--quick` makes no model call
+- [x] AC-20: `pulse.json` validates against its schema
+- [x] AC-21: The dashboard takes every label and date from data
+- [x] AC-22: The dashboard's card count matches `pulse.json`
+- [x] AC-23: Output inside an unignored folder of a git repository is refused
+- [x] AC-24: The checker proves each rule can fail against its committed sample
+- [x] AC-25: `--quick` makes no model call
 - [ ] AC-26: A live run on the maintainer's tree produces output the checker passes
 
 ### Currently In Progress
 
-Spec written 2026-10-30 on `feat/audit-skills`. The build follows `implementation-plan.md`.
+Built on 2026-10-30 on `feat/audit-skills`. Evidence: AC-2 to AC-10 by `test-discover-sweep.py`, including a hash of every file in each fixture repository before and after a sweep (AC-9); AC-11 to AC-15 by `test-derive-pulse-facts.py` (30 checks); AC-17, AC-18 and AC-20 to AC-22 by `test-build-render.py` and by `pulse-check.py --self-test`, whose mutations make each of its ten rules fail against the committed sample (AC-24); AC-23 by `check-placement.py`, which is byte-identical to the copy `plab-usage-audit`'s `test-scrub.py` exercises; AC-25 by a live `--quick` run on the maintainer's tree that made no model call, swept every repository under the configured roots in 11 seconds and passed the checker. AC-1's eval case exists but the eval suite has not been run, because each case is a full session on the maintainer's credential. Still open: AC-16, because `test-workflow-reference.py` proves every agent names a model but only a `--week` run can show a short scout being escalated; AC-19, because digest records come from the log agents of a `--week` run; and AC-26, that run itself.
 
 ---
 
@@ -286,6 +286,7 @@ A repository's newest log lists a merge as blocked, but git shows the commit on 
 | Date | Author | Type | Description |
 |------|--------|------|-------------|
 | 2026-10-30 | claude | added | Initial spec, from the maintainer-local spec brief of 2026-10-16 and its review of 2026-10-30. Changes from the brief: the comparison with `plab-current-status` and the snapshot reader, the shared vocabulary, waiting-item ages, unprotected work, the dashboard card check, the credential rule in C5, the facts script and assembly step, Pacific examples, and the stale board context in D3. The decisions below are built on their recommendations as working defaults and stay `Open` until the maintainer ratifies or overturns them. |
+| 2026-10-30 | claude | changed | Status moved to `committed` with 23 of 26 criteria ticked on the evidence in Currently In Progress. AC-16, AC-19 and AC-26 stay open until a live `--week` run. |
 
 ## Sources & Evidence
 
