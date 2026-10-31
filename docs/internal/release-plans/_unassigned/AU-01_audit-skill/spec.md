@@ -4,7 +4,7 @@ title: "plab-audit: repository appraisal, findings and roadmap"
 type: spec
 status: committed
 created: 2026-09-19
-updated: 2026-10-06
+updated: 2026-10-30
 linked-effort: "docs/internal/ideas/plab-audit-skill-2026-08-15.md, the tracked parent brief. Its why-gate was closed by maintainer ruling on 2026-09-19, recorded in a maintainer-local design note that is not tracked; see Sources below"
 linked-plan: implementation-plan.md
 linked-release: null
@@ -19,7 +19,7 @@ priority: P1
 ## Task Summary
 
 **Status:** committed
-**Last updated:** 2026-10-06 by claude, AC-7 amended for the closing big-picture section (R-2)
+**Last updated:** 2026-10-30 by claude, eight acceptance criteria ticked from recorded evidence
 **Linked plan:** `implementation-plan.md` in this folder
 **Open questions:** 0
 **Revisions:** 2
@@ -30,21 +30,35 @@ This document and its plan were promoted out of `_local/` into this folder on 20
 
 ### Acceptance Criteria Fulfillment
 
-- [ ] **AC-1** - The skill runs only on explicit invocation and never fires from conversational context
-- [ ] **AC-2** - Three modes run independently or together, defaulting to all three
+- [x] **AC-1** - The skill runs only on explicit invocation and never fires from conversational context
+- [x] **AC-2** - Three modes run independently or together, defaulting to all three
 - [ ] **AC-3** - Repository type is detected from disk, and a flag overrides the detection
-- [ ] **AC-4** - Every finding carries a file path, and a line number where one applies
-- [ ] **AC-5** - Every run emits a coverage statement naming what was read, sampled and skipped
+- [x] **AC-4** - Every finding carries a file path, and a line number where one applies
+- [x] **AC-5** - Every run emits a coverage statement naming what was read, sampled and skipped
 - [ ] **AC-6** - The coverage statement records each deterministic tool invoked and its exit code
 - [ ] **AC-7** - Appraisal reports current status, recent history and the repository's own declared plans, and ends with a big-picture section
 - [ ] **AC-8** - Appraisal compares declared plans against observed state and reports disagreements
-- [ ] **AC-9** - Every roadmap item above the speculation break cites the finding it traces to
-- [ ] **AC-10** - Speculative material appears only below a labelled break and is never mixed with findings
+- [x] **AC-9** - Every roadmap item above the speculation break cites the finding it traces to
+- [x] **AC-10** - Speculative material appears only below a labelled break and is never mixed with findings
 - [ ] **AC-11** - Every roadmap item names its mechanization rung
 - [ ] **AC-12** - A missing or failing deterministic tool degrades to a reported gap, never to silent omission
 - [ ] **AC-13** - Output lands in a gitignored per-run folder, and a flag redirects it
-- [ ] **AC-14** - The skill's own self-check fails when the coverage statement is absent
-- [ ] **AC-15** - Every finding is reconciled against the repository's recorded decisions before publication, and the coverage statement names which decision records were read
+- [x] **AC-14** - The skill's own self-check fails when the coverage statement is absent
+- [x] **AC-15** - Every finding is reconciled against the repository's recorded decisions before publication, and the coverage statement names which decision records were read
+
+**Ticked 2026-10-30, three versions after the skill shipped, from recorded evidence only.** Every box had stayed empty since the spec was written, although the skill has shipped 1.0.0, 1.0.1 and 1.1.0.
+
+- **AC-1:** `skills/plab-audit/SKILL.md` carries `disable-model-invocation: true`, and `evals/` holds its manual-only case.
+- **AC-2:** plan Phase 7 step 2 wrote all five files (2026-10-06), and step 4's `--appraise` run wrote exactly two (2026-10-05).
+- **AC-4, AC-5, AC-9, AC-10, AC-14, AC-15:** `skills/plab-audit/scripts/bundle-check.py` enforces each one as rules R1 to R7. The rules were canary-tested in Phase 6, and CI runs the checker against `skills/plab-audit/examples/sample-bundle/` on every pull request.
+
+**Left unticked, with the reason:**
+
+- **AC-3:** detection was proven by the step 2 run, which detected `agent-plugin`; the override flag was never exercised.
+- **AC-6, AC-8, AC-11:** no run record or checker rule verifies them.
+- **AC-7:** R8 checks only the closing "Standing back" section, not the status, history and declared-plans content.
+- **AC-12:** the degradation run is Phase 7 step 5, which is waived and optional.
+- **AC-13:** runs landed in `_output/plab-audit/`, but the redirect flag was never exercised.
 
 ### Currently In Progress
 

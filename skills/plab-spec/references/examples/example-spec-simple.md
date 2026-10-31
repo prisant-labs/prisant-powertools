@@ -12,7 +12,7 @@ type: spec
 status: draft
 created: 2026-04-15
 updated: 2026-04-15
-linked-effort: docs/internal/efforts/I-04.md
+linked-effort: "a CI gap found while reviewing script documentation"
 linked-plan: null
 ac-count: 3
 source-count: 1

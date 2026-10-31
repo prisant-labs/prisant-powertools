@@ -13,7 +13,7 @@ Works with Claude Code and Codex.
 | [`plab-strategy-brief`](docs/skills/plab-strategy-brief/README.md) | Turn a brain dump into a structured, decision-ready analysis document | 1.1.1 |
 | [`plab-guide`](docs/skills/plab-guide/README.md) | Generate a guide bundle: standard Markdown, an ADHD-formatted variant, a quick-reference HTML page, and a 1-2 page PDF | 2.2.3 |
 | [`plab-ai-review`](docs/skills/plab-ai-review/README.md) | Run a structured peer review of a document with a second model, then synthesise the findings | 1.3.0 |
-| [`plab-spec`](docs/skills/plab-spec/README.md) | Write a feature spec: numbered acceptance criteria, each cited to a source, in a per-effort folder | 1.3.3 |
+| [`plab-spec`](docs/skills/plab-spec/README.md) | Write a feature spec: numbered acceptance criteria, each cited to a source, in a per-effort folder | 1.3.4 |
 | [`plab-release-plan`](docs/skills/plab-release-plan/README.md) **&sup1;** | Scope a release, promote efforts into it, and gate the tag on hygiene checks and a doc-update checklist | 1.6.0 |
 | [`plab-resolve-open-items`](docs/skills/plab-resolve-open-items/README.md) | Walk through the open questions, decisions and tasks a session has raised, take a one-line answer, and write each answer back to its home document | 1.2.0 |
 | [`plab-init-project`](docs/skills/plab-init-project/README.md) **&sup1;** | Scaffold agent infrastructure into a repository: AGENTS.md, CLAUDE.md, session logs, decision records | 1.3.1 |

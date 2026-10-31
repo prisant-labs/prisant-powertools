@@ -12,8 +12,8 @@ description: "Write a feature specification with numbered, source-cited acceptan
 argument-hint: "--effort <id-or-path> [--from-brief <path>] [--target-release vX.Y.Z] [--slug <slug>] [--out <path>] [--revise] [--dry-run]"
 license: MIT
 metadata:
-  version: "1.3.3"
-  updated: 2026-09-01
+  version: "1.3.4"
+  updated: 2026-10-30
 ---
 
 # Create Spec

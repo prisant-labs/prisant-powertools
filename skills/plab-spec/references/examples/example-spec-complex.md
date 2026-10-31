@@ -12,9 +12,10 @@ type: spec
 status: committed
 created: 2026-04-05
 updated: 2026-04-20
-linked-effort: docs/internal/efforts/S-04.md
-linked-plan: docs/internal/efforts/S-04/S-04_plan.md
-linked-strategy-brief: docs/internal/efforts/S-04/S-04_strategy-brief.md
+linked-effort: "the maintainer's request of 2026-04-05 for a second-model review step"
+linked-plan: implementation-plan.md
+linked-strategy-brief: supporting/strategy-brief.md
+linked-release: docs/internal/release-plans/plan_03_peer-review/plan.md
 gh-issue: 15
 ac-count: 7
 source-count: 4
@@ -29,7 +30,7 @@ priority: P2
 
 **Status:** committed
 **Last updated:** 2026-04-20 14:30 (UTC) by codex
-**Linked plan:** `docs/internal/efforts/S-04/S-04_plan.md`
+**Linked plan:** `docs/internal/release-plans/plan_03_peer-review/S-04_ai-review/implementation-plan.md`
 **Open questions:** 2
 **Revisions:** 1
 
@@ -115,26 +116,26 @@ AC-7: When source document exceeds 200 lines, skill summarizes key claims (3-5 b
 ### Example 1: Reviewing an implementation plan
 
 ```
-$ /plab-ai-review docs/internal/efforts/S-04/S-04_plan.md --reviewer codex --type plan
+$ /plab-ai-review docs/internal/release-plans/plan_03_peer-review/S-04_ai-review/implementation-plan.md --reviewer codex --type plan
 
-Wrote: docs/internal/efforts/S-04/S-04_plan_reviewed-by-codex.md
+Wrote: docs/internal/release-plans/plan_03_peer-review/S-04_ai-review/implementation-plan_reviewed-by-codex.md
 
 Next steps:
   1. Open the file in your reviewer LLM (Codex)
   2. Reviewer fills in findings per section
   3. Paste reviewer output back into the same file
-  4. Run /plab-ai-review docs/internal/efforts/S-04/S-04_plan_reviewed-by-codex.md --respond
+  4. Run /plab-ai-review docs/internal/release-plans/plan_03_peer-review/S-04_ai-review/implementation-plan_reviewed-by-codex.md --respond
 ```
 
 ### Example 2: Auto-detect mode for re-invocation
 
 ```
-$ /plab-ai-review docs/internal/efforts/S-04/S-04_plan_reviewed-by-codex.md
+$ /plab-ai-review docs/internal/release-plans/plan_03_peer-review/S-04_ai-review/implementation-plan_reviewed-by-codex.md
 
 This file has reviewer findings. Add my response? [yes / no / explicit-mode]
 > yes
 
-Updated: docs/internal/efforts/S-04/S-04_plan_reviewed-by-codex.md
+Updated: docs/internal/release-plans/plan_03_peer-review/S-04_ai-review/implementation-plan_reviewed-by-codex.md
   - Added Reviewer Assessment summary
   - Added 7 inline responses (3 Major, 4 Minor)
   - Added 4 Proposed Actions
@@ -159,8 +160,8 @@ Updated: docs/internal/efforts/S-04/S-04_plan_reviewed-by-codex.md
 
 ## Sources & Evidence
 
-- **[S1]** Strategy brief: AI peer review - `docs/internal/efforts/S-04/S-04_strategy-brief.md` - class A
-- **[S2]** Effort brief - `docs/internal/efforts/S-04.md` - class A
+- **[S1]** Strategy brief: AI peer review - `docs/internal/release-plans/plan_03_peer-review/S-04_ai-review/supporting/strategy-brief.md` - class A
+- **[S2]** Effort request - the maintainer's request of 2026-04-05, as recorded in the effort's `linked-effort` - class A
 - **[S3]** GitHub issue #15 (anti-sycophancy discussion) - `https://github.com/<org>/<repo>/issues/15` - class A
 - **[S4]** Sibling-plugin skill `utility-mermaid-diagrams` (precedent for cross-LLM coordination patterns) - `<other-plugin>/skills/utility-mermaid-diagrams/SKILL.md` - class B
 
