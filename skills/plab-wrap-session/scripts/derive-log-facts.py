@@ -454,7 +454,8 @@ def check1_remote(project_root: Path, fetched: bool) -> dict:
             if rc == 0
             else []
         )
-    rc, out, _ = run_git(["tag", "-l"], project_root)
+    # Version sort, so v0.10.0 lists after v0.9.0 rather than before v0.2.0.
+    rc, out, _ = run_git(["tag", "-l", "--sort=v:refname"], project_root)
     result["tags-tail"] = out.splitlines()[-5:] if rc == 0 else []
     return result
 

@@ -205,7 +205,7 @@ def main() -> int:
             ["git", "log", "--oneline", "HEAD..@{u}"],
             ["git", "log", "--oneline", "@{u}..HEAD"],
             ["git", "ls-remote", "--heads", "origin"],
-            ["git", "tag", "-l"],
+            ["git", "tag", "-l", "--sort=v:refname"],
         ]
         missing_check1 = [cmd for cmd in check1_commands if cmd not in argvs]
         check("AC-2: all six hygiene-sweep Check 1 commands ran (--no-prune deviation aside)",
@@ -353,7 +353,26 @@ def main() -> int:
             check("canary: restored script passes the rename-hint assertion again",
                   restored_missing.get("docs/old-name.md") == "docs/new-name.md", restored_missing)
 
-    failed = [name for name, ok, _ in results if not ok]
+        # ---------------------------------------------------------------
+        # 11. "Recent tags" orders by version, not by text. A plain `git tag -l`
+        # sorts v0.10.0 before v0.7.0, so its last five lines dropped every
+        # two-digit minor version (seen live on 2026-10-31 at tag v0.11.0).
+        # ---------------------------------------------------------------
+        tag_origin = init_bare_origin(tmp / "tagsort")
+        tag_repo = init_repo(tmp / "tagsort")
+        git(tag_repo, "remote", "add", "origin", str(tag_origin))
+        commit(tag_repo, "initial", "2026-10-01T09:00:00-07:00", files={"a.md": "a\n"})
+        git(tag_repo, "push", "-u", "origin", "main")
+        for tag in ["v0.2.0", "v0.7.0", "v0.8.0", "v0.9.0", "v0.10.0", "v0.11.0"]:
+            git(tag_repo, "tag", tag)
+        tag_log = tmp / "tagsort" / "log.md"
+        write_log(tag_log, "2026-10-01T09:00:00-07:00", "main", prompt_body="n/a")
+        report_tags = json.loads(run_reconcile(tag_repo, tag_log, "--json").stdout)
+        tag_detail = report_tags["checks"]["remote_branches"]["detail"]
+        check("recent tags are the five highest versions, in version order",
+              "Recent tags: v0.7.0, v0.8.0, v0.9.0, v0.10.0, v0.11.0." in tag_detail, tag_detail)
+
+    failed =[name for name, ok, _ in results if not ok]
     print()
     print(f"{len(results) - len(failed)}/{len(results)} checks passed.")
     if failed:

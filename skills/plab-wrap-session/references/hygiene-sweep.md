@@ -20,7 +20,7 @@ git status -sb                     # ahead/behind vs upstream
 git log --oneline HEAD..@{u}       # commits the remote has that local lacks
 git log --oneline @{u}..HEAD       # unpushed local commits
 git ls-remote --heads origin       # branches that exist remotely
-git tag -l | tail -5               # local tags vs expectations after --tags fetch
+git tag -l --sort=v:refname | tail -5   # newest local tags by version; a plain -l puts v0.10 before v0.7
 ```
 
 Flag: behind-remote (someone else worked), unpushed commits, remote branches with no local counterpart, tags that appeared without a local release.

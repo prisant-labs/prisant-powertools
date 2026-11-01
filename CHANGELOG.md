@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Session tooling listed the wrong "recent" tags from v0.10.0 onward.** `plab-wrap-session`'s hygiene sweep and `plab-continue-session`'s reconciliation both took the last five lines of a plain `git tag -l`, which sorts tag names as text, so `v0.10.0` sorted before `v0.7.0`. At tag v0.11.0 both reported v0.7.0 to v0.9.0 as the newest tags. Both scripts and the documented Check 1 command now use `git tag -l --sort=v:refname`, and each skill's fixture suite carries a case that fails on the old command. `plab-wrap-session` 1.8.2 and `plab-continue-session` 1.6.1.
 - **A `plab-project-pulse` test began failing on 2026-10-31 and blocked CI on every pull request.** Its AC-15 fixture wrote files at the real time of the run, outside the test's fixed window, so the unprotected-work check found nothing and the session-log exclusion check passed without testing anything. The fixture now pins the files' modification times inside the window, and a canary proves the exclusion check can fail. No change to the skill's behaviour. `plab-project-pulse` 1.0.1.
 
 ## [0.11.0] - 2026-10-30

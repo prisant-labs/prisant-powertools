@@ -9,8 +9,8 @@ description: "Resume an interrupted work session by replaying its recorded hando
 argument-hint: "[--log <path>]"
 license: MIT
 metadata:
-  version: "1.6.0"
-  updated: 2026-10-15
+  version: "1.6.1"
+  updated: 2026-10-31
 ---
 
 # Continue Session
