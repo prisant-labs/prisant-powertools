@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **A `plab-project-pulse` test began failing on 2026-10-31 and blocked CI on every pull request.** Its AC-15 fixture wrote files at the real time of the run, outside the test's fixed window, so the unprotected-work check found nothing and the session-log exclusion check passed without testing anything. The fixture now pins the files' modification times inside the window, and a canary proves the exclusion check can fail. No change to the skill's behaviour. `plab-project-pulse` 1.0.1.
+
 ## [0.11.0] - 2026-10-30
 
 Two new manual-only skills, `plab-usage-audit` and `plab-project-pulse`, and fixes for the defects the 2026-08-29 audit found in `plab-guide`, `plab-init-project` and `plab-spec`. It ships as a MINOR release because it adds two skills. The six manual-only skills are now manual-only in Codex as well as in Claude Code.
