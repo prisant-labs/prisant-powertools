@@ -2,7 +2,12 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.0.1 | 2026-10-31 | unreleased | fixed | `scripts/test-derive-pulse-facts.py` pins its AC-15 fixture files inside the test window. It wrote them at the real time of the run, so from 2026-10-31 on the unprotected-work check failed and the session-log exclusion check passed without testing anything. No change to the skill's behaviour. |
 | 1.0.0 | 2026-10-30 | v0.11.0 | added | First version, specified by PP-01 (project pulse skill). Rolls every repository under the configured roots into one private weekly pulse, reusing fresh `plab-current-status` snapshots. Manual invocation only. Built on five working-default decisions, D1 to D5 in the PP-01 spec, all still `Open` pending the maintainer's ratification. |
+
+## 1.0.1 - 2026-10-31
+
+**Fixed: the AC-15 fixture no longer depends on the date the test runs.** The test fixes its window at 2026-10-24 to 2026-10-30, and `derive-pulse-facts.py` counts an unprotected file only when its modification date falls inside the window. The fixture wrote its four files without setting their modification times, so they carried the real time of the run. On 2026-10-30 that was inside the window; from 2026-10-31 on it was after it, and CI failed on every pull request. The same drift made the neighbouring check, that a `_local/_session-logs/` change is never reported, pass without exercising the exclusion. The fixture now pins all four files to 2026-10-26. A canary that drops `_session-logs` from `STATUS_PROTECTED` makes both AC-15 checks fail (28/30); the restored script passes 30/30. The skill's own behaviour is unchanged.
 
 ## 1.0.0 - 2026-10-30
 
