@@ -5,8 +5,8 @@ argument-hint: "[--quick|--week] [--date YYYY-MM-DD] [--config <path>] [--digest
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.0.0"
-  updated: 2026-10-30
+  version: "1.0.1"
+  updated: 2026-10-31
 ---
 
 # Project Pulse

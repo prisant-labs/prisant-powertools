@@ -276,6 +276,13 @@ def main() -> int:
         write(unprotected / "_local" / "notes" / "second.md", "a second\n")
         write(unprotected / "_local" / "notes" / "deeper" / "third.md", "a third\n")
         write(unprotected / "_local" / "_session-logs" / "2026-10-26_09-00_claude_x.md", "a log\n")
+        # Pin every mtime inside the fixed window. Left at the real time of the run, the files fell
+        # after WINDOW_END from 2026-10-31 on, so the first AC-15 check failed and the second passed
+        # without testing the _session-logs exclusion at all.
+        in_window = epoch_utc(2026, 10, 26)
+        for rel in ["notes/idea.md", "notes/second.md", "notes/deeper/third.md",
+                    "_session-logs/2026-10-26_09-00_claude_x.md"]:
+            os.utime(unprotected / "_local" / rel, (in_window, in_window))
 
         state_path = Path(tmp) / "state.json"
         state_path.write_text(json.dumps({
