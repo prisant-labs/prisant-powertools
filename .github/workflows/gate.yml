@@ -281,6 +281,28 @@ jobs:
         if: always()
         run: python3 skills/plab-project-pulse/scripts/test-workflow-reference.py
 
+      # The session pair, plab-wrap-session and plab-continue-session. These
+      # four suites existed and passed locally but never ran here, so the
+      # tag-sort defect fixed in PR #60 shipped past a green CI. Each builds
+      # throwaway git repositories with a pinned identity and pinned dates.
+      # The reconcile suite's canary edits reconcile.py and restores it, which
+      # is harmless on a fresh checkout.
+      - name: The session-log checker
+        if: always()
+        run: python3 skills/plab-wrap-session/scripts/test-check-log.py
+
+      - name: The wrap facts script, against fixture repositories
+        if: always()
+        run: python3 skills/plab-wrap-session/scripts/test-derive-log-facts.py
+
+      - name: The session-log organizer
+        if: always()
+        run: python3 skills/plab-wrap-session/scripts/test-organize-logs.py
+
+      - name: The continue-session reconciler, against fixture repositories
+        if: always()
+        run: python3 skills/plab-continue-session/scripts/test-reconcile.py
+
       # plab-ai-review's dispatch helper (A-02). This is the one script in this
       # job that talks to a subprocess at all, but that subprocess is a fake
       # codex-companion.mjs the test writes into a tempdir itself - never the
