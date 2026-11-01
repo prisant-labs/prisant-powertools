@@ -174,12 +174,12 @@ In a repository with no logs and no specs, the facts report level `git-only` and
 
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
-| D1 | Where the decisions sweep lives | (none) | Open | 2026-10-28 |
-| D2 | Whether the facts script fetches before comparing with the remote | (none) | Open | 2026-10-28 |
-| D3 | The look-back window for recent decisions and accomplishments | (none) | Open | 2026-10-28 |
-| D4 | How many items each ranked section shows | (none) | Open | 2026-10-28 |
+| D1 | Where the decisions sweep lives | Option A | Decided | 2026-11-01 |
+| D2 | Whether the facts script fetches before comparing with the remote | Option A | Decided | 2026-11-01 |
+| D3 | The look-back window for recent decisions and accomplishments | Option A | Decided | 2026-11-01 |
+| D4 | How many items each ranked section shows | Option A | Decided | 2026-11-01 |
 
-### D1: Where the decisions sweep lives (Open)
+### D1: Where the decisions sweep lives (Decided)
 
 **Summary.** Whether the new skill calls `gather-backlog.py` in its current home, or the sweep moves to the plugin's shared `lib/` folder first.
 
@@ -197,14 +197,15 @@ In a repository with no logs and no specs, the facts report level `git-only` and
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A
+> * **Reasoning:** The maintainer kept the plugin-path call to `gather-backlog.py`.
+> * **Follow-up:** None needed; shipped in 1.0.0. Revisit if a third skill needs the sweep.
+> * **Decided by / date:** jprisant / 2026-11-01
 
-### D2: Whether the facts script fetches before comparing with the remote (Open)
+### D2: Whether the facts script fetches before comparing with the remote (Decided)
 
 **Summary.** Whether "level with GitHub" is checked against a fresh fetch or against the last one.
 
@@ -221,14 +222,15 @@ In a repository with no logs and no specs, the facts report level `git-only` and
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A
+> * **Reasoning:** The maintainer kept the fetch under a timeout, with a failed or skipped fetch named as a gap.
+> * **Follow-up:** None needed; shipped in 1.0.0.
+> * **Decided by / date:** jprisant / 2026-11-01
 
-### D3: The look-back window for recent decisions and accomplishments (Open)
+### D3: The look-back window for recent decisions and accomplishments (Decided)
 
 **Summary.** How far back Recent Decisions and Accomplished reach.
 
@@ -245,14 +247,15 @@ In a repository with no logs and no specs, the facts report level `git-only` and
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A
+> * **Reasoning:** The maintainer kept chaining each snapshot's window to the previous snapshot, so consecutive snapshots neither overlap nor leave gaps.
+> * **Follow-up:** None needed; shipped in 1.0.0.
+> * **Decided by / date:** jprisant / 2026-11-01
 
-### D4: How many items each ranked section shows (Open)
+### D4: How many items each ranked section shows (Decided)
 
 **Summary.** Whether Waiting on You, What's Next and Pending Decisions are capped.
 
@@ -269,9 +272,10 @@ In a repository with no logs and no specs, the facts report level `git-only` and
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A
+> * **Reasoning:** The maintainer kept the cap of ten items per ranked section, with the remaining count stated.
+> * **Follow-up:** None needed; shipped in 1.0.0.
+> * **Decided by / date:** jprisant / 2026-11-01

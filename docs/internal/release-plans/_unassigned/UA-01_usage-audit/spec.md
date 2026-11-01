@@ -269,14 +269,14 @@ A settings file pins the `sonnet` alias to an older model id. All Sonnet respons
 
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
-| D1 | Recommendation id scheme | (none) | Open | 2026-10-30 |
-| D2 | Weekly agent budget | (none) | Open | 2026-10-30 |
-| D3 | Practice lane placement | (none) | Open | 2026-10-30 |
-| D4 | Codex adapter timing | (none) | Open | 2026-10-30 |
-| D5 | Writing into a tracked folder | (none) | Open | 2026-10-30 |
-| D6 | Recording plan-limit use | (none) | Open | 2026-10-30 |
+| D1 | Recommendation id scheme | Option B | Decided | 2026-11-01 |
+| D2 | Weekly agent budget | Option A | Decided | 2026-11-01 |
+| D3 | Practice lane placement | Option A | Decided | 2026-11-01 |
+| D4 | Codex adapter timing | Option B | Decided | 2026-11-01 |
+| D5 | Writing into a tracked folder | Option A | Decided | 2026-11-01 |
+| D6 | Recording plan-limit use | Option A | Decided | 2026-11-01 |
 
-### D1: Recommendation id scheme (Open)
+### D1: Recommendation id scheme (Decided)
 
 **Summary.** A rotating letter per audit, or ids scoped by date?
 
@@ -294,14 +294,15 @@ A settings file pins the `sonnet` alias to an older model id. All Sonnet respons
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option B, date-scoped ids such as "2026-10-30 R3"
+> * **Reasoning:** In the maintainer's words: "D1 b actually makes sense, perhaps the year should also be a part of it." Option B's ids already carry the full date, year included, so they place a recommendation in time with no lookup.
+> * **Follow-up:** Replace the rotating letter in `scripts/derive-audit-facts.py`, `scripts/bundle-check.py`, its test, `references/collector-output.md` and `SKILL.md`, and map past letter ids so the scorecard keeps matching open asks across weeks; its own pull request after v0.11.1; tracked in the 2026-11-01 walk record until then.
+> * **Decided by / date:** jprisant / 2026-11-01
 
-### D2: Weekly agent budget (Open)
+### D2: Weekly agent budget (Decided)
 
 **Summary.** How many agents may `--weekly` launch?
 
@@ -319,14 +320,15 @@ A settings file pins the `sonnet` alias to an older model id. All Sonnet respons
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A
+> * **Reasoning:** The maintainer kept the working default of eight agents plus the verifier. The number comes from one live run, so the spec's own revisit trigger stands.
+> * **Follow-up:** None needed; shipped in 1.0.0. Revisit once four `audit_run` rows are in the ledger.
+> * **Decided by / date:** jprisant / 2026-11-01
 
-### D3: Practice lane placement (Open)
+### D3: Practice lane placement (Decided)
 
 **Summary.** Should reading the session logs for lessons run weekly?
 
@@ -343,14 +345,15 @@ A settings file pins the `sonnet` alias to an older model id. All Sonnet respons
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A
+> * **Reasoning:** The maintainer kept the weekly practice lane, bounded to two readers and skipped when a pulse digest covers the window.
+> * **Follow-up:** None needed; shipped in 1.0.0.
+> * **Decided by / date:** jprisant / 2026-11-01
 
-### D4: Codex adapter timing (Open)
+### D4: Codex adapter timing (Decided)
 
 **Summary.** Include Codex usage in v1, or add it later?
 
@@ -367,14 +370,15 @@ A settings file pins the `sonnet` alias to an older model id. All Sonnet respons
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option B, build the Codex adapter now rather than later
+> * **Reasoning:** The maintainer chose to measure Codex spend in this effort rather than defer it. It is a feature, so it ships separately from the v0.11.1 fixes.
+> * **Follow-up:** Build the Codex accounting adapter with fixture-proven rules beside the Claude Code ones, ideally after the first live weekly run proves the Claude Code rules; its own pull request after v0.11.1; tracked in the 2026-11-01 walk record until then.
+> * **Decided by / date:** jprisant / 2026-11-01
 
-### D5: Writing into a tracked folder (Open)
+### D5: Writing into a tracked folder (Decided)
 
 **Summary.** May the skill write its bundle straight into a private repository's audits folder?
 
@@ -392,14 +396,15 @@ A settings file pins the `sonnet` alias to an older model id. All Sonnet respons
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A
+> * **Reasoning:** The maintainer kept the explicit `allow_tracked_output: true` settings flag. The skill still never commits anything itself.
+> * **Follow-up:** None needed; shipped in 1.0.0.
+> * **Decided by / date:** jprisant / 2026-11-01
 
-### D6: Recording plan-limit use (Open)
+### D6: Recording plan-limit use (Decided)
 
 **Summary.** How should the ledger get the plan-limit percentages that only `/usage` shows?
 
@@ -417,9 +422,10 @@ A settings file pins the `sonnet` alias to an older model id. All Sonnet respons
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A
+> * **Reasoning:** The maintainer kept the once-per-run question for the two plan-limit percentages, with a skip named under Not measured.
+> * **Follow-up:** None needed; shipped in 1.0.0.
+> * **Decided by / date:** jprisant / 2026-11-01
