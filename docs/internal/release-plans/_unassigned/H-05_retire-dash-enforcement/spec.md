@@ -163,10 +163,10 @@ Before this effort, `check-log.py` reports the `dashes` check as findings, and t
 
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
-| D1 | Whether `plab-audit`'s own no-dash output rule goes too | (none) | Open | 2026-10-26 |
-| D2 | Whether the no-dash constraint lines in unbuilt implementation plans go too | (none) | Open | 2026-10-26 |
+| D1 | Whether `plab-audit`'s own no-dash output rule goes too | Option A | Decided | 2026-11-01 |
+| D2 | Whether the no-dash constraint lines in unbuilt implementation plans go too | Option A | Decided | 2026-11-01 |
 
-### D1: Whether `plab-audit`'s own no-dash output rule goes too (Open)
+### D1: Whether `plab-audit`'s own no-dash output rule goes too (Decided)
 
 **Summary.** `skills/plab-audit/references/output-bundle.md` tells the audit skill to write its bundle with no em-dashes and no en-dashes. The ruling did not name it.
 
@@ -183,14 +183,15 @@ Before this effort, `check-log.py` reports the `dashes` check as findings, and t
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A
+> * **Reasoning:** In the maintainer's words: "I stopped caring so much about this but choose whatever is best." The choice was delegated to the recommendation: the line governs a deliverable for another reader, and nothing enforces it.
+> * **Follow-up:** None needed; this effort leaves `plab-audit`'s output rule untouched when it is built.
+> * **Decided by / date:** jprisant / 2026-11-01
 
-### D2: Whether the no-dash constraint lines in unbuilt implementation plans go too (Open)
+### D2: Whether the no-dash constraint lines in unbuilt implementation plans go too (Decided)
 
 **Summary.** Seven implementation plans that are still draft or in progress open with a global constraint saying not to write em-dashes or en-dashes in any file they touch.
 
@@ -207,9 +208,10 @@ Before this effort, `check-log.py` reports the `dashes` check as findings, and t
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A
+> * **Reasoning:** In the maintainer's words: "I stopped caring so much about this but choose whatever is best." The choice was delegated to the recommendation: editing seven plans outside this effort is churn, and whoever next opens one can drop its line.
+> * **Follow-up:** None needed; the seven plans are left as they are.
+> * **Decided by / date:** jprisant / 2026-11-01

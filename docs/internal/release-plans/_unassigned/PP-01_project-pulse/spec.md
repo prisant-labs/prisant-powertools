@@ -315,13 +315,13 @@ A repository's newest log lists a merge as blocked, but git shows the commit on 
 
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
-| D1 | Skill name | (none) | Open | 2026-10-30 |
-| D2 | Readiness ranking in v1 | (none) | Open | 2026-10-30 |
-| D3 | A GitHub Projects feed | (none) | Open | 2026-10-30 |
-| D4 | Manual-only invocation | (none) | Open | 2026-10-30 |
-| D5 | Series letter | (none) | Open | 2026-10-30 |
+| D1 | Skill name | Option A | Decided | 2026-11-01 |
+| D2 | Readiness ranking in v1 | Option B | Decided | 2026-11-01 |
+| D3 | A GitHub Projects feed | Deferred to 2026-11-08 | Deferred | 2026-11-01 |
+| D4 | Manual-only invocation | Option A | Decided | 2026-11-01 |
+| D5 | Series letter | Option A | Decided | 2026-11-01 |
 
-### D1: Skill name (Open)
+### D1: Skill name (Decided)
 
 **Summary.** `plab-project-pulse` or `plab-portfolio-pulse`?
 
@@ -338,14 +338,15 @@ A repository's newest log lists a merge as blocked, but git shows the commit on 
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A, `plab-project-pulse`
+> * **Reasoning:** The maintainer kept the shipped name. It has been in the v0.11.0 release notes since 2026-10-30.
+> * **Follow-up:** None needed; shipped in 1.0.0.
+> * **Decided by / date:** jprisant / 2026-11-01
 
-### D2: Readiness ranking in v1 (Open)
+### D2: Readiness ranking in v1 (Decided)
 
 **Summary.** Should v1 rank work that is ready for long autonomous runs?
 
@@ -362,14 +363,15 @@ A repository's newest log lists a merge as blocked, but git shows the commit on 
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option B, rank readiness in v1
+> * **Reasoning:** The maintainer chose to rank work that is ready for long autonomous runs now rather than in a later version. Readiness has been ranked by hand twice, each time with a judge agent. It is a feature, so it ships separately from the v0.11.1 fixes.
+> * **Follow-up:** Add a readiness-ranking stage to `--week` that reads `pulse.json`; its own pull request after v0.11.1; tracked in the 2026-11-01 walk record until then.
+> * **Decided by / date:** jprisant / 2026-11-01
 
-### D3: A GitHub Projects feed (Open)
+### D3: A GitHub Projects feed (Deferred)
 
 **Summary.** Should the pulse later push its next steps onto the owner's GitHub Projects board?
 
@@ -386,14 +388,14 @@ A repository's newest log lists a merge as blocked, but git shows the commit on 
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Deferred 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Deferred
+> * **Choice:** Deferred until the GitHub Projects board's trial ends on 2026-11-08
+> * **Reasoning:** The board is in a two-week read-or-archive trial, so neither option can be chosen with real information before that date.
+> * **Decided by / date:** jprisant / 2026-11-01
 
-### D4: Manual-only invocation (Open)
+### D4: Manual-only invocation (Decided)
 
 **Summary.** Should the skill set `disable-model-invocation: true`?
 
@@ -410,14 +412,15 @@ A repository's newest log lists a merge as blocked, but git shows the commit on 
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A, manual only
+> * **Reasoning:** The maintainer confirmed the shipped gate in both harnesses. "What's next?" is a status question that two other skills answer directly. This settles the disagreement with `AGENTS.md`, which already described the gate as a ruling.
+> * **Follow-up:** None needed; shipped in 1.0.0 with `disable-model-invocation: true` and the Codex `agents/openai.yaml` policy.
+> * **Decided by / date:** jprisant / 2026-11-01
 
-### D5: Series letter (Open)
+### D5: Series letter (Decided)
 
 **Summary.** Which effort series does this work go under?
 
@@ -434,9 +437,10 @@ A repository's newest log lists a merge as blocked, but git shows the commit on 
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A, a new `PP-` series
+> * **Reasoning:** The maintainer kept the series, which the release index generator and the release-plans README already register.
+> * **Follow-up:** None needed; already registered.
+> * **Decided by / date:** jprisant / 2026-11-01

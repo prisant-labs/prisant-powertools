@@ -157,10 +157,10 @@ Before this effort, `doc-lifecycle-check.py` prints four notes saying plans 05 t
 
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
-| D1 | Whether to delete the four empty release plans instead of clearing their versions | (none) | Open | 2026-10-26 |
-| D2 | Whether to fix the skill's `released` status, which the schema calls `complete` | (none) | Open | 2026-10-26 |
+| D1 | Whether to delete the four empty release plans instead of clearing their versions | Option A | Decided | 2026-11-01 |
+| D2 | Whether to fix the skill's `released` status, which the schema calls `complete` | Option A | Decided | 2026-11-01 |
 
-### D1: Whether to delete the four empty release plans instead of clearing their versions (Open)
+### D1: Whether to delete the four empty release plans instead of clearing their versions (Decided)
 
 **Summary.** Release plans 05 to 08 hold no efforts. This spec clears their versions. It could delete them instead.
 
@@ -177,14 +177,15 @@ Before this effort, `doc-lifecycle-check.py` prints four notes saying plans 05 t
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A
+> * **Reasoning:** The maintainer kept the four plans and will clear their versions, so their three open items keep their homes.
+> * **Follow-up:** Clear the versions of release plans 05 to 08 when H-06 is built. The build itself is deferred; the 2026-11-01 walk record holds that decision.
+> * **Decided by / date:** jprisant / 2026-11-01
 
-### D2: Whether to fix the skill's `released` status, which the schema calls `complete` (Open)
+### D2: Whether to fix the skill's `released` status, which the schema calls `complete` (Decided)
 
 **Summary.** `plab-release-plan`'s own references name a release plan's final status `released`, but the repository's schema and its scripts call it `complete`.
 
@@ -201,9 +202,10 @@ Before this effort, `doc-lifecycle-check.py` prints four notes saying plans 05 t
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A, fix it now
+> * **Reasoning:** The maintainer chose to fix the live mismatch now, independent of the rest of H-06, because the side CI enforces is the side that should win.
+> * **Follow-up:** Change `released` to `complete` in `plab-release-plan`'s `SKILL.md`, `references/frontmatter-schema.md` and `references/plan-template.md`, as `plab-release-plan` 1.6.1 in v0.11.1.
+> * **Decided by / date:** jprisant / 2026-11-01
