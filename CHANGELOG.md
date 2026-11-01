@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Session tooling listed the wrong "recent" tags from v0.10.0 onward.** `plab-wrap-session`'s hygiene sweep and `plab-continue-session`'s reconciliation both took the last five lines of a plain `git tag -l`, which sorts tag names as text, so `v0.10.0` sorted before `v0.7.0`. At tag v0.11.0 both reported v0.7.0 to v0.9.0 as the newest tags. Both scripts and the documented Check 1 command now use `git tag -l --sort=v:refname`, and each skill's fixture suite carries a case that fails on the old command. `plab-wrap-session` 1.8.2 and `plab-continue-session` 1.6.1.
+
 ## [0.11.0] - 2026-10-30
 
 Two new manual-only skills, `plab-usage-audit` and `plab-project-pulse`, and fixes for the defects the 2026-08-29 audit found in `plab-guide`, `plab-init-project` and `plab-spec`. It ships as a MINOR release because it adds two skills. The six manual-only skills are now manual-only in Codex as well as in Claude Code.

@@ -955,7 +955,24 @@ def main() -> int:
             str(dirty),
         )
 
-    failed = [name for name, ok, _ in results if not ok]
+        # ------------------------------------------------------------------
+        # check1's tags-tail orders by version, not by text. A plain
+        # `git tag -l` sorts v0.10.0 before v0.7.0, so its last five lines
+        # dropped every two-digit minor version (seen live at tag v0.11.0).
+        # ------------------------------------------------------------------
+        tag_repo = init_repo(root / "tag-sort")
+        for tag in ["v0.2.0", "v0.7.0", "v0.8.0", "v0.9.0", "v0.10.0", "v0.11.0"]:
+            git(tag_repo, "tag", tag)
+        proc = run_script(str(tag_repo), "--json")
+        check("tag-sort fixture: --json run exits 0", proc.returncode == 0, proc.stderr)
+        tags_tail = json.loads(proc.stdout)["hygiene-sweep"]["check1-remote"]["tags-tail"]
+        check(
+            "check1 tags-tail is the five highest versions, in version order",
+            tags_tail == ["v0.7.0", "v0.8.0", "v0.9.0", "v0.10.0", "v0.11.0"],
+            str(tags_tail),
+        )
+
+    failed =[name for name, ok, _ in results if not ok]
     print()
     print(f"{len(results) - len(failed)}/{len(results)} checks passed.")
     if failed:

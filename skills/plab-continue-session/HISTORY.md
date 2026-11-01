@@ -2,12 +2,17 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.6.1 | 2026-10-31 | unreleased | fixed | The reconciliation's "Recent tags" note lists the five highest versions. `reconcile.py` read a plain `git tag -l`, which sorts as text, so from v0.10.0 onward it showed v0.7.0 to v0.9.0 as the newest tags. |
 | 1.6.0 | 2026-10-15 | v0.8.0 | added | A new Phase 3 reconciles the log's claims against live repository state before anything is displayed, and leads the resumption context with what changed. |
 | 1.5.0 | 2026-09-15 | v0.5.5 | changed | The continuation prompt is no longer dumped verbatim. Phase 3 renders the immediate action and gives the log path; verbatim is opt-in. |
 | 1.4.0 | 2026-08-25 | v0.4.0 | added | Capture-lite orientation on the no-log and stale-log paths. |
 | 1.3.0 | 2026-08-18 | v0.2.0 | added | Discovery reads `YYYY-MM/` month folders alongside the flat store. Empty-store message diagnoses version skew. |
 | 1.2.1 | 2026-08-18 | v0.1.2 | fixed | Body trigger list aligned with the narrowed description. Records the 2026-08-17 description change that shipped un-versioned. |
 | 1.2.0 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.2.0; prior history remains there. |
+
+## 1.6.1 - 2026-10-31
+
+**Fixed: "Recent tags" now lists the newest versions.** The remote-branches check appends the last five tags to its detail line. It took them from a plain `git tag -l`, which sorts names as text, so `v0.10.0` sorted before `v0.7.0`. At tag v0.11.0 the note read "v0.7.0, v0.7.1, v0.8.0, v0.8.1, v0.9.0" and omitted the three newest tags. The command is now `git tag -l --sort=v:refname`, matching the corrected hygiene-sweep Check 1 in `plab-wrap-session` 1.8.2. A new fixture case in `scripts/test-reconcile.py` fails on the old command and passes on the new one.
 
 ## 1.6.0 - 2026-10-15
 

@@ -376,8 +376,9 @@ def check_ahead_behind(cwd, fetch_state, commands_run):
 def check_remote_branches_without_local(cwd, timeout, commands_run):
     """AC-2's remaining literal reuse of hygiene-sweep.md Check 1: `git ls-remote --heads
     origin` (unscoped, unlike AC-5's branch_remote check, which is scoped to the log's own
-    branch) and `git tag -l` (the plain listing Check 1 pipes to `tail -5`; the last five
-    are taken in Python here since there is no shell pipe at this call site). Flags remote
+    branch) and `git tag -l --sort=v:refname` (the version-sorted listing Check 1 pipes to
+    `tail -5`; the last five are taken in Python here since there is no shell pipe at this
+    call site). Without the version sort, v0.10.0 lists before v0.7.0. Flags remote
     branches with no local counterpart, exactly the flag Check 1 itself defines; a
     one-maintainer repo with many short-lived feature branches should expect this to be a
     finding often, the same as it is at wrap time."""
@@ -398,7 +399,7 @@ def check_remote_branches_without_local(cwd, timeout, commands_run):
         return {"state": "broken", "detail": "git branch --list failed: %s" % err_b.strip()}
     local_branches = {l.strip().lstrip("* ").strip() for l in out_b.splitlines() if l.strip()}
 
-    rc_t, out_t, _err_t, _ = run_git(["tag", "-l"], cwd, commands_run)
+    rc_t, out_t, _err_t, _ = run_git(["tag", "-l", "--sort=v:refname"], cwd, commands_run)
     tail_tags = [t for t in out_t.splitlines() if t.strip()][-5:] if rc_t == 0 else []
     tag_note = (" Recent tags: %s." % ", ".join(tail_tags)) if tail_tags else ""
 

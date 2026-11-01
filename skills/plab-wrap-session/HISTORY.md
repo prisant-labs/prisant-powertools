@@ -2,6 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.8.2 | 2026-10-31 | unreleased | fixed | The hygiene sweep's Check 1 tag tail lists the five highest versions. `derive-log-facts.py` and the documented `git tag -l | tail -5` sorted tags as text, so from v0.10.0 onward the tail omitted every two-digit minor version. |
 | 1.8.1 | 2026-10-16 | v0.8.1 | fixed | `scripts/check-log.py` collapses the whole Log Self-Check into one post-write call, `derive-log-facts.py`'s default text output becomes a complete wrap digest that stays well under 20,000 characters on every section except an uncapped `files-changed` on a very large session, two Windows-only Unicode crashes and a leading-space porcelain-parsing bug are fixed, `check4_doc_drift` stops flagging a HISTORY.md-only change as drift, `extract_waiting_on_you()` stops counting an indented sub-bullet as its own item, `frontmatter-schema.md` catches up with the two fields 1.8.0 added, and the hygiene sweep's own-validation-scripts step chains into one command. |
 | 1.8.0 | 2026-10-15 | v0.8.0 | added | `derive-log-facts.py` derives frontmatter facts, the Evidence Gathering inputs, and the hygiene sweep's detection results from git and the environment, in place of model recall and one-at-a-time commands. |
 | 1.7.0 | 2026-09-13 | v0.5.4 | added | Deep-mode logs carry an Uncertainty Ledger and a What You May Not Realize section. |
@@ -11,6 +12,10 @@
 | 1.5.0 | 2026-08-18 | v0.2.0 | added | `--organize` files old logs into `YYYY-MM/` folders. Hygiene sweep gained Check 5. |
 | 1.4.1 | 2026-08-18 | v0.1.2 | fixed | Dropped the "what did we do" trigger. Added `type:` to the frontmatter block and `machine:` to the Quick and Blocked templates. |
 | 1.4.0 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.4.0; prior history remains there. |
+
+## 1.8.2 - 2026-10-31
+
+**Fixed: Check 1's tag tail now lists the newest versions.** `scripts/derive-log-facts.py` reported `tags-tail` as the last five lines of a plain `git tag -l`, and `references/hygiene-sweep.md` documented the same `git tag -l | tail -5`. A plain listing sorts tag names as text, so from v0.10.0 onward the tail omitted every two-digit minor version. Both now use `git tag -l --sort=v:refname`. A new fixture case in `scripts/test-derive-log-facts.py` fails on the old command and passes on the new one. `plab-continue-session` 1.6.1 fixes the same command in its reconciliation.
 
 ## 1.8.1 - 2026-10-16
 
