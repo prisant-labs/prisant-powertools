@@ -187,7 +187,7 @@ def main() -> int:
         # itself (the exact case that made files-changed empty for a pushed session).
         session_start_repo = init_repo(root / "session-start")
         d0 = "2026-10-12T09:00:00+00:00"
-        git(session_start_repo, "commit", "--amend", "--date", d0,
+        git(session_start_repo, "commit", "--amend", "--no-edit", "--date", d0,
             extra_env={"GIT_AUTHOR_DATE": d0, "GIT_COMMITTER_DATE": d0})
         # Push to a bare remote so an upstream tracking ref exists and, after the
         # second commit below, points at HEAD itself - the exact shape that made

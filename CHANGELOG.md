@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **CI now runs the session pair's four test suites.** `test-check-log.py`, `test-derive-log-facts.py` and `test-organize-logs.py` for `plab-wrap-session`, and `test-reconcile.py` for `plab-continue-session`, existed and passed locally but were never named in `.github/workflows/gate.yml`, which globs nothing. That gap is how the tag-sort defect below shipped past a green CI. They run in the Document lifecycle job, because branch protection requires that job by name. No skill changed.
+- **CI now runs the session pair's four test suites.** `test-check-log.py`, `test-derive-log-facts.py` and `test-organize-logs.py` for `plab-wrap-session`, and `test-reconcile.py` for `plab-continue-session`, existed and passed locally but were never named in `.github/workflows/gate.yml`, which globs nothing. That gap is how the tag-sort defect below shipped past a green CI. They run in the Document lifecycle job, because branch protection requires that job by name. The first CI run found one defect: `test-derive-log-facts.py` amended a commit without `--no-edit`, so it failed on a runner with no editor. That fix joins the unreleased `plab-wrap-session` 1.8.2, and no skill's behaviour changed.
 
 ### Fixed
 
