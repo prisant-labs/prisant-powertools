@@ -7,14 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-11-01
+
+A patch release of fixes in four skills. The session pair lists the newest tags correctly again, two tests stop depending on the machine and the date they run on, and `plab-release-plan` names its final status with the word the schema accepts. CI now also runs four test suites it skipped. Nothing from the 2026-11-01 decision walk's feature decisions ships here; those builds follow in their own pull requests.
+
 ### Changed
 
-- **CI now runs the session pair's four test suites.** `test-check-log.py`, `test-derive-log-facts.py` and `test-organize-logs.py` for `plab-wrap-session`, and `test-reconcile.py` for `plab-continue-session`, existed and passed locally but were never named in `.github/workflows/gate.yml`, which globs nothing. That gap is how the tag-sort defect below shipped past a green CI. They run in the Document lifecycle job, because branch protection requires that job by name. The first CI run found one defect: `test-derive-log-facts.py` amended a commit without `--no-edit`, so it failed on a runner with no editor. That fix joins the unreleased `plab-wrap-session` 1.8.2, and no skill's behaviour changed.
+- **CI now runs the session pair's four test suites.** `test-check-log.py`, `test-derive-log-facts.py` and `test-organize-logs.py` for `plab-wrap-session`, and `test-reconcile.py` for `plab-continue-session`, existed and passed locally but were never named in `.github/workflows/gate.yml`, which globs nothing. That gap is how the tag-sort defect below shipped past a green CI. They run in the Document lifecycle job, because branch protection requires that job by name. The first CI run found one defect: `test-derive-log-facts.py` amended a commit without `--no-edit`, so it failed on a runner with no editor. That fix is part of `plab-wrap-session` 1.8.2, and no skill's behaviour changed.
 
 ### Fixed
 
 - **Session tooling listed the wrong "recent" tags from v0.10.0 onward.** `plab-wrap-session`'s hygiene sweep and `plab-continue-session`'s reconciliation both took the last five lines of a plain `git tag -l`, which sorts tag names as text, so `v0.10.0` sorted before `v0.7.0`. At tag v0.11.0 both reported v0.7.0 to v0.9.0 as the newest tags. Both scripts and the documented Check 1 command now use `git tag -l --sort=v:refname`, and each skill's fixture suite carries a case that fails on the old command. `plab-wrap-session` 1.8.2 and `plab-continue-session` 1.6.1.
 - **A `plab-project-pulse` test began failing on 2026-10-31 and blocked CI on every pull request.** Its AC-15 fixture wrote files at the real time of the run, outside the test's fixed window, so the unprotected-work check found nothing and the session-log exclusion check passed without testing anything. The fixture now pins the files' modification times inside the window, and a canary proves the exclusion check can fail. No change to the skill's behaviour. `plab-project-pulse` 1.0.1.
+- **`plab-release-plan` named a release plan's final status `released`, which CI rejects.** The schema and `doc-lifecycle-check.py` call that status `complete`, so a maintainer who followed the skill would have failed the frontmatter check. The skill's `SKILL.md`, `references/frontmatter-schema.md` and `references/plan-template.md` now say `complete` in all seven places. `plab-release-plan` 1.6.2.
 
 ## [0.11.0] - 2026-10-30
 

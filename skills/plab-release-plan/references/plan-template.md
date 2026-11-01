@@ -8,7 +8,7 @@ sequence: NN
 target-version: vX.Y.Z
 title: "Release plan NN: <theme>"
 type: release-plan
-status: draft                    # draft -> in-progress -> released
+status: draft                    # draft -> in-progress -> complete
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 target-date: YYYY-MM-DD          # optional
