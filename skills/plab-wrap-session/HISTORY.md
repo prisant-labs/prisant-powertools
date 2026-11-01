@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 1.8.2 | 2026-10-31 | unreleased | fixed | The hygiene sweep's Check 1 tag tail lists the five highest versions. `derive-log-facts.py` and the documented `git tag -l | tail -5` sorted tags as text, so from v0.10.0 onward the tail omitted every two-digit minor version. |
+| 1.8.2 | 2026-10-31 | v0.11.1 | fixed | The hygiene sweep's Check 1 tag tail lists the five highest versions. `derive-log-facts.py` and the documented `git tag -l | tail -5` sorted tags as text, so from v0.10.0 onward the tail omitted every two-digit minor version. |
 | 1.8.1 | 2026-10-16 | v0.8.1 | fixed | `scripts/check-log.py` collapses the whole Log Self-Check into one post-write call, `derive-log-facts.py`'s default text output becomes a complete wrap digest that stays well under 20,000 characters on every section except an uncapped `files-changed` on a very large session, two Windows-only Unicode crashes and a leading-space porcelain-parsing bug are fixed, `check4_doc_drift` stops flagging a HISTORY.md-only change as drift, `extract_waiting_on_you()` stops counting an indented sub-bullet as its own item, `frontmatter-schema.md` catches up with the two fields 1.8.0 added, and the hygiene sweep's own-validation-scripts step chains into one command. |
 | 1.8.0 | 2026-10-15 | v0.8.0 | added | `derive-log-facts.py` derives frontmatter facts, the Evidence Gathering inputs, and the hygiene sweep's detection results from git and the environment, in place of model recall and one-at-a-time commands. |
 | 1.7.0 | 2026-09-13 | v0.5.4 | added | Deep-mode logs carry an Uncertainty Ledger and a What You May Not Realize section. |

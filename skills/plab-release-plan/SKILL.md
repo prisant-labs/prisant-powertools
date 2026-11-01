@@ -13,8 +13,8 @@ argument-hint: "--create vX.Y.Z [--theme <text>] | --promote --from _unassigned 
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.6.1"
-  updated: 2026-10-30
+  version: "1.6.2"
+  updated: 2026-11-01
 ---
 
 # Release Plan
@@ -158,14 +158,14 @@ Read-only. Walks:
 2. Doc-update checklist: count checked vs total.
 3. Release readiness: READY only when there is at least one effort in scope AND every gate passes AND every checklist item is checked.
 
-Output: structured report; no file modification. An empty release is never READY; it is `INCONCLUSIVE` until efforts are in scope. If a release is intentionally tracked outside the spec chain (as v1.4.0 and v1.5.0 were), gate on (f) plus the checklist alone and record that choice in the plan's Decisions section. The skill never sets `status: released` automatically (the maintainer does that after tagging).
+Output: structured report; no file modification. An empty release is never READY; it is `INCONCLUSIVE` until efforts are in scope. If a release is intentionally tracked outside the spec chain (as v1.4.0 and v1.5.0 were), gate on (f) plus the checklist alone and record that choice in the plan's Decisions section. The skill never sets `status: complete` automatically (the maintainer does that after tagging).
 
 ## Hard Constraints
 
 1. **AC live in specs, not in the release plan.** If user input attempts to add an AC, refuse and redirect: "AC belong in the spec. Edit the linked spec or run `/plab-spec --revise`."
 2. **Atomicity of promote/demote.** A folder move either completes (spec + plan + supporting all moved, frontmatter updated) or fails with no partial state. See `references/promote-demote.md`.
 3. **Aggregation is generated, not authored.** `--update` regenerates the table; never hand-edit aggregation rows. The skill is the only writer of that section.
-4. **Status flows up from evidence.** Never auto-set `status: released`. The skill reports readiness; the human acts on it.
+4. **Status flows up from evidence.** Never auto-set `status: complete`. The skill reports readiness; the human acts on it.
 5. **Checklist is a gate, not a reminder.** `--gate` reports unchecked items as FAIL. Tag time requires every item checked.
 6. **Folder is self-contained.** `plan.md` lives INSIDE `plan_NN_<slug>/`, not as a sibling. The release folder is the unit of release-time freeze.
 

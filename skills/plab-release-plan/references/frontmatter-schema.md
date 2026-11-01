@@ -10,7 +10,7 @@ The release plan's YAML frontmatter is the machine-readable contract that downst
 | `target-version` | string | Semver version this release is currently expected to ship as, with `v` prefix. **A prediction, not an identity**: edit it freely when the number changes, and never rename the folder to match | `v1.4.0` |
 | `title` | string | Convention: `"Release plan: vX.Y.Z"`. Quote it (colon). | `"Release plan: v1.4.0"` |
 | `type` | const | Always `release-plan` | `release-plan` |
-| `status` | enum | `draft`, `in-progress`, `released` | `draft` |
+| `status` | enum | `draft`, `in-progress`, `complete` | `draft` |
 | `created` | ISO date | When the plan file was first written | `2026-05-28` |
 | `updated` | ISO date | Last substantive edit | `2026-05-28` |
 | `spec-count` | integer | Count of effort folders with `spec.md` (computed by `--update`) | `2` |
@@ -38,14 +38,14 @@ gate-waivers:
 ## Status lifecycle
 
 ```
-draft -> in-progress -> released
+draft -> in-progress -> complete
 ```
 
 | Status | Meaning | Who sets it |
 |--------|---------|-------------|
 | `draft` | `--create` just ran; aggregation is empty or sparse | Skill on creation |
 | `in-progress` | At least one effort promoted into the release; work underway | Auto on first `--promote` |
-| `released` | Tag cut, doc-update checklist complete, hygiene gates pass | Manual (maintainer after tag; skill never auto-sets this) |
+| `complete` | Tag cut, doc-update checklist complete, hygiene gates pass | Manual (maintainer after tag; skill never auto-sets this) |
 
 ## Validation rules
 
@@ -90,6 +90,6 @@ gate-waivers:
 - **Counts are dynamic.** `spec-count`, `plan-count`, `checklist-complete` are computed; never hand-edit. Hand-edits drift; computed values stay honest.
 - **`includes` is the canonical list of in-scope work.** Whatever's listed here MUST exist on disk (`--update` regenerates from disk; if you remove an entry by hand, the next `--update` will add it back).
 - **`gate-waivers` is the only explicit-override surface.** A waiver requires a reason. The release plan's hygiene gate report shows waived items so they remain visible.
-- **`status: released` is manual.** The skill reports readiness; only a human sets the flag after tagging. This prevents "skill says released, tag never happened" drift.
+- **`status: complete` is manual.** The skill reports readiness; only a human sets the flag after tagging. This prevents "skill says complete, tag never happened" drift.
 
 Do not invent fields. If a need arises that this schema doesn't cover, propose an extension in the plab-release-plan backlog rather than ad-hoc adding it.

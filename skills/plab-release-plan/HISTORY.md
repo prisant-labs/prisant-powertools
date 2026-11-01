@@ -2,6 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.6.2 | 2026-11-01 | v0.11.1 | fixed | The final status of a release plan is `complete`, as the schema CI enforces. The skill's `SKILL.md`, `references/frontmatter-schema.md` and `references/plan-template.md` called it `released`, which `docs/internal/schemas/release-plan.schema.json` rejects. |
 | 1.6.1 | 2026-10-30 | v0.11.0 | fixed | Codex now honors manual-only too: `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, which Codex reads in place of `disable-model-invocation`. |
 | 1.6.0 | 2026-10-19 | v0.8.1 | changed | Restored `disable-model-invocation: true`. The skill runs only when typed as `/plab-release-plan`, by the maintainer's provisional ruling of 2026-10-17. |
 | 1.5.1 | 2026-09-01 | v0.5.3 | fixed | Removed every pointer to `/superpowers:writing-plans`, including the stale-plan gate's failure message. The skill names no external plugin. |
@@ -10,6 +11,10 @@
 | 1.3.0 | 2026-08-24 | v0.3.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.3.0; prior history remains there. |
 
 
+
+## 1.6.2 - 2026-11-01
+
+**Fixed: the skill names a release plan's final status `complete`.** Its `SKILL.md`, `references/frontmatter-schema.md` and `references/plan-template.md` named the status `released` in seven places, while `docs/internal/schemas/release-plan.schema.json` allows only `draft`, `in-progress` and `complete`, and `scripts/doc-lifecycle-check.py` treats `complete` as terminal. A maintainer who followed the skill and set `status: released` would have failed the frontmatter check in CI. Every occurrence now reads `complete`. Decided by the maintainer on 2026-11-01 as H-06 D2 (fix the status word now), independent of the rest of H-06 (optional release-plan version), whose build is deferred.
 
 ## 1.6.1 - 2026-10-30
 
