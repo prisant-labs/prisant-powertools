@@ -1,6 +1,6 @@
 # plab-current-status
 
-**Version:** 1.0.1
+**Version:** 1.1.0
 **Source:** [`skills/plab-current-status/`](../../../skills/plab-current-status/)
 
 Write a dated status snapshot of the current repository: the answer first, what changed since the last snapshot, what waits on you, what is next, pending and recent decisions ranked with reasons, what was accomplished, and what is still unknown. Manual invocation only.
@@ -52,7 +52,7 @@ Ships with the `prisant-powertools` plugin. Nothing to install separately. Becau
 
 ### 1. One script call gathers the facts
 
-`derive-status-facts.py` reads git (branch, head, tree, upstream after a fetch, tag, commits), GitHub pull requests through `gh`, the session logs, the previous snapshot, and the decisions sweep of `plab-resolve-open-items`, in one call. Facts from a script rather than from the model's memory is the same rule `plab-wrap-session` follows.
+`derive-status-facts.py` reads git (branch, head, tree, upstream after a fetch, tag, commits), GitHub pull requests and each open one's check state through `gh`, the session logs, the previous snapshot, and the decisions sweep of `plab-resolve-open-items`, in one call. Facts from a script rather than from the model's memory is the same rule `plab-wrap-session` follows.
 
 ### 2. It works in any repository
 

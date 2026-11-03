@@ -249,17 +249,58 @@ def status_dir_ignored(repo):
 # ---------------------------------------------------------------------------
 
 
+# A check run passes with one of these conclusions and fails with any other.
+# A commit status, the older mechanism, reports `state` instead. The split
+# follows `gh pr checks`, so the snapshot never disagrees with the CLI.
+PASSING_CONCLUSIONS = {"SUCCESS", "NEUTRAL", "SKIPPED"}
+PENDING_STATES = {"PENDING", "EXPECTED"}
+
+
+def check_state(rollup):
+    """Reduce one pull request's `statusCheckRollup` to a state and the failing names.
+
+    The raw rollup carries a URL and two timestamps per check, which the
+    snapshot never states, so only the reduction enters the facts.
+    """
+    failing, pending, total = [], 0, 0
+    for item in rollup or []:
+        total += 1
+        if item.get("__typename") == "StatusContext":
+            name, state = item.get("context") or "?", (item.get("state") or "").upper()
+            if state == "SUCCESS":
+                continue
+            if state in PENDING_STATES:
+                pending += 1
+            else:
+                failing.append(name)
+            continue
+        if (item.get("status") or "").upper() != "COMPLETED":
+            pending += 1
+        elif (item.get("conclusion") or "").upper() not in PASSING_CONCLUSIONS:
+            failing.append(item.get("name") or "?")
+    if failing:
+        state = "failing"
+    elif pending:
+        state = "pending"
+    else:
+        state = "passing" if total else "none"
+    return {"state": state, "failing": failing, "pending": pending, "total": total}
+
+
 def pull_requests(repo, gh, since, gaps):
     exe = shutil.which(gh)
     if exe is None:
         gaps.append({"source": "pull requests", "reason": "`%s` is not on PATH, so pull requests were not read" % gh})
         return {"available": False, "open": [], "merged_since": []}
-    rc, out, err = run([exe, "pr", "list", "--state", "open", "--json", "number,title,headRefName,isDraft"],
+    rc, out, err = run([exe, "pr", "list", "--state", "open", "--json",
+                        "number,title,headRefName,isDraft,statusCheckRollup"],
                        repo, timeout=30, env=os.environ.copy())
     if rc != 0:
         gaps.append({"source": "pull requests", "reason": "`gh pr list` failed (%s)" % (first_line(err) or "exit %d" % rc)})
         return {"available": False, "open": [], "merged_since": []}
     open_prs = json.loads(out or "[]")
+    for pr in open_prs:
+        pr["checks"] = check_state(pr.pop("statusCheckRollup", None))
     merged = []
     if since:
         rc, out, err = run([exe, "pr", "list", "--state", "merged", "--search", "merged:>=%s" % since,

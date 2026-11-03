@@ -16,6 +16,7 @@ confirm the failure names "level"; then restore it.
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import os
 import json
 import subprocess
@@ -110,6 +111,47 @@ created: 2026-01-05
 """
 
 LOG = "---\ntype: session-log\n---\n\n## Waiting on You\n\n- **A task** (blocked since 2026-01-20). Pending.\n"
+
+
+def run_(name, status="COMPLETED", conclusion="SUCCESS"):
+    return {"__typename": "CheckRun", "name": name, "status": status, "conclusion": conclusion,
+            "detailsUrl": "https://example.com/%s" % name}
+
+
+def context_(name, state):
+    return {"__typename": "StatusContext", "context": name, "state": state}
+
+
+def check_cases() -> None:
+    spec = importlib.util.spec_from_file_location("derive_status_facts", SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    reduce_ = getattr(module, "check_state", None)
+    if reduce_ is None:
+        check("check_state exists to reduce a pull request's checks", False, "no check_state in the script")
+        return
+    cases = [
+        ("no checks at all is none", None, "none", []),
+        ("an empty rollup is none", [], "none", []),
+        ("every check passing is passing", [run_("lint"), run_("test")], "passing", []),
+        ("neutral and skipped checks do not fail", [run_("lint", conclusion="NEUTRAL"), run_("docs", conclusion="SKIPPED")],
+         "passing", []),
+        ("one failure makes the pull request failing, and names it", [run_("lint"), run_("test", conclusion="FAILURE")],
+         "failing", ["test"]),
+        ("a cancelled check fails", [run_("test", conclusion="CANCELLED")], "failing", ["test"]),
+        ("a check still running is pending", [run_("lint"), run_("test", status="IN_PROGRESS", conclusion=None)],
+         "pending", []),
+        ("a failure outranks a pending check", [run_("lint", conclusion="FAILURE"), run_("test", status="QUEUED", conclusion="")],
+         "failing", ["lint"]),
+        ("a commit status that errored fails, named by its context", [context_("ci/legacy", "ERROR")], "failing", ["ci/legacy"]),
+        ("a commit status still expected is pending", [context_("ci/legacy", "EXPECTED")], "pending", []),
+    ]
+    for name, rollup, state, failing in cases:
+        got = reduce_(rollup)
+        check(name, got.get("state") == state and got.get("failing") == failing, str(got))
+    got = reduce_([run_("lint"), run_("test", status="IN_PROGRESS", conclusion=None)])
+    check("the reduction counts checks and drops their urls", got.get("total") == 2 and got.get("pending") == 1
+          and "detailsUrl" not in json.dumps(got), str(got))
 
 
 def main() -> int:
@@ -242,6 +284,11 @@ def main() -> int:
         after = hash_tree(repo)
         check("the facts script writes nothing in the working tree", before == after, "changed")
         check("an untracked file counts as a change", f["git"]["dirty_count"] >= 1, str(f["git"]["dirty_sample"]))
+
+    # 9. Each open pull request's checks reduce to one state. Called directly,
+    # because every case above runs with `gh` absent; the rollups are the two
+    # shapes `gh pr list --json statusCheckRollup` returns.
+    check_cases()
 
     failed = [name for name, ok, _ in results if not ok]
     print()

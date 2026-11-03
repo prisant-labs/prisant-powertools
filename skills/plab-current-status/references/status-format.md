@@ -36,7 +36,7 @@ The three counts let a later reader, such as a page listing every project's snap
 
 ### Title and "As of" paragraph [R3]
 
-A level-1 title, `# Status: <repo>, YYYY-MM-DD`, then one paragraph opening with `**As of YYYY-MM-DD.**`. It states the commit, the branch, the upstream comparison and whether a fetch ran, the tree state, the newest tag, and the open pull requests. It then names the sources read, and gives the confidence key: high means checked against a file or a command's output, medium means a reasonable reading of one, low means judgment.
+A level-1 title, `# Status: <repo>, YYYY-MM-DD`, then one paragraph opening with `**As of YYYY-MM-DD.**`. It states the commit, the branch, the upstream comparison and whether a fetch ran, the tree state, the newest tag, and the open pull requests, each with its check state from the facts (`passing`, `failing`, `pending` or `none`). A failing open pull request is work: name its failing checks and rank it under What's Next, or under Waiting on You when only the maintainer can fix it. It then names the sources read, and gives the confidence key: high means checked against a file or a command's output, medium means a reasonable reading of one, low means judgment.
 
 ### Sections, exactly these, in this order [R3]
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`plab-current-status` reports each open pull request's CI state.** The facts script asks GitHub for the check results in the call it already makes, and reduces them to passing, failing, pending or none, naming any failing check, so a snapshot can rank a failing pull request as work. The CS-01 spec also records that the decisions sweep never reads an unmerged branch. Both were decided in the 2026-11-01 walk. `plab-current-status` 1.1.0.
+
 ## [0.11.1] - 2026-11-01
 
 A patch release of fixes in four skills. The session pair lists the newest tags correctly again, two tests stop depending on the machine and the date they run on, and `plab-release-plan` names its final status with the word the schema accepts. CI now also runs four test suites it skipped. Nothing from the 2026-11-01 decision walk's feature decisions ships here; those builds follow in their own pull requests.
