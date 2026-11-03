@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 1.1.0 | 2026-11-03 | unreleased | changed | Recommendation ids are date-scoped, such as `2026-11-03 R2`, in place of a rotating letter. `bundle-check.py` rule R3 requires the new form and one date per bundle. Older letter ids map to their bundle's date plus the letter. UA-01 D1. |
+| 1.1.0 | 2026-11-03 | v0.12.0 | changed | Recommendation ids are date-scoped, such as `2026-11-03 R2`, in place of a rotating letter. `bundle-check.py` rule R3 requires the new form and one date per bundle. Older letter ids map to their bundle's date plus the letter. UA-01 D1. |
 | 1.0.0 | 2026-10-30 | v0.11.0 | added | First version, specified by UA-01 (usage audit skill). Runs the owner's weekly audit of their own Claude Code usage and writes a scrubbed, verified bundle. Manual invocation only. Built on six working-default decisions, D1 to D6 in the UA-01 spec, all still `Open` pending the maintainer's ratification. |
 
 ## 1.1.0 - 2026-11-03

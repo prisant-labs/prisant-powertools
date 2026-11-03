@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 1.6.2 | 2026-11-03 | unreleased | fixed | The commit check anchors on the end SHA of the log's `commit-range` when `commit-sha` is absent, so a pull request merged during a wrap no longer reads as new work. Remote commits are no longer called unreflected when the local branch already has them. C-02 OQ7. |
+| 1.6.2 | 2026-11-03 | v0.12.0 | fixed | The commit check anchors on the end SHA of the log's `commit-range` when `commit-sha` is absent, so a pull request merged during a wrap no longer reads as new work. Remote commits are no longer called unreflected when the local branch already has them. C-02 OQ7. |
 | 1.6.1 | 2026-10-31 | v0.11.1 | fixed | The reconciliation's "Recent tags" note lists the five highest versions. `reconcile.py` read a plain `git tag -l`, which sorts as text, so from v0.10.0 onward it showed v0.7.0 to v0.9.0 as the newest tags. |
 | 1.6.0 | 2026-10-15 | v0.8.0 | added | A new Phase 3 reconciles the log's claims against live repository state before anything is displayed, and leads the resumption context with what changed. |
 | 1.5.0 | 2026-09-15 | v0.5.5 | changed | The continuation prompt is no longer dumped verbatim. Phase 3 renders the immediate action and gives the log path; verbatim is opt-in. |

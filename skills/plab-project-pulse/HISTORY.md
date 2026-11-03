@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 1.1.0 | 2026-11-03 | unreleased | added | `--week` ranks the active repositories' work by readiness for a long autonomous run. `scripts/readiness.py` scores three of seven criteria from the sweep and the file system, one Sonnet judge scores the other four, and `pulse-check.py` rule R11 checks `readiness.json`. The dashboard and readout show the ranking. PP-01 D2. |
+| 1.1.0 | 2026-11-03 | v0.12.0 | added | `--week` ranks the active repositories' work by readiness for a long autonomous run. `scripts/readiness.py` scores three of seven criteria from the sweep and the file system, one Sonnet judge scores the other four, and `pulse-check.py` rule R11 checks `readiness.json`. The dashboard and readout show the ranking. PP-01 D2. |
 | 1.0.1 | 2026-10-31 | v0.11.1 | fixed | `scripts/test-derive-pulse-facts.py` pins its AC-15 fixture files inside the test window. It wrote them at the real time of the run, so from 2026-10-31 on the unprotected-work check failed and the session-log exclusion check passed without testing anything. No change to the skill's behaviour. |
 | 1.0.0 | 2026-10-30 | v0.11.0 | added | First version, specified by PP-01 (project pulse skill). Rolls every repository under the configured roots into one private weekly pulse, reusing fresh `plab-current-status` snapshots. Manual invocation only. Built on five working-default decisions, D1 to D5 in the PP-01 spec, all still `Open` pending the maintainer's ratification. |
 
