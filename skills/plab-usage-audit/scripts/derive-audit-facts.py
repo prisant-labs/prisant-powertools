@@ -9,7 +9,8 @@ per-workflow costs sum to the workflow lane total, compactions, the installed Cl
 Code version against the state file's last version, settings drift against the
 owner's change register, which keys are model pins (and only those get their value
 printed), credential-file presence and key names (never values), the newest insights
-report, the next recommendation-series letter, and the previous bundle folder.
+report, and the previous bundle folder. Recommendation ids are the audit date plus
+`R<n>` (UA-01 D1), so they need no state.
 
 USAGE
 -----
@@ -20,8 +21,8 @@ USAGE
   derive-audit-facts.py --config <settings> --state <state> --commit-state
       --facts <facts file>
           read a previously written facts file and advance the state: the installed
-          Claude Code version, the settings key-hash snapshot, the audit date, and the
-          recommendation-series letter following the one the facts file used.
+          Claude Code version, the settings key-hash snapshot, and the audit date. A
+          state file's retired `recommendation_series` key is dropped.
 
 EXIT CODES
 ----------
@@ -66,7 +67,6 @@ DEFAULT_CLAUDE_SETTINGS = "~/.claude/settings.json"
 DEFAULT_WORKFLOW_TOLERANCE_USD = 1.0
 REPRODUCE_TIMEOUT_S = 300
 CLAUDE_VERSION_TIMEOUT_S = 10
-LETTERS = [chr(c) for c in range(ord("A"), ord("Z") + 1)]
 
 # Requirement/point 6: a model-pin key, matched against the KEY's last dotted segment.
 MODEL_PIN_KEY_RE = re.compile(
@@ -289,31 +289,6 @@ def installed_claude_version():
     return m.group(0), None
 
 
-# ---------------------------------------------------------------------------- series
-def advance_letter(letter):
-    idx = (LETTERS.index(letter) + 1) % len(LETTERS)
-    return LETTERS[idx]
-
-
-def skip_adjust(letter, skip_set):
-    letter = (letter or "A").upper()
-    if letter not in LETTERS:
-        letter = "A"
-    seen = 0
-    while letter in skip_set and seen < len(LETTERS):
-        letter = advance_letter(letter)
-        seen += 1
-    return letter
-
-
-def resolve_series(state, settings):
-    series_settings = settings.raw.get("recommendation_series") or {}
-    skip = set((series_settings.get("skip") or [])) if isinstance(series_settings, dict) else set()
-    state_series = (state or {}).get("recommendation_series") or {}
-    candidate = state_series.get("next") or series_settings.get("next") or "A"
-    return skip_adjust(candidate, skip)
-
-
 # --------------------------------------------------------------------------- ledger / reconciliation
 def prior_period(global_json):
     win_start = global_json.get("window", [None, None])[0]
@@ -532,7 +507,6 @@ def gather(args):
         credentials.append(scan_credential_file(expand(raw_path)))
 
     insights_report = compute_insights_report(claude_settings_path, last_audit_date, gaps)
-    next_series_letter = resolve_series(state, settings)
     previous_bundle = compute_previous_bundle(settings, args.out, gaps)
 
     facts = {
@@ -547,7 +521,6 @@ def gather(args):
         "model_pins": model_pins,
         "credentials": credentials,
         "insights_report": insights_report,
-        "next_series_letter": next_series_letter,
         "previous_bundle": previous_bundle,
         "settings_snapshot": settings_snapshot(flat),
         "findings": findings,
@@ -568,11 +541,6 @@ def commit_state(args):
     state, _ = load_json(args.state) if args.state and os.path.exists(args.state) else ({}, None)
     state = state or {}
 
-    series_settings = settings.raw.get("recommendation_series") or {}
-    skip = set((series_settings.get("skip") or [])) if isinstance(series_settings, dict) else set()
-    used = facts.get("next_series_letter") or "A"
-    new_next = skip_adjust(advance_letter(used.upper()), skip)
-
     new_state = dict(state)
     new_state["schema_version"] = 1
     new_state["updated_at"] = now_iso()
@@ -586,7 +554,9 @@ def commit_state(args):
         new_state["settings_snapshot"] = facts["settings_snapshot"]
     if facts.get("audit_date"):
         new_state["last_audit_date"] = facts["audit_date"]
-    new_state["recommendation_series"] = {"next": new_next}
+    # UA-01 D1: ids are date-scoped, so the rotating letter a pre-1.1.0 state carried
+    # is no longer read; drop it rather than leave a value that looks live.
+    new_state.pop("recommendation_series", None)
 
     write_json_atomic(args.state, new_state)
     return 0, new_state

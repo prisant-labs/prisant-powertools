@@ -66,7 +66,6 @@ def make_settings_file(path, **overrides):
         "output_dir": overrides.get("output_dir", ""),
         "transcript_root": overrides.get("transcript_root", ""),
         "timezone": overrides.get("timezone", "America/New_York"),
-        "recommendation_series": overrides.get("recommendation_series", {"next": "A", "skip": []}),
     }
     lines = ["---"]
     for k, v in body.items():
@@ -340,34 +339,34 @@ def test_model_pins():
     check("model_pins: a non-pin key name is not reported", "env.SOME_OTHER_KEY" not in by_key, str(pins))
 
 
-def test_series_wrap_and_skip():
-    check("series: Z wraps to A", daf.skip_adjust("Z", set()) == "Z")
-    check("series: Z skipped wraps past A to B", daf.skip_adjust("Z", {"Z", "A"}) == "B")
-    check("series: a non-skip letter is unchanged", daf.skip_adjust("C", {"D"}) == "C")
-    check("series: advance_letter wraps Z to A", daf.advance_letter("Z") == "A")
+def test_series_letter_retired():
+    """UA-01 D1: recommendation ids are date-scoped, so no letter series is computed."""
+    check("ids: the letter-series helpers are gone",
+          not any(hasattr(daf, n) for n in ("advance_letter", "skip_adjust", "resolve_series")))
 
 
 def test_commit_state_advances_and_snapshots():
     with tempfile.TemporaryDirectory() as tmp:
         settings_path = os.path.join(tmp, "settings.local.md")
-        make_settings_file(settings_path, recommendation_series={"next": "A", "skip": ["D"]})
+        make_settings_file(settings_path)
 
         facts_path = os.path.join(tmp, "facts.json")
         snapshot = {"env.FOO": "deadbeef"}
         write_json(facts_path, {
-            "next_series_letter": "C",
             "claude_version": {"installed": "2.1.300"},
             "settings_snapshot": snapshot,
             "audit_date": "2026-02-10",
         })
         state_path = os.path.join(tmp, "state.json")
+        # A state file written before UA-01 D1 still carries the retired letter series.
+        write_json(state_path, {"recommendation_series": {"next": "C"}})
 
         proc = run_tool(["--config", settings_path, "--state", state_path,
                           "--commit-state", "--facts", facts_path])
         check("commit-state: exits 0", proc.returncode == 0, proc.stdout + proc.stderr)
         new_state = json.loads(open(state_path, encoding="utf-8").read())
-        check("commit-state: advances C to D, skips D, lands on E",
-              new_state.get("recommendation_series", {}).get("next") == "E", str(new_state))
+        check("commit-state: drops the retired recommendation_series key",
+              "recommendation_series" not in new_state, str(new_state))
         check("commit-state: writes last_claude_version", new_state.get("last_claude_version") == "2.1.300")
         check("commit-state: writes the settings snapshot verbatim",
               new_state.get("settings_snapshot") == snapshot)
@@ -380,7 +379,7 @@ def test_commit_state_skips_snapshot_on_claude_settings_gap():
     that empty one, or every real key reads as newly added next run."""
     with tempfile.TemporaryDirectory() as tmp:
         settings_path = os.path.join(tmp, "settings.local.md")
-        make_settings_file(settings_path, recommendation_series={"next": "A", "skip": []})
+        make_settings_file(settings_path)
 
         good_snapshot = {"env.FOO": "deadbeef", "model": "abc123"}
         state_path = os.path.join(tmp, "state.json")
@@ -388,7 +387,6 @@ def test_commit_state_skips_snapshot_on_claude_settings_gap():
 
         facts_path = os.path.join(tmp, "facts.json")
         write_json(facts_path, {
-            "next_series_letter": "B",
             "claude_version": {"installed": None},
             "settings_snapshot": {},
             "audit_date": "2026-02-10",
@@ -401,8 +399,6 @@ def test_commit_state_skips_snapshot_on_claude_settings_gap():
         new_state = json.loads(open(state_path, encoding="utf-8").read())
         check("commit-state gap guard: keeps the previous snapshot",
               new_state.get("settings_snapshot") == good_snapshot, str(new_state))
-        check("commit-state gap guard: still advances the series letter",
-              new_state.get("recommendation_series", {}).get("next") == "C", str(new_state))
         check("commit-state gap guard: still advances last_audit_date",
               new_state.get("last_audit_date") == "2026-02-10", str(new_state))
 
@@ -534,7 +530,7 @@ def main():
     test_ac16_cost_gap_exits_1()
     test_settings_drift_registered_and_unregistered()
     test_model_pins()
-    test_series_wrap_and_skip()
+    test_series_letter_retired()
     test_commit_state_advances_and_snapshots()
     test_commit_state_skips_snapshot_on_claude_settings_gap()
     test_missing_claude_binary_is_a_gap()

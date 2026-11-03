@@ -18,7 +18,7 @@ Two workflows ran: `release-plan-build` (6 runs, $61.20) on `alpha-app`, and `au
 
 ## Depth
 
-The main loop's average iteration depth was 3.2 turns before handing off to a subagent, down from 4.1 last week, consistent with the routing rule change recorded in `03-scorecard.md` as A1 from two audits ago.
+The main loop's average iteration depth was 3.2 turns before handing off to a subagent, down from 4.1 last week, consistent with the routing rule change recorded in `03-scorecard.md` as R1 from two audits ago.
 
 ## Automated population
 

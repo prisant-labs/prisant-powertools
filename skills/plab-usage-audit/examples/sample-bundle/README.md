@@ -10,10 +10,10 @@ The focus week runs 2026-10-19 through 2026-10-25 in `America/Los_Angeles`. The 
 
 | ID (handle) | Who acts | What it costs to skip | Mechanism |
 |---|---|---|---|
-| A1 (routing-pin) | owner decides | the Sonnet alias quietly drifts to an older priced model | setting |
-| A2 (brief-citations) | agent | a brief worker's approval claim with no record ships unchallenged | skill |
-| B1 (digest-reuse) | agent after a yes | the practice lane launches a reader even when the pulse already ran | skill |
-| B2 (backup-check) | owner acts | the transcript backup silently stops and nobody notices for weeks | script |
+| 2026-10-25 R1 (routing-pin) | owner decides | the Sonnet alias quietly drifts to an older priced model | setting |
+| 2026-10-25 R2 (brief-citations) | agent | a brief worker's approval claim with no record ships unchallenged | skill |
+| 2026-10-25 R3 (digest-reuse) | agent after a yes | the practice lane launches a reader even when the pulse already ran | skill |
+| 2026-10-25 R4 (backup-check) | owner acts | the transcript backup silently stops and nobody notices for weeks | script |
 
 ## The recommendations table
 

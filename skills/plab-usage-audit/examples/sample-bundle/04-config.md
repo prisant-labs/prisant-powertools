@@ -2,7 +2,7 @@
 
 ## Findings
 
-The `sonnet` alias in the global settings file is pinned to `claude-sonnet-4-5`, one release behind the family's current priced model, `claude-sonnet-5`. This is the same drift Y8 named two audits ago. The `gh pr create` permission entry that A2's predecessor added was reverted during the merge commit that closed PR #41 on 2026-10-21, and nothing restored it, which is this week's friction finding from `01-usage.md`.
+The `sonnet` alias in the global settings file is pinned to `claude-sonnet-4-5`, one release behind the family's current priced model, `claude-sonnet-5`. This is the same drift 2026-10-18 Y8 named two audits ago. The `gh pr create` permission entry that R2's predecessor added was reverted during the merge commit that closed PR #41 on 2026-10-21, and nothing restored it, which is this week's friction finding from `01-usage.md`.
 
 ## Settings against the change register
 

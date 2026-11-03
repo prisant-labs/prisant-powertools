@@ -34,9 +34,6 @@ sweep:
   max_depth: 2
   exclude: ["_delete", "_temp", "*_worktrees"]
   author_pattern: "owner|noreply@anthropic"
-recommendation_series:
-  next: A
-  skip: [D, K, O, Q, S, T]
 ---
 ```
 

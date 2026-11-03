@@ -4,7 +4,7 @@ title: "plab-usage-audit: what agent usage cost, whether past changes worked, an
 type: spec
 status: committed
 created: 2026-10-30
-updated: 2026-10-30
+updated: 2026-11-03
 linked-effort: "the maintainer's instruction of 2026-10-30 in session to enrich and build the two audit skills, and the maintainer-local packaging analysis of 2026-10-16 with its ruling of 2026-10-30 (two skills, scripts first)"
 linked-plan: implementation-plan.md
 linked-release: null
@@ -151,7 +151,7 @@ The rule that follows: every section of the bundle answers a question none of th
 25. A claim that the owner approved, chose or declined something must quote the record that says so. A worker's claim of approval without a record is removed. On 2026-10-30 a brief worker reported an approval the owner never gave [S3].
 26. After the bundle is written, one verifier agent checks every number in it against the collector and facts output, and every claim about a decision against its record. The main loop applies or rejects each finding, and `data/README.md` lists every correction in a section headed `## Verification`. The bundle is not reported done before that section exists [S3].
 27. Every recommendation in `05-recommendations.md` carries an id, a short handle, who acts (the owner decides, the owner acts, an agent, or an agent after a yes) and a mechanism (setting, rule, hook, skill, script, decision or habit). Across the audits, changes carried by a rule, hook, setting or skill stuck, and habits mostly did not [S2].
-28. Recommendation ids come from a rotating letter series stored in the state file, which wraps from Z to A and skips reserved letters. The bundle date disambiguates a reused letter [S3].
+28. A recommendation id is the audit date, a space, `R` and a number, such as `2026-10-30 R3`. An id from an audit before date-scoped ids is cited as its bundle's date plus its letter id (D1) [S3].
 
 **Output**
 
@@ -240,6 +240,7 @@ A settings file pins the `sonnet` alias to an older model id. All Sonnet respons
 |------|--------|------|-------------|
 | 2026-10-30 | claude | added | Initial spec, from the maintainer-local spec brief of 2026-10-16 and its review of 2026-10-30. Changes from the brief: the verification stage, the credential rule, the model-that-ran check, de-duplication labels, the copied-folder and task-notice rules, Pacific examples, the positioning against native tools, the plan-limit field, the self-cost row, and the scope narrowed to `--weekly`. The decisions below are built on their recommendations as working defaults and stay `Open` until the maintainer ratifies or overturns them. |
 | 2026-10-30 | claude | changed | Status moved to `committed` with AC-1 to AC-23 ticked on the evidence in Currently In Progress. AC-24 stays open for the first live weekly run. |
+| 2026-11-03 | claude | changed | D1 built as `plab-usage-audit` 1.1.0: Requirement 28 now states date-scoped ids, replacing the rotating letter series. |
 
 ## Sources & Evidence
 
@@ -299,7 +300,7 @@ A settings file pins the `sonnet` alias to an older model id. All Sonnet respons
 > * **Status:** Decided
 > * **Choice:** Option B, date-scoped ids such as "2026-10-30 R3"
 > * **Reasoning:** In the maintainer's words: "D1 b actually makes sense, perhaps the year should also be a part of it." Option B's ids already carry the full date, year included, so they place a recommendation in time with no lookup.
-> * **Follow-up:** Replace the rotating letter in `scripts/derive-audit-facts.py`, `scripts/bundle-check.py`, its test, `references/collector-output.md` and `SKILL.md`, and map past letter ids so the scorecard keeps matching open asks across weeks; its own pull request after v0.11.1; tracked in the 2026-11-01 walk record until then.
+> * **Follow-up:** Replace the rotating letter in `scripts/derive-audit-facts.py`, `scripts/bundle-check.py`, its test, `references/collector-output.md` and `SKILL.md`, and map past letter ids so the scorecard keeps matching open asks across weeks; its own pull request after v0.11.1; tracked in the 2026-11-01 walk record until then. Built 2026-11-03 as `plab-usage-audit` 1.1.0; the past-id mapping is a rule in `references/scorecard.md`, because the scorecard is matched by the agent, not by a script.
 > * **Decided by / date:** jprisant / 2026-11-01
 
 ### D2: Weekly agent budget (Decided)

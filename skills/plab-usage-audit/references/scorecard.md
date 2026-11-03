@@ -20,6 +20,12 @@ Every verdict carries an evidence entry: a path and line, a command and its outp
 
 A claim that the owner approved, chose, declined, decided or said yes to something quotes the record in double quotes or names its path in backticks. A claim of approval without a record is removed, because a worker once reported an approval the owner never gave. `bundle-check.py` rule R9 enforces this in the written bundle.
 
+## Recommendation ids
+
+An id is the date of the audit that raised it, a space, `R` and a number: `2026-10-30 R3`. The date places the recommendation in time with no lookup, and no two audits can share an id. Inside the bundle that raised it, a recommendation may be called `R3` after its first mention; in any other bundle it carries its date.
+
+**Ids from before date-scoped ids.** Audits before `plab-usage-audit` 1.1.0 used a rotating letter, such as `X3` or `A1`, and the letters repeated. Map such an id to the date of the bundle that raised it plus its letter id, such as `2026-10-09 X3`, so old and new ids take one form. Read the date from the previous scorecard's bundle folder name. An open ask keeps its mapped id, and its `asked_count`, for as long as it stays open.
+
 ## Asked count
 
 Each open ask carries `asked_count`, the number of consecutive audits that have raised it, read from the previous scorecard. When an ask reaches three, the recommendation changes form: offer the groundwork that would make the decision easy (a plain explainer, a built tool, or a proposal to drop the ask) instead of asking again.

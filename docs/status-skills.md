@@ -16,7 +16,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 | `plab-audit` | 1.1.1 | **Explicit only** | `<path> [--appraise\|--audit\|--roadmap] [--type ...] [--lens=docs] [--out <path>]` | `_output/plab-audit/<repo>_<YYYY-MM-DD>/` |
 | `plab-current-status` | 1.1.0 | **Explicit only** | `[<byline>] [--no-fetch]` | `_local/_status/YYYY-MM-DD_<model>_<byline>.md` (gitignored) |
 | `plab-project-pulse` | 1.0.1 | **Explicit only** | `[--quick\|--week] [--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD/`, private, outside any repository or ignored by it |
-| `plab-usage-audit` | 1.0.0 | **Explicit only** | `[--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD_claude-usage/`; a tracked folder only when the settings allow it |
+| `plab-usage-audit` | 1.1.0 | **Explicit only** | `[--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD_claude-usage/`; a tracked folder only when the settings allow it |
 | `plab-continue-session` | 1.6.2 | Auto + explicit | `[--log <path>]` | Nothing. Displays context only |
 | `plab-guide` | 2.2.3 | Auto + explicit | `<topic-or-repo-url> [--type repo-url\|tool\|concept] [--out <dir>] [--force]` | `_output/plab-guide/` |
 | `plab-init-project` | 1.3.1 | **Explicit only** | `[--profile minimal\|standard\|public] [--type ...] [--dry-run]` | The target repository root |
@@ -215,7 +215,7 @@ Writes a dated, ranked status snapshot of the current repository.
 
 ---
 
-### `plab-usage-audit` 1.0.0, explicit only
+### `plab-usage-audit` 1.1.0, explicit only
 
 Audits a week of the owner's own Claude Code usage and writes a scrubbed bundle.
 
