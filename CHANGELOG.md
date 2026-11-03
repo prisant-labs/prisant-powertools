@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-03
+
+A minor release that builds six decided items across five skills. The wrap now writes its log before it asks any hygiene question, and a resume no longer reports a pull request merged during the wrap as new work. The usage audit dates its recommendation ids, the project pulse ranks work by readiness for a long autonomous run, and the current-status snapshot reports each open pull request's CI state.
+
 ### Changed
 
 - **`plab-wrap-session` writes the log before it asks any hygiene question.** It then asks every proposal in one numbered batch, answered in one line such as `H1 y, H2 n`, amends the log with the answers, and checks it again. A terminal closed while a question is open now still leaves a complete log. Pruning remote-tracking refs whose branch is gone from origin, deleting a merged branch whose upstream is gone, pruning stale worktree records, and filing old logs run without asking and are recorded in the log, with each pruned ref's SHA so it can be restored. Parked items are now carried from one log to the next, as Waiting on You items already were. Specified as W-05 (wrap hygiene order). `plab-wrap-session` 1.9.0.
