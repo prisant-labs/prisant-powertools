@@ -306,6 +306,15 @@ def extract_waiting_on_you(text: str) -> list[str] | None:
     return [line.rstrip() for line in body if WAITING_ON_YOU_ITEM_RE.match(line)]
 
 
+def extract_parked(text: str) -> list[str]:
+    """Top-level Parked items, by the same rule as Waiting on You, for the
+    next wrap to carry forward (W-05, wrap hygiene order). Nothing read this
+    section before 1.9.0, so a parked item lasted one log and vanished. The
+    section is optional, so its absence is an empty list, not a gap."""
+    body = extract_section(text, "Parked") or []
+    return [line.rstrip() for line in body if WAITING_ON_YOU_ITEM_RE.match(line)]
+
+
 def count_decisions(text: str) -> int:
     """Mechanical count of the Decisions Made section's own entries (AC-4). Top-level
     list items, numbered or bulleted (`-` or `*`), with no leading indentation, so a
@@ -873,6 +882,12 @@ def render(data: dict) -> str:
     else:
         lines.append(f"  waiting-on-you ({len(woy)} item(s), verbatim with their dates, never capped):")
         lines.extend(render_verbatim(woy))
+    parked = eg["parked"]
+    if parked is None:
+        lines.append("  parked: n/a (no existing log to carry forward)")
+    else:
+        lines.append(f"  parked ({len(parked)} item(s), verbatim, never capped):")
+        lines.extend(render_verbatim(parked))
     gm = eg["gitignored-modified"]
     lines.append(
         f"  gitignored-modified ({len(gm['files'])} file(s), "
@@ -1020,6 +1035,7 @@ def main(argv: list[str] | None = None) -> int:
             "capture-records": capture_records(project_root, cutoff),
             "newest-log": log_path.name if log_path else None,
             "waiting-on-you": extract_waiting_on_you(log_text) if log_text is not None else None,
+            "parked": extract_parked(log_text) if log_text is not None else None,
             "gitignored-modified": gitignored_modified(project_root, cutoff, args.gitignored_limit),
         },
         "hygiene-sweep": {

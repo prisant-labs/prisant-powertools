@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`plab-wrap-session` writes the log before it asks any hygiene question.** It then asks every proposal in one numbered batch, answered in one line such as `H1 y, H2 n`, amends the log with the answers, and checks it again. A terminal closed while a question is open now still leaves a complete log. Deleting a merged branch whose upstream is gone, pruning stale worktree records, and filing old logs run without asking and are recorded in the log. Parked items are now carried from one log to the next, as Waiting on You items already were. Specified as W-05 (wrap hygiene order). `plab-wrap-session` 1.9.0.
+
 ### Added
 
 - **`plab-current-status` reports each open pull request's CI state.** The facts script asks GitHub for the check results in the call it already makes, and reduces them to passing, failing, pending or none, naming any failing check, so a snapshot can rank a failing pull request as work. The CS-01 spec also records that the decisions sweep never reads an unmerged branch. Both were decided in the 2026-11-01 walk. `plab-current-status` 1.1.0.

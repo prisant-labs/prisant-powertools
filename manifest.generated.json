@@ -67,7 +67,7 @@
     {
       "name": "plab-wrap-session",
       "path": "skills/plab-wrap-session/SKILL.md",
-      "description": "Document and close agentic coding sessions with structured session logs. Use at the end of any coding session, when wrapping up work, when switching tasks, or when blocked. Defaults to a deep log with a verbose copy-paste-ready continuation prompt, runs a pre-wrap hygiene sweep (remote divergence, release state, doc drift, working-tree reconciliation with per-action confirmation), and always lists what it is waiting on from the maintainer with links. Triggers on 'wrap up', 'wrap session', 'end of session', 'session log', 'close out', or 'document this session'. Also use when the session is blocked and needs to capture blocker details for the next session."
+      "description": "Document and close agentic coding sessions with structured session logs. Use at the end of any coding session, when wrapping up work, when switching tasks, or when blocked. Defaults to a deep log with a verbose copy-paste-ready continuation prompt, runs a hygiene sweep (remote divergence, release state, doc drift, working-tree reconciliation), writes the log first and then asks its numbered hygiene proposals in one batch, and always lists what it is waiting on from the maintainer with links. Triggers on 'wrap up', 'wrap session', 'end of session', 'session log', 'close out', or 'document this session'. Also use when the session is blocked and needs to capture blocker details for the next session."
     }
   ],
   "commands": []

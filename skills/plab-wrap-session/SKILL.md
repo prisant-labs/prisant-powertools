@@ -3,17 +3,18 @@ name: plab-wrap-session
 description: "Document and close agentic coding sessions with structured session logs.
   Use at the end of any coding session, when wrapping up work, when switching tasks,
   or when blocked. Defaults to a deep log with a verbose copy-paste-ready continuation
-  prompt, runs a pre-wrap hygiene sweep (remote divergence, release state, doc drift,
-  working-tree reconciliation with per-action confirmation), and always lists what it
-  is waiting on from the maintainer with links. Triggers on 'wrap up', 'wrap session',
+  prompt, runs a hygiene sweep (remote divergence, release state, doc drift,
+  working-tree reconciliation), writes the log first and then asks its numbered
+  hygiene proposals in one batch, and always lists what it is waiting on from the
+  maintainer with links. Triggers on 'wrap up', 'wrap session',
   'end of session', 'session log', 'close out', or 'document this
   session'. Also use when the session is blocked and needs to capture blocker details
   for the next session."
 argument-hint: "[mode: quick|final|deep|blocked] [--organize]"
 license: MIT
 metadata:
-  version: "1.8.2"
-  updated: 2026-10-31
+  version: "1.9.0"
+  updated: 2026-11-03
 ---
 
 # Wrap Session
@@ -35,7 +36,7 @@ Valid downgrade objections mirror the verbosity rule: "trivial typo fix, clean t
 
 ## Evidence Gathering
 
-Before writing the log, run `derive-log-facts.py` once and read the tool result once. Add `--fetch` in deep and final modes, where the Pre-Wrap Hygiene Sweep's remote facts need to be current; omit it in quick and blocked modes.
+Before writing the log, run `derive-log-facts.py` once and read the tool result once. Add `--fetch` in deep and final modes, where the Hygiene Sweep's remote facts need to be current; omit it in quick and blocked modes.
 
 ```bash
 python <skill-dir>/scripts/derive-log-facts.py <project-root>            # quick, blocked
@@ -51,24 +52,44 @@ From that output, the agent still:
 3. Checks for blockers, outstanding issues, and risks introduced.
 4. Inventories work products in gitignored locations (`_local/` and kin), starting from the script's gitignored-modified list - git-derived file lists cannot otherwise see them.
 5. Lists skills invoked this session and any multi-agent workflow runs (run IDs, agent counts, token totals) for the frontmatter and Evidence Index.
-6. In deep and final modes, judges whether the script's reported newest existing log covers the same arc as this session. If it does, prepares one archive proposal under the same per-action confirmation protocol the hygiene sweep uses (see `references/hygiene-sweep.md`): propose moving the older file to `_local/_session-logs/_superseded/`, execute only on explicit approval, and record the disposition, declared plus archived-or-not, in the new log's Summary.
-7. Carries every still-unresolved Waiting on You item from the script's output forward into this log with its original date, never today's, so a blocker's age survives across wraps instead of resetting. If the script reports no newest log, start fresh and say nothing.
+6. In deep and final modes, judges whether the script's reported newest existing log covers the same arc as this session. If it does, prepares one archive proposal for the hygiene batch (see Wrap Order below): propose moving the older file to `_local/_session-logs/_superseded/`, execute only when its number is approved, and record the disposition, declared plus archived-or-not, in the new log's Summary.
+7. Carries every still-unresolved Waiting on You item from the script's output forward into this log with its original date, never today's, so a blocker's age survives across wraps instead of resetting. Carries every Parked item the script reports into this log's Parked section the same way, verbatim, dropping only items this session resolved or promoted to Waiting on You; before 1.9.0 nothing read Parked, so a parked item lasted one log. If the script reports no newest log, start fresh and say nothing.
 
 If the script reports git as unavailable, note that and proceed with session context only.
 
-## Pre-Wrap Hygiene Sweep (deep and final modes)
+## Hygiene Sweep (deep and final modes)
 
-Run before writing the log; record findings in the log's Hygiene Sweep section. The same `derive-log-facts.py --fetch` invocation from Evidence Gathering above already carries every check's detection result; this section judges and proposes from that output rather than re-gathering it. Check catalog, the output field each check reads, and the confirmation protocol live in `references/hygiene-sweep.md`.
+Detect and judge before writing the log; resolve after it, in one numbered batch (see Wrap Order below). Record findings, proposals and auto actions in the log's Hygiene Sweep section. The same `derive-log-facts.py --fetch` invocation from Evidence Gathering above already carries every check's detection result; this section judges and proposes from that output rather than re-gathering it. Check catalog, the output field each check reads, and the confirmation protocol live in `references/hygiene-sweep.md`.
 
 1. **Remote reconciliation**, from the script's `check1-remote` field: local branch vs its remote (ahead/behind), unpushed commits, remote branches, remote tags vs local. Parallel work from another checkout must surface at wrap time, not at the next release.
 2. **Working-tree and worktree state**, from `check2-worktree`: uncommitted changes, untracked files, stashes, worktrees.
 3. **Release and repo hygiene**, from `check3-release`: un-released CHANGELOG content and version fields vs the latest tag. The repo's own validation scripts, when it has them, are still run locally as a separate step, chained into one shell command (for example `python scripts/a.py && python scripts/b.py && ...`) so their combined output is read in one call rather than one call per script, and their results reported (never fixed silently) - the script has no way to know what those scripts are.
 4. **Documentation drift, both directions.** User or technical docs this session made stale: version tables, skill or feature READMEs vs source of truth, missing CHANGELOG entries. And the inverse, which is the direction that actually shipped here: a skill whose content changed since the last tag while its `metadata.version` did not move, or whose `HISTORY.md` has no entry for the version it currently ships, from the script's `check4-doc-drift` field. `references/hygiene-sweep.md` carries the recipe the field mirrors.
-5. **Session-log store**, from `check5-log-store`: logs from closed months sitting unfiled in `_local/_session-logs/`. Offer to file them into `YYYY-MM/` folders (see Organize Mode below). Read-only until confirmed; silent when there is nothing to file.
+5. **Session-log store**, from `check5-log-store`: logs from closed months sitting unfiled in `_local/_session-logs/`. When the plan has moves and no collisions, file them as an auto action (see below) and record it; silent when there is nothing to file.
 
-**Resolution protocol: propose, then per-action confirmation.** For each finding, propose one concrete action (commit these files with this message, push, prune this worktree, apply this doc update) and execute only what the user approves, action by action. Declined or unanswered proposals are recorded in the log and carried into the continuation prompt. The sweep itself changes nothing; only confirmed actions do.
+**Resolution: one numbered batch, after the log.** For each finding, draft one concrete proposal (commit these files with this message, push, apply this doc update) and number it `H1`, `H2` and so on. Each proposal runs only when the maintainer approves its number. Unanswered and declined proposals stay recorded in the log and in the continuation prompt.
+
+**Auto actions.** Three actions run without asking, because each is local, reversible, and refused by git or the script when its precondition fails: deleting a local branch with `git branch -d` once its upstream is gone, `git worktree prune`, and `organize-logs.py --apply` on a plan with no collisions. Each is recorded in the Hygiene Sweep section as `auto: <rule>`, with its command and its output. Every other action asks. The facts already carry `git worktree list`, which marks a prunable entry, and check 5's plan; the one extra read is `git branch -vv`, which marks a branch whose upstream is gone. `references/hygiene-sweep.md` holds the rules and the record format.
 
 In quick and blocked modes, run only check 2 and note the skips.
+
+## Wrap Order
+
+The log is written before any question is asked, and amended after the answers.
+
+1. Run `derive-log-facts.py` once (Evidence Gathering above).
+2. Judge the sweep and draft every proposal the wrap will ask about: hygiene findings, the same-arc archive (Evidence Gathering step 6), and surrounding-document updates (see below). Number them `H1` to `Hn`.
+3. Run the auto actions the sweep allows, and record each.
+4. Write the log. Its Hygiene Sweep section lists every proposal as `- **H1** <action>. Status: unanswered`, and the continuation prompt mirrors the list as pending hygiene actions.
+5. Run `check-log.py` (Log Self-Check below) and fix every finding.
+6. With no proposals, the wrap is done. Otherwise present every proposal in one message, numbered, and end with the answer line: "Answer in one line, such as `H1 y, H2 n`, or `ok` to approve them all."
+7. Carry out exactly the approved proposals, nothing adjacent.
+8. Amend the log. In the Hygiene Sweep section and the continuation prompt, change each status word: `done` or `failed` with the result for an approved proposal, `declined` for a declined one, and `unanswered` stays for any number the answer left out. A declined proposal that now needs the maintainer also goes in Waiting on You.
+9. Run `check-log.py` again on the amended file. This second clean run completes the wrap.
+
+**Silence approves nothing.** An item the answer line leaves out stays `unanswered`; only `ok`, `all y` or an equivalent explicit phrase approves every proposal. This is the same rule `plab-resolve-open-items` applies to its answer line.
+
+**Why the log comes first.** A terminal closed while a question is open still leaves a complete log, whose unanswered proposals `plab-continue-session` already shows as re-decidable. The ask-first order, decided on 2026-10-19 and reversed on 2026-11-03 before it was built, would have left no log at all in that case. Writing first costs one edit and one more `check-log.py` run, and only on wraps that asked a question.
 
 ## Session Log Output
 
@@ -166,7 +187,7 @@ resumed-from: # written only by an in-session /plab-continue-session resume; nev
 
 **Outstanding Issues** - Blockers, risks, unfinished work, including any sessions since the last log that were never wrapped (from capture-lite records, when present; see Evidence Gathering above).
 
-**Hygiene Sweep** - Findings from the pre-wrap sweep: state found, actions proposed, actions taken vs declined.
+**Hygiene Sweep** - Findings from the sweep: state found, one `auto:` line per auto action, and one line per numbered proposal with its status (`unanswered`, then `done`, `failed` or `declined` after the amendment).
 
 **Waiting on You** - Required in every mode. Only items blocked on the maintainer's decision or action belong here, one bullet each: what is awaited, why it blocks, a `(blocked since YYYY-MM-DD)` marker carrying the date the item first blocked, and links to the relevant files. Optional or nice-to-have items go in the Parked list, never here; an item nobody is blocked on dilutes the section until a real blocker hides inside it. Write "Nothing pending" explicitly when the list is empty; never omit the section. Mirror the list inside the continuation prompt so the next session re-presents it.
 
@@ -211,7 +232,7 @@ This default is a comply-or-explain rule: produce the verbose form, or produce a
 
 ## Log Self-Check (one call, after writing)
 
-Write the log, then run one command, and fix every finding before the wrap counts as done:
+Write the log, then run one command, and fix every finding before the wrap counts as done. When the wrap asked hygiene questions, run it again after the amendment (Wrap Order step 9); that second clean run is the one that completes the wrap:
 
 ```bash
 python <skill-dir>/scripts/check-log.py <log-path> --repo-root <project-root> --mode <quick|final|deep|blocked>
@@ -234,7 +255,7 @@ The following gates are judgment calls no script can make and stay the agent's o
 
 ## Surrounding Document Updates
 
-After writing the session log, check if changes warrant updates to:
+Before writing the session log, check whether changes warrant updates to:
 
 - **README.md** - only if user-facing capabilities changed
 - **CHANGELOG.md** - only if release-worthy (new feature, visible bugfix, breaking change)
@@ -242,7 +263,7 @@ After writing the session log, check if changes warrant updates to:
 - **Decision records** - if an architectural decision was made this session, propose capturing it as an ADR (MADR, `docs/internal/decisions/` where the repo uses them)
 - **Agent memory** - if durable facts or decisions emerged that outlive this session, confirm they are recorded in persistent memory rather than only in the log
 
-**Before making any edit, state the intended change and ask for confirmation.** Never update surrounding docs silently.
+**Each intended edit is one proposal in the hygiene batch** (Wrap Order above), naming the file and the change. Never update a surrounding doc until its number is approved.
 
 If nothing warrants an update, move on without commenting.
 
@@ -250,8 +271,9 @@ If nothing warrants an update, move on without commenting.
 
 - Never embed full transcripts - reference the transcript path only
 - Never conflate "completed" with "verified" - state verification status explicitly
-- Never commit, push, or modify anything beyond the session log without explicit per-action confirmation; the hygiene sweep proposes, the user disposes
-- Never update surrounding docs without confirmation
+- Never commit, push, or modify anything beyond the session log until the maintainer approves that proposal by its number. The only exceptions are the three auto actions in `references/hygiene-sweep.md`, each recorded in the log
+- Never ask a hygiene question before the log is written; write first, ask in one batch, then amend
+- Never update surrounding docs until their proposal is approved
 - The Waiting on You section is mandatory in every mode; an empty list is stated, never omitted
 - Summary must be ≤ 120 characters (for index display)
 - The session log must be self-contained - readable without the original session
