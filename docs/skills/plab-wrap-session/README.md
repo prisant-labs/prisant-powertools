@@ -128,7 +128,7 @@ _local/_session-logs/
 
 **Resume is unaffected.** `/plab-continue-session` 1.3.0+ reads the flat store and the month folders as one pooled set, sorted by filename, so an archived log and a hot log order correctly against each other. Filenames never change when a log is filed.
 
-**You do not have to remember this exists.** Deep and final wraps run hygiene Check 5. As of 1.9.0, when its plan has no collisions, the wrap files the logs without asking, as one of its three auto actions, and records it in the log:
+**You do not have to remember this exists.** Deep and final wraps run hygiene Check 5. As of 1.9.0, when its plan has no collisions, the wrap files the logs without asking, as one of its four auto actions, and records it in the log:
 
 > auto: log-store. `organize-logs.py _local/_session-logs --apply` -> 14 logs from 3 closed months (2026-05, 2026-06, 2026-07) filed into month folders.
 
@@ -294,7 +294,7 @@ Before writing the log, the skill checks whether changes warrant updates to READ
 |------|---------|-------------|
 | `references/frontmatter-schema.md` | Complete 25-field metadata specification (3 tiers) | When customizing frontmatter or building tooling |
 | `references/session-log-template.md` | Output skeletons for all 4 modes | When examining exact output structure per mode |
-| `references/hygiene-sweep.md` | The five checks, their commands, the numbered-batch protocol, and the three auto actions | When understanding what the sweep inspects and proposes |
+| `references/hygiene-sweep.md` | The five checks, their commands, the numbered-batch protocol, and the four auto actions | When understanding what the sweep inspects and proposes |
 | `references/doc-update-rules.md` | When/how to update README, CHANGELOG, plans, and ADRs | When understanding the surrounding document update rules |
 | `scripts/derive-log-facts.py` | One call gathers the frontmatter facts, the Waiting on You carry-forward, and the detection results of all five hygiene checks | Run once per wrap, before drafting the log |
 | `scripts/check-log.py` | Log Self-Check: one call runs the decisions-count, summary-length, Tier 1, Waiting on You, and deep-mode-section checks, plus the two detector scripts below | After writing the log |

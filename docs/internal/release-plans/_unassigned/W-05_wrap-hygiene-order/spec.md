@@ -9,7 +9,7 @@ linked-effort: "the maintainer's walk ruling of 2026-10-19 that placed W-05 in t
 linked-plan: null
 linked-release: null
 ac-count: 6
-source-count: 7
+source-count: 8
 requires-human-review: true
 target-release: null
 priority: P2
@@ -22,14 +22,14 @@ priority: P2
 **Status:** committed. Built as `plab-wrap-session` 1.9.0, not yet released. AC-6 waits on the first real wrap under 1.9.0.
 **Last updated:** 2026-11-03 by claude (Opus 5.5), written and built under the maintainer's instruction of 2026-11-03
 **Linked plan:** none; the build followed this spec directly
-**Open questions:** 1, D2, built on its recommendation as a working default (see Open Questions / Decisions)
-**Revisions:** 1
+**Open questions:** 0. D1 and D2 are Decided; D2 chose Option B on 2026-11-03 and is built (see Open Questions / Decisions)
+**Revisions:** 2
 
 ### Acceptance Criteria Fulfillment
 
 - [x] AC-1: `SKILL.md` writes the log before asking any hygiene question, and checks it after the amendment
 - [x] AC-2: The proposals are numbered, asked in one message, and silence approves nothing
-- [x] AC-3: Exactly three auto actions run without asking, each recorded
+- [x] AC-3: Exactly four auto actions run without asking, each recorded
 - [x] AC-4: Parked items are carried forward like Waiting on You items
 - [x] AC-5: A log with unanswered proposals, and its amended copy, both pass `check-log.py`
 - [ ] AC-6: The first real deep wrap under 1.9.0 follows the order
@@ -74,8 +74,8 @@ This spec fixes the order of a wrap and closes the Parked gap. The maintainer ch
 3. After writing, the wrap runs `check-log.py`. With no proposals, the wrap is done. Otherwise it presents every proposal in one message, ending with an answer line such as `H1 y, H2 n`, and carries out exactly the approved proposals [S2, S3].
 4. Silence approves nothing. A number the answer leaves out stays `unanswered`; only `ok`, `all y` or an equivalent explicit phrase approves every proposal. This is the rule `plab-resolve-open-items` applies to its own answer line [S7].
 5. After carrying out the answers, the wrap amends each status word, in the Hygiene Sweep section and the continuation prompt, to `done` or `failed` with the result, or `declined`, and runs `check-log.py` again. The second clean run completes the wrap.
-6. Three actions run without asking, before the log is written: `git branch -d` on a local branch whose upstream is gone, `git worktree prune`, and `organize-logs.py --apply` on a plan with no collisions. Each is recorded as an `auto:` line with its command and output. Every other action asks, including `git fetch --prune` (D2) [S2, S6].
-7. The constraint that nothing beyond the log changes without confirmation names the three auto actions as its only exceptions, so the skill does not contradict itself [S2].
+6. Four actions run without asking, before the log is written, in this order: `git fetch --prune origin` when a dry run lists a stale remote-tracking ref, `git branch -d` on a local branch whose upstream is gone, `git worktree prune`, and `organize-logs.py --apply` on a plan with no collisions. Each is recorded as an `auto:` line with its command and output, and the pruning fetch's line also names each pruned ref's SHA. Every other action asks (D2) [S2, S6, S8].
+7. The constraint that nothing beyond the log changes without confirmation names the four auto actions as its only exceptions, so the skill does not contradict itself [S2].
 8. `derive-log-facts.py` reports the newest log's top-level Parked items as `parked`, by the same rule as Waiting on You, and the wrap carries them forward verbatim, dropping only items the session resolved or promoted [S2, S5].
 
 ## Acceptance Criteria
@@ -84,7 +84,7 @@ This spec fixes the order of a wrap and closes the Parked gap. The maintainer ch
 
 **AC-2:** `references/hygiene-sweep.md`'s resolution protocol presents every proposal in one message with an `H1 y, H2 n` answer line, states that silence approves nothing, and defines the status words `unanswered`, `done`, `failed` and `declined`. [S3, S7]
 
-**AC-3:** `references/hygiene-sweep.md` lists exactly three auto actions with their record format, and names `git fetch --prune` as an action that asks. `SKILL.md`'s constraints name those three as the only exceptions to asking. [S2, S6]
+**AC-3:** `references/hygiene-sweep.md` lists exactly four auto actions with their record format, the pruning fetch first and recording each pruned ref's SHA. `SKILL.md`'s constraints name those four as the only exceptions to asking. [S2, S6, S8]
 
 **AC-4:** Given a newest log whose Parked section holds two top-level items and one indented sub-bullet, `derive-log-facts.py --json` reports exactly the two items, and the default digest prints them. A log with no Parked section yields an empty list, and no log yields null. Making the extractor count indented sub-bullets makes `test-derive-log-facts.py` fail. [S5]
 
@@ -114,6 +114,7 @@ The same wrap is interrupted after it asks. The log already exists, with H1 and 
 | Date | Author | Type | Description |
 |------|--------|------|-------------|
 | 2026-11-03 | claude | added | Initial spec, written and built in one pull request under the maintainer's instruction of 2026-11-03, following the shape ruled on 2026-10-19 with the order reversed. |
+| 2026-11-03 | claude | changed | D2 decided as Option B. The pruning fetch joins the auto actions, first in order and recorded with each pruned ref's SHA. Requirement 6, Requirement 7, AC-3 and S8 updated. |
 
 ## Sources & Evidence
 
@@ -124,6 +125,7 @@ The same wrap is interrupted after it asks. The log already exists, with H1 and 
 - **[S5]** `skills/plab-continue-session/references/handoff-display.md`, which leaves the Parked list out of the display, and `skills/plab-wrap-session/scripts/derive-log-facts.py` as of 1.8.2, which extracted only Waiting on You. Class A.
 - **[S6]** `docs/internal/release-plans/_unassigned/W-02_derived-log-facts/spec.md`, decision D4, and `skills/plab-continue-session/references/reconciliation.md`: a pruning fetch deleted a remote-tracking ref without confirmation on 2026-09-25. Class A.
 - **[S7]** `skills/plab-resolve-open-items/references/answer-line.md`, whose answer grammar never infers acceptance from silence. Class A.
+- **[S8]** The maintainer's answer of 2026-11-03 to D2, "prune yes", given to the question whether `git fetch --prune` should run without asking. In session. Class A.
 
 ### Unverified Claims
 
@@ -132,12 +134,12 @@ The same wrap is interrupted after it asks. The log already exists, with H1 and 
 
 ## Open Questions / Decisions
 
-**What these statuses mean.** D1 was decided by the maintainer. D2 is `Open`: the build followed its recommendation as a working default, so a walk can ratify or overturn it.
+**What these statuses mean.** D1 and D2 were decided by the maintainer. D2 overturned the working default the first build used.
 
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
 | D1 | Whether the wrap asks before or after writing the log | Option B | Decided | 2026-11-03 |
-| D2 | Whether `git fetch --prune` is an auto action | (none) | Open | (none) |
+| D2 | Whether `git fetch --prune` is an auto action | Option B: it is an auto action, recorded with each pruned ref's SHA | Decided | 2026-11-03 |
 
 ### D1: Whether the wrap asks before or after writing the log (Decided)
 
@@ -164,7 +166,7 @@ The same wrap is interrupted after it asks. The log already exists, with H1 and 
 > * **Follow-up:** Built as `plab-wrap-session` 1.9.0 on 2026-11-03; AC-6 waits on the first real wrap.
 > * **Decided by / date:** jprisant / 2026-11-03
 
-### D2: Whether `git fetch --prune` is an auto action
+### D2: Whether `git fetch --prune` is an auto action (Decided)
 
 **Summary.** The 2026-10-19 ruling listed `git fetch --prune` among the actions a wrap runs without asking [S2]. This build leaves it out.
 
@@ -178,3 +180,13 @@ The same wrap is interrupted after it asks. The log already exists, with H1 and 
 * **Option B:** Restore it to the auto list, as the 2026-10-19 ruling had it.
 
 **Recommendation.** Option A. Confidence: medium. The other three auto actions can be undone from what the log records, and a pruning fetch cannot, which is the reason W-02 D4 gave. Working default: built on this recommendation on 2026-11-03; not yet ratified.
+
+---
+
+> **Maintainer decision:** Decided 2026-11-03 by jprisant
+>
+> * **Status:** Decided
+> * **Choice:** Option B, the pruning fetch is an auto action
+> * **Reasoning:** The maintainer answered "prune yes" to the question whether `git fetch --prune` should run without asking [S8]. This restores the 2026-10-19 ruling. The build keeps the desired outcome by recording each pruned ref with its SHA, so the deletion is seen and can be undone with `git update-ref`.
+> * **Follow-up:** Built on 2026-11-03 into the unreleased `plab-wrap-session` 1.9.0: `SKILL.md`'s Auto actions paragraph and constraint, `references/hygiene-sweep.md`'s table and record example.
+> * **Decided by / date:** jprisant / 2026-11-03

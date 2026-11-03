@@ -69,7 +69,7 @@ Detect and judge before writing the log; resolve after it, in one numbered batch
 
 **Resolution: one numbered batch, after the log.** For each finding, draft one concrete proposal (commit these files with this message, push, apply this doc update) and number it `H1`, `H2` and so on. Each proposal runs only when the maintainer approves its number. Unanswered and declined proposals stay recorded in the log and in the continuation prompt.
 
-**Auto actions.** Three actions run without asking, because each is local, reversible, and refused by git or the script when its precondition fails: deleting a local branch with `git branch -d` once its upstream is gone, `git worktree prune`, and `organize-logs.py --apply` on a plan with no collisions. Each is recorded in the Hygiene Sweep section as `auto: <rule>`, with its command and its output. Every other action asks. The facts already carry `git worktree list`, which marks a prunable entry, and check 5's plan; the one extra read is `git branch -vv`, which marks a branch whose upstream is gone. `references/hygiene-sweep.md` holds the rules and the record format.
+**Auto actions.** Four actions run without asking, because each changes only this checkout, can be undone from what the log records, and is refused by git or the script when its precondition fails. In this order: a pruning fetch, `git fetch --prune origin`, in deep and final modes when `git remote prune origin --dry-run` lists a stale remote-tracking ref; deleting a local branch with `git branch -d` once its upstream is gone; `git worktree prune`; and `organize-logs.py --apply` on a plan with no collisions. The pruning fetch goes first because a branch's upstream reads `gone` only after its tracking ref is pruned. Each is recorded in the Hygiene Sweep section as `auto: <rule>`, with its command and its output, and the pruning fetch also records each pruned ref's SHA. Every other action asks. The facts already carry `git worktree list`, which marks a prunable entry, and check 5's plan. The extra reads are `git remote prune origin --dry-run` with one `git rev-parse` per stale ref, and `git branch -vv`, which marks a branch whose upstream is gone. The facts were fetched with `--no-prune`, so check 1 describes the remote before the pruning fetch. `references/hygiene-sweep.md` holds the rules and the record format.
 
 In quick and blocked modes, run only check 2 and note the skips.
 
@@ -271,7 +271,7 @@ If nothing warrants an update, move on without commenting.
 
 - Never embed full transcripts - reference the transcript path only
 - Never conflate "completed" with "verified" - state verification status explicitly
-- Never commit, push, or modify anything beyond the session log until the maintainer approves that proposal by its number. The only exceptions are the three auto actions in `references/hygiene-sweep.md`, each recorded in the log
+- Never commit, push, or modify anything beyond the session log until the maintainer approves that proposal by its number. The only exceptions are the four auto actions in `references/hygiene-sweep.md`, each recorded in the log
 - Never ask a hygiene question before the log is written; write first, ask in one batch, then amend
 - Never update surrounding docs until their proposal is approved
 - The Waiting on You section is mandatory in every mode; an empty list is stated, never omitted
