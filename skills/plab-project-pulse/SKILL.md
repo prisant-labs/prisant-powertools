@@ -5,8 +5,8 @@ argument-hint: "[--quick|--week] [--date YYYY-MM-DD] [--config <path>] [--digest
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.0.1"
-  updated: 2026-10-31
+  version: "1.1.0"
+  updated: 2026-11-03
 ---
 
 # Project Pulse
@@ -27,7 +27,7 @@ Answer "where is everything?" across every repository the owner keeps: what ship
 
 ## Output
 
-In `<out>/YYYY-MM-DD/`: `pulse-facts.json`, `digest.jsonl` (week mode), `scouts.json`, `curation.json`, `pulse.json`, `coverage.md`, `readout.md` and `dashboard.html`. The state file named in the settings is updated after validation. All of it is private; nothing is committed, pushed or published.
+In `<out>/YYYY-MM-DD/`: `pulse-facts.json`, `digest.jsonl` (week mode), `scouts.json`, `curation.json`, `pulse.json`, `readiness-candidates.json`, `readiness-judge.json` and `readiness.json` (week mode), `coverage.md`, `readout.md` and `dashboard.html`. The state file named in the settings is updated after validation. All of it is private; nothing is committed, pushed or published.
 
 ## Workflow
 
@@ -57,11 +57,24 @@ Follow `references/workflow.md`. With `--digest`, copy it to the run folder and 
 
 Write `curation.json`: at most ten What's Next items across all repositories, ordered by what unblocks the most work, each with repository, who acts, why, and its source; one line per cross-repository pattern; and the agent routing table. Use the same meanings as `plab-current-status`: Waiting on You is what only the owner can do, What's Next is work an agent can do once unblocked.
 
-### 5. Build, render and check
+### 5. Build, rank readiness, render and check
 
 ```bash
 python <this skill's base directory>/scripts/build-pulse.py --facts <run>/pulse-facts.json --scouts <run>/scouts.json --curation <run>/curation.json --state <state> --out <run> [--digest <run>/digest.jsonl] [--spend <projects.json>]
-python <this skill's base directory>/scripts/render.py --pulse <run>/pulse.json --out <run>/dashboard.html
+```
+
+In week mode, rank readiness before rendering (PP-01 D2). The judge's prompt and the seven criteria are in `references/workflow.md`.
+
+```bash
+python <this skill's base directory>/scripts/readiness.py candidates --pulse <run>/pulse.json --out <run>/readiness-candidates.json
+# launch the readiness judge; write its return to <run>/readiness-judge.json
+python <this skill's base directory>/scripts/readiness.py build --candidates <run>/readiness-candidates.json --judge <run>/readiness-judge.json --out <run>/readiness.json
+```
+
+Then render and check. Pass `--readiness` in week mode only.
+
+```bash
+python <this skill's base directory>/scripts/render.py --pulse <run>/pulse.json --out <run>/dashboard.html [--readiness <run>/readiness.json]
 python <this skill's base directory>/scripts/pulse-check.py <run>
 ```
 
@@ -69,7 +82,7 @@ On exit 1, fix each named failure and run again. The state file changes only whe
 
 ### 6. Write the readout
 
-Write `readout.md`: The Answer in three sentences, What's Next, Waiting on You grouped by repository with ages, conflicts, unprotected work, and the active repositories listed as `current_status_candidate`, each with "run `/plab-current-status` there".
+Write `readout.md`: The Answer in three sentences, What's Next, Waiting on You grouped by repository with ages, the top three readiness items with their level and missing criteria (week mode), conflicts, unprotected work, and the active repositories listed as `current_status_candidate`, each with "run `/plab-current-status` there".
 
 ### 7. Reply
 
@@ -89,7 +102,7 @@ Give the run folder, The Answer, the three oldest waiting items, and the checker
 | File | Load when |
 |------|-----------|
 | `references/pulse-schema.md` | Steps 3 to 5 |
-| `references/workflow.md` | Step 3 |
+| `references/workflow.md` | Steps 3 and 5 |
 | `references/carry-forward.md` | When a dormant repository's entry looks old |
 | `references/coverage-statement.md` | Step 5, when the checker fails on `coverage.md` |
 | `references/settings-example.md` | Step 1, when the settings file is missing |

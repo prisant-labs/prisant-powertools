@@ -43,6 +43,11 @@ THE RULES (references/pulse-schema.md, "Rules `pulse-check.py` enforces")
       20; see the module docstring's note on the schema discrepancy below)
   R10 `dashboard.html`'s count of `class="repo-card"` elements equals the
       number of repository records in `pulse.json` (AC-22)
+  R11 a `--week` run holds `readiness.json` (PP-01 D2), and any
+      `readiness.json` is well formed: its judge names a model, its items
+      rank 1 to n, each names a repository in `pulse.json`, a work item and
+      a source, carries exactly the seven criteria with a boolean and
+      non-empty evidence, and its met count and level agree
 
 R1 TO R8 TAKE PARSED JSON; R9 AND R10 NEED THE DIRECTORY
 ----------------------------------------------------------
@@ -288,6 +293,49 @@ def r10_card_count(dashboard_text, data):
     return []
 
 
+# The seven criteria and the levels of `scripts/readiness.py`, which writes the file.
+READINESS_CRITERIA = ("github_pr_flow", "tests_pass", "spec_with_acs", "agent_instructions",
+                      "checkpointed_stages", "safe_tests", "clean_branch")
+
+
+def _readiness_level(met):
+    return "high" if met == len(READINESS_CRITERIA) else ("medium" if met >= 5 else "low")
+
+
+def r11_readiness(readiness, data):
+    out = []
+    agent = readiness.get("agent") if isinstance(readiness, dict) else None
+    if not isinstance(agent, dict) or not agent.get("model"):
+        out.append("R11: readiness.json's judge agent names no model")
+    items = readiness.get("items") if isinstance(readiness, dict) else None
+    if not isinstance(items, list):
+        return out + ["R11: readiness.json has no `items` list"]
+    repos = {r.get("repo") for r in data.get("repos", []) or []}
+    if [i.get("rank") for i in items] != list(range(1, len(items) + 1)):
+        out.append("R11: readiness items are not ranked 1 to n")
+    for item in items:
+        name = item.get("repo")
+        if name not in repos:
+            out.append("R11: readiness item %r names no repository in pulse.json" % name)
+        if not item.get("work_item") or not item.get("source"):
+            out.append("R11: readiness item for %s lacks a work item or a source" % name)
+        crit = item.get("criteria") or {}
+        if sorted(crit) != sorted(READINESS_CRITERIA):
+            out.append("R11: readiness item for %s does not carry exactly the seven criteria" % name)
+            continue
+        bad = [k for k, c in crit.items()
+               if not isinstance(c, dict) or not isinstance(c.get("met"), bool) or not (c.get("evidence") or "").strip()]
+        if bad:
+            out.append("R11: readiness item for %s has criteria without a boolean and evidence: %s"
+                       % (name, ", ".join(sorted(bad))))
+            continue
+        met = sum(1 for c in crit.values() if c["met"])
+        if item.get("met_count") != met or item.get("level") != _readiness_level(met):
+            out.append("R11: readiness item for %s says %r at %r met, but its criteria give %d met, level %s"
+                       % (name, item.get("level"), item.get("met_count"), met, _readiness_level(met)))
+    return out
+
+
 def _read(path):
     try:
         return path.read_text(encoding="utf-8-sig")
@@ -296,7 +344,8 @@ def _read(path):
 
 
 def check_dir(dir_path):
-    """All ten rules against a directory holding pulse.json, coverage.md, dashboard.html."""
+    """All eleven rules against a directory holding pulse.json, coverage.md, dashboard.html,
+    and, for a --week run, readiness.json."""
     d = Path(dir_path)
     if not d.is_dir():
         raise Broken("%s is not a directory" % dir_path)
@@ -316,6 +365,14 @@ def check_dir(dir_path):
     out = check_pulse(data)
     out.extend(r9_coverage_headings(_read(coverage_path)))
     out.extend(r10_card_count(_read(dashboard_path), data))
+    readiness_path = d / "readiness.json"
+    if readiness_path.is_file():
+        try:
+            out.extend(r11_readiness(json.loads(_read(readiness_path)), data))
+        except ValueError as exc:
+            out.append("R11: readiness.json is not valid JSON: %s" % exc)
+    elif data.get("mode") == "week":
+        out.append("R11: a --week run has no readiness.json")
     return out
 
 
@@ -329,7 +386,7 @@ SAMPLE_DIR = Path(__file__).resolve().parent.parent / "examples" / "sample-pulse
 
 def _copy_sample(root):
     dest = Path(tempfile.mkdtemp(dir=root))
-    for name in ("pulse.json", "coverage.md", "dashboard.html"):
+    for name in ("pulse.json", "coverage.md", "dashboard.html", "readiness.json"):
         shutil.copyfile(SAMPLE_DIR / name, dest / name)
     return dest
 
@@ -462,6 +519,22 @@ def self_test():
         (d / "dashboard.html").write_text(mutated, encoding="utf-8")
         _assert_only(d, "R10", proved)
         proved += 1
+
+        # R11: a level that its criteria do not support.
+        d = _copy_sample(root)
+        readiness = json.loads((SAMPLE_DIR / "readiness.json").read_text(encoding="utf-8"))
+        low = [i for i in readiness["items"] if i["level"] != "high"]
+        if not low:
+            raise Broken("self-test: R11 needs a readiness item below high in the sample")
+        low[0]["level"] = "high"
+        _write_json(d / "readiness.json", readiness)
+        _assert_only(d, "R11", proved)
+        proved += 1
+
+        # R11: a week run with no readiness.json at all.
+        d = _copy_sample(root)
+        (d / "readiness.json").unlink()
+        _assert_only(d, "R11", proved)
 
         return proved
     finally:

@@ -281,6 +281,10 @@ jobs:
         if: always()
         run: python3 skills/plab-project-pulse/scripts/test-workflow-reference.py
 
+      - name: The pulse readiness ranking
+        if: always()
+        run: python3 skills/plab-project-pulse/scripts/test-readiness.py
+
       # The session pair, plab-wrap-session and plab-continue-session. These
       # four suites existed and passed locally but never ran here, so the
       # tag-sort defect fixed in PR #60 shipped past a green CI. Each builds

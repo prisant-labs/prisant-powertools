@@ -2,8 +2,22 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.1.0 | 2026-11-03 | unreleased | added | `--week` ranks the active repositories' work by readiness for a long autonomous run. `scripts/readiness.py` scores three of seven criteria from the sweep and the file system, one Sonnet judge scores the other four, and `pulse-check.py` rule R11 checks `readiness.json`. The dashboard and readout show the ranking. PP-01 D2. |
 | 1.0.1 | 2026-10-31 | v0.11.1 | fixed | `scripts/test-derive-pulse-facts.py` pins its AC-15 fixture files inside the test window. It wrote them at the real time of the run, so from 2026-10-31 on the unprotected-work check failed and the session-log exclusion check passed without testing anything. No change to the skill's behaviour. |
 | 1.0.0 | 2026-10-30 | v0.11.0 | added | First version, specified by PP-01 (project pulse skill). Rolls every repository under the configured roots into one private weekly pulse, reusing fresh `plab-current-status` snapshots. Manual invocation only. Built on five working-default decisions, D1 to D5 in the PP-01 spec, all still `Open` pending the maintainer's ratification. |
+
+## 1.1.0 - 2026-11-03
+
+**Added: a readiness ranking in `--week`.** The owner ranked work for long autonomous runs by hand on 2026-10-09 and 2026-10-28, each time with a judge agent. The maintainer chose on 2026-11-01 to build that ranking into the weekly run (PP-01 D2, Option B). A new stage runs after `build-pulse.py`, because it reads `pulse.json`, and before `render.py`, so the dashboard carries it.
+
+- `scripts/readiness.py candidates` picks at most eight active repositories, those with an agent-actionable What's Next item first, and scores three criteria without a model: a GitHub remote, an `AGENTS.md` or `CLAUDE.md` at the root, and a branch with no modified or staged file.
+- One Sonnet judge at high effort reads at most four files per candidate and scores the other four: passing tests, a spec with acceptance criteria, checkpointed stages, and tests without destructive side effects. A missing return is re-run once on Opus. The agent cap stays at ten, now counting the judge.
+- `scripts/readiness.py build` merges both halves into `readiness.json`, levels each item (`high` at seven met, `medium` at five or six, `low` below), ranks by met count, and exits 1 naming any candidate the judge left unscored.
+- `pulse-check.py` rule R11 requires `readiness.json` in a week run and checks its shape, its ranks, its criteria and its levels. Two self-test mutations prove it fails.
+- `render.py --readiness` adds a "Ready for a Long Autonomous Run" section; its items are not `repo-card` elements, so R10's count is unchanged. The readout lists the top three.
+- The sample pulse gains a hand-authored `readiness.json`, and its dashboard is re-rendered with the new section.
+
+`scripts/test-readiness.py` adds 23 checks, including a canary that disables the level rule and sees a two-met item read `high`. CI runs it.
 
 ## 1.0.1 - 2026-10-31
 
