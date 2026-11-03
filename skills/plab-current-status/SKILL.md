@@ -5,8 +5,8 @@ argument-hint: "[<byline>] [--no-fetch]"
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.0.1"
-  updated: 2026-10-30
+  version: "1.1.0"
+  updated: 2026-11-02
 ---
 
 # Current Status
@@ -34,7 +34,7 @@ Run, with a facts path in a temp folder outside the repository:
 python <this skill's base directory>/scripts/derive-status-facts.py --repo <project root> --json --out <temp folder>/status-facts.json
 ```
 
-Add `--no-fetch` when the maintainer passed it. On exit 2, report the named cause and stop; never write a snapshot from recall. Every fact about repository state in the snapshot comes from this output: branch, head, tree, upstream, tag, commits, pull requests, logs, previous snapshot, decisions and gaps.
+Add `--no-fetch` when the maintainer passed it. On exit 2, report the named cause and stop; never write a snapshot from recall. Every fact about repository state in the snapshot comes from this output: branch, head, tree, upstream, tag, commits, pull requests and each open one's check state, logs, previous snapshot, decisions and gaps.
 
 ### 2. Check where the file will land
 

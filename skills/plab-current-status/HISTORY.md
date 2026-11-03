@@ -2,8 +2,13 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.1.0 | 2026-11-02 | unreleased | added | Each open pull request in the facts carries its check state, reduced from `gh pr list --json statusCheckRollup` in the same call, so the snapshot can name a failing pull request. Decided as CS-01 D6 (CI status for open pull requests) in the 2026-11-01 walk. |
 | 1.0.1 | 2026-10-30 | v0.11.0 | fixed | Codex now honors manual-only too: `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, which Codex reads in place of `disable-model-invocation`. |
 | 1.0.0 | 2026-10-28 | v0.10.0 | added | First version, specified by CS-01 (current status skill). Writes a dated, ranked status snapshot of any git repository to `_local/_status/YYYY-MM-DD_<model>_<byline>.md`, from one facts-script call, and checks it with a self-testing checker. Manual invocation only. Built on four working-default decisions, D1 to D4 in the CS-01 spec, all still `Open` pending the maintainer's ratification. |
+
+## 1.1.0 - 2026-11-02
+
+**Added: check state for open pull requests.** `derive-status-facts.py` now requests `statusCheckRollup` in its existing `gh pr list` call and reduces it, per pull request, to `checks`: a `state` of `passing`, `failing`, `pending` or `none`, the names of the failing checks, and pending and total counts. The raw rollup carries a URL and two timestamps per check, so it never enters the facts. The split follows `gh pr checks`: a check run passes on `SUCCESS`, `NEUTRAL` or `SKIPPED` and fails on any other conclusion, a commit status fails on `FAILURE` or `ERROR`, and one failure outranks any pending check. `references/status-format.md` now asks the "As of" paragraph for each open pull request's check state, and ranks a failing one as work. `test-derive-status-facts.py` gains eleven checks against both rollup shapes. Decided by the maintainer on 2026-11-01 as CS-01 D6. The same walk decided D5 (decisions on unmerged branches): the sweep still reads only the checked-out tree, and the CS-01 spec now records that as a limitation.
 
 ## 1.0.1 - 2026-10-30
 

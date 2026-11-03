@@ -4,12 +4,12 @@ title: "plab-current-status: a dated, per-repository status snapshot"
 type: spec
 status: fulfilled
 created: 2026-10-28
-updated: 2026-10-28
+updated: 2026-11-02
 linked-effort: "the maintainer's request of 2026-10-28 in session, and stream 3 (seeing everything in one place) of the maintainer's private consolidated status file of 2026-10-25"
 linked-plan: implementation-plan.md
 linked-release: null
-ac-count: 12
-source-count: 9
+ac-count: 13
+source-count: 10
 requires-human-review: true
 target-release: null
 priority: P2
@@ -19,11 +19,11 @@ priority: P2
 
 ## Task Summary
 
-**Status:** fulfilled, shipped in v0.10.0
-**Last updated:** 2026-10-28 by claude (Opus 5.5), written and committed under the maintainer's instruction to write and build it
+**Status:** fulfilled, shipped in v0.10.0; AC-13 (check state for open pull requests) added in 1.1.0, not yet released
+**Last updated:** 2026-11-02 by claude (Opus 5.5), adding D5 and D6 from the maintainer's walk of 2026-11-01 and building D6
 **Linked plan:** `implementation-plan.md` in this folder
-**Open questions:** 4, each built on its recommendation as a working default and awaiting ratification (see Open Questions / Decisions)
-**Revisions:** 2
+**Open questions:** none. D1 to D4 were ratified and D5 and D6 decided on 2026-11-01 (see Open Questions / Decisions)
+**Revisions:** 3
 
 ### Acceptance Criteria Fulfillment
 
@@ -39,6 +39,7 @@ priority: P2
 - [x] AC-10: Every gap the facts report appears in What I Don't Know
 - [x] AC-11: Stdlib tests and a self-testing checker prove the scripts, each with a canary, and CI runs them
 - [x] AC-12: A live run on this repository produces a file the checker passes
+- [x] AC-13: Each open pull request carries the state of its checks, reduced from GitHub's rollup
 
 ### Currently In Progress
 
@@ -72,6 +73,7 @@ The skill must stand alone. It runs in any repository, whether or not that repos
 4. **Answering or writing back decisions.** That is `plab-resolve-open-items`. This skill reads decisions and writes only its own file [S4].
 5. **Writing to a session log, a spec, or any tracked file.** The snapshot is the only file a run writes.
 6. **Moving the decisions sweep into `lib/`.** See D1.
+7. **Decisions recorded only on an unmerged branch.** The decisions sweep reads the checked-out working tree and never another branch's content, so a decision written only on a branch that has not merged is not gathered, and therefore not ranked, until that branch is checked out or merged. See D5.
 
 ## Users / Actors
 
@@ -83,7 +85,7 @@ The skill must stand alone. It runs in any repository, whether or not that repos
 ## Requirements
 
 1. The skill carries `disable-model-invocation: true`. `plab-continue-session` and `plab-resolve-open-items` both answer status questions such as "where are we" directly, and a status skill that fired on those phrases would break that contract [S5].
-2. Every fact about repository state comes from one invocation of `derive-status-facts.py`, which returns JSON. The facts are: the repository name, branch, head commit, whether the tree is clean, the upstream comparison, the latest tag, commits since that tag and since the previous snapshot, open and recently merged pull requests, the newest session log and every log written since the previous snapshot, the previous snapshot itself, and the decisions sweep's pending, recently answered and unrecognised items. Facts from a script rather than from the model's recall is the convention `plab-wrap-session` follows, because the number of calls sets a run's cost [S6].
+2. Every fact about repository state comes from one invocation of `derive-status-facts.py`, which returns JSON. The facts are: the repository name, branch, head commit, whether the tree is clean, the upstream comparison, the latest tag, commits since that tag and since the previous snapshot, open and recently merged pull requests, with each open pull request's check state, the newest session log and every log written since the previous snapshot, the previous snapshot itself, and the decisions sweep's pending, recently answered and unrecognised items. Facts from a script rather than from the model's recall is the convention `plab-wrap-session` follows, because the number of calls sets a run's cost [S6].
 3. The facts script writes no file in the working tree. A `git fetch` that updates remote-tracking refs is permitted, because it changes no tracked or untracked file. When the target is not a git repository, or a step that must succeed fails, the script exits 2 and names the cause rather than returning partial facts [model-inference].
 4. The facts report the repository's level: `git-only` when it has neither session logs nor typed planning documents with a decisions section, `logs` when it has logs but no such documents, and `decisions` when it has such documents. Every source that could not be read for an expected reason, such as `gh` being absent, no remote, or no logs, is listed as a named gap rather than treated as broken [S2, S7].
 5. The decisions sweep is `gather-backlog.py`, called by its path inside the plugin. A new `--answered-since YYYY-MM-DD` argument makes it also return items whose status is an answer and whose `Updated` date is on or after that date, and items whose status is outside the vocabulary of `references/decisions-section.md`. Each item then carries a `kind` of `pending`, `answered` or `unrecognised`. Without the argument, its output is byte-identical to before. Unrecognised statuses are returned because six open items were invisible to every sweep until 2026-10-26, when their status words were found to be outside the vocabulary [S4, S8].
@@ -123,6 +125,8 @@ The skill must stand alone. It runs in any repository, whether or not that repos
 
 **AC-12:** Running `/plab-current-status` on this repository writes one file under `_local/_status/`, and `status-check.py --facts` passes it. [model-inference: the live run is this spec's own test design]
 
+**AC-13:** Each open pull request in the facts carries `checks`, holding a `state` of `passing`, `failing`, `pending` or `none`, the names of its failing checks, and its pending and total counts, reduced from `gh pr list --json statusCheckRollup` without the rollup's URLs. A check run fails on any conclusion other than `SUCCESS`, `NEUTRAL` or `SKIPPED`, a commit status fails on `FAILURE` or `ERROR`, and one failure outranks any pending check. `test-derive-status-facts.py` proves each rule, and adding `FAILURE` to the passing conclusions makes it fail. [S10]
+
 ## Behavior / Examples
 
 ### Example 1: This repository
@@ -148,6 +152,7 @@ In a repository with no logs and no specs, the facts report level `git-only` and
 |------|--------|------|-------------|
 | 2026-10-28 | claude | added | Initial spec, written and committed the same day under the maintainer's instruction to write and build it. The four decisions below are built on their recommendations as working defaults and stay `Open` until the maintainer ratifies or overturns them. |
 | 2026-10-28 | claude | status | Status moved to `fulfilled`: all twelve acceptance criteria were verified with the evidence in the Task Summary, and the skill ships in v0.10.0. D1 to D4 remain `Open`; a later answer that overturns one changes the skill in a follow-up version, not this spec's criteria. |
+| 2026-11-02 | claude | added | D5 and D6 added, both decided in the maintainer's walk of 2026-11-01. D6 adds check state for open pull requests to Requirement 2 and as AC-13, built in `plab-current-status` 1.1.0; D5 records the unmerged-branch limitation as Non-Goal 7. The status stays `fulfilled`. |
 
 ## Sources & Evidence
 
@@ -160,6 +165,7 @@ In a repository with no logs and no specs, the facts report level `git-only` and
 - **[S7]** `skills/plab-audit/references/coverage-statement.md`, which makes a missing tool a recorded gap rather than a silence. Class A.
 - **[S8]** PR #47 (closing verified decision items), merged 2026-10-26, which found six open items whose status words no sweep recognised. Class A.
 - **[S9]** The maintainer's global instructions, which require every reference id to carry a human-readable handle. Maintainer-local, outside this repository. Class A.
+- **[S10]** The maintainer's walk of 2026-11-01, which decided D5 and D6, and the shape `gh pr list --json statusCheckRollup` returned for PR #64 (v0.11.1 release) on 2026-11-02. Class A.
 
 ### Unverified Claims
 
@@ -170,7 +176,7 @@ In a repository with no logs and no specs, the facts report level `git-only` and
 
 ## Open Questions / Decisions
 
-**What these statuses mean.** Every item below is `Open`: the maintainer has not chosen. Each Recommendation ends by saying the build used it as a working default, so a walk can ratify or overturn it. The build followed the maintainer's instruction of 2026-10-28 to write and build the skill.
+**What these statuses mean.** D1 to D4 were built on their recommendations as working defaults on 2026-10-28, following the maintainer's instruction to write and build the skill, and the maintainer ratified all four on 2026-11-01. D5 and D6 were raised as follow-up questions before that walk and decided in it.
 
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
@@ -178,6 +184,8 @@ In a repository with no logs and no specs, the facts report level `git-only` and
 | D2 | Whether the facts script fetches before comparing with the remote | Option A | Decided | 2026-11-01 |
 | D3 | The look-back window for recent decisions and accomplishments | Option A | Decided | 2026-11-01 |
 | D4 | How many items each ranked section shows | Option A | Decided | 2026-11-01 |
+| D5 | Whether a decision on an unmerged branch is gathered | Option A | Decided | 2026-11-01 |
+| D6 | Whether the facts report CI status for open pull requests | Option A | Decided | 2026-11-01 |
 
 ### D1: Where the decisions sweep lives (Decided)
 
@@ -278,4 +286,54 @@ In a repository with no logs and no specs, the facts report level `git-only` and
 > * **Choice:** Option A
 > * **Reasoning:** The maintainer kept the cap of ten items per ranked section, with the remaining count stated.
 > * **Follow-up:** None needed; shipped in 1.0.0.
+> * **Decided by / date:** jprisant / 2026-11-01
+
+### D5: Whether a decision on an unmerged branch is gathered (Decided)
+
+**Summary.** Whether the decisions sweep should read decisions written only on a branch that has not merged.
+
+**Context.** The ranking rule puts what blocks work in flight first. The sweep, `skills/plab-resolve-open-items/scripts/gather-backlog.py`, reads files from the checked-out working tree and never reads another branch's content. A decision recorded only on an unmerged branch is therefore never gathered, so the question of how to rank it never arises.
+
+**Desired outcome.** The snapshot does not claim to see decisions it cannot see.
+
+**Options / approaches.**
+
+* **Option A:** Leave it unbuilt, and record the limitation in this spec.
+* **Option B:** Teach the sweep to read a named list of in-flight branches from git, so their decisions are gathered and ranked as blocking.
+
+**Recommendation.** Option A. Confidence: medium. Branches in this repository are checked out and merged quickly, so the gap rarely matters, and Option B is a new capability in the sweep that another skill also depends on.
+
+---
+
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
+>
+> * **Status:** Decided
+> * **Choice:** Option A
+> * **Reasoning:** The maintainer accepted leaving the sweep to the checked-out tree, with the limitation written down rather than built around.
+> * **Follow-up:** Recorded as Non-Goal 7 on 2026-11-02; no code change.
+> * **Decided by / date:** jprisant / 2026-11-01
+
+### D6: Whether the facts report CI status for open pull requests (Decided)
+
+**Summary.** Whether the facts script asks GitHub for each open pull request's check results.
+
+**Context.** Up to 1.0.1 the script requested only each open pull request's number, title, branch and draft flag. A pull request's CI state is the kind of fact a status snapshot exists to surface, and `gh pr list` already returns it as `statusCheckRollup` in the same call.
+
+**Desired outcome.** A failing pull request appears in the snapshot as work to do, without the agent running another command.
+
+**Options / approaches.**
+
+* **Option A:** Request `statusCheckRollup` in the existing call and reduce it to one state per pull request.
+* **Option B:** Leave check state out of the facts.
+
+**Recommendation.** Option A. Confidence: medium. It costs no extra call, and the reduction keeps the rollup's URLs and timestamps out of the facts the agent reads.
+
+---
+
+> **Maintainer decision:** Decided 2026-11-01 by jprisant
+>
+> * **Status:** Decided
+> * **Choice:** Option A
+> * **Reasoning:** The maintainer chose to build it, in its own pull request after v0.11.1.
+> * **Follow-up:** Built in `plab-current-status` 1.1.0 as AC-13, on 2026-11-02.
 > * **Decided by / date:** jprisant / 2026-11-01

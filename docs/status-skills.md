@@ -14,7 +14,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 |---|---|---|---|---|
 | `plab-ai-review` | 1.3.0 | Auto + explicit | `<doc.md> [--reviewer codex\|gpt\|gemini] [--dispatch] [--respond] [--collect] [--close]` | Beside the source doc, plus `_archive/` on `--close` |
 | `plab-audit` | 1.1.1 | **Explicit only** | `<path> [--appraise\|--audit\|--roadmap] [--type ...] [--lens=docs] [--out <path>]` | `_output/plab-audit/<repo>_<YYYY-MM-DD>/` |
-| `plab-current-status` | 1.0.1 | **Explicit only** | `[<byline>] [--no-fetch]` | `_local/_status/YYYY-MM-DD_<model>_<byline>.md` (gitignored) |
+| `plab-current-status` | 1.1.0 | **Explicit only** | `[<byline>] [--no-fetch]` | `_local/_status/YYYY-MM-DD_<model>_<byline>.md` (gitignored) |
 | `plab-project-pulse` | 1.0.1 | **Explicit only** | `[--quick\|--week] [--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD/`, private, outside any repository or ignored by it |
 | `plab-usage-audit` | 1.0.0 | **Explicit only** | `[--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD_claude-usage/`; a tracked folder only when the settings allow it |
 | `plab-continue-session` | 1.6.1 | Auto + explicit | `[--log <path>]` | Nothing. Displays context only |
@@ -197,7 +197,7 @@ Audits a repository into a five-file bundle: what it is worth, what is wrong wit
 
 ---
 
-### `plab-current-status` 1.0.1, explicit only
+### `plab-current-status` 1.1.0, explicit only
 
 Writes a dated, ranked status snapshot of the current repository.
 
@@ -208,7 +208,7 @@ Writes a dated, ranked status snapshot of the current repository.
 | Sections | The Answer, Changed Since Last Status, Waiting on You, What's Next, Pending Decisions, Recent Decisions, Accomplished, Where the Project Is, What I Don't Know |
 | Levels | `git-only`, `logs`, `decisions`, reported by the facts script; each missing source is a named gap |
 | Scripts | `derive-status-facts.py`, with `test-derive-status-facts.py`; `status-check.py`, its own output gate, which proves eight rules against the committed sample on every run. It calls `plab-resolve-open-items`'s `gather-backlog.py --answered-since` for decisions |
-| Setup required | Python 3. `gh` is optional; without it, pull requests become a named gap |
+| Setup required | Python 3. `gh` is optional; with it, each open pull request carries its check state, and without it, pull requests become a named gap |
 | References | 1 file |
 
 **A ranked list, not an inventory.** Each ranked section shows at most ten items, each with a `Why here:` clause, and names where the rest are. The frontmatter carries the counts, the level and the previous snapshot, so another tool can read the file without parsing its prose.
