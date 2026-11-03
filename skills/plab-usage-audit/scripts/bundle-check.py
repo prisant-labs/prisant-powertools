@@ -78,7 +78,9 @@ APPROVAL_FILES = ("03-scorecard.md", "05-recommendations.md")
 
 FIVE_MIN_HEADING_RE = re.compile(r"^##\s+Five-minute version", re.M)
 SECTION_HEADING_TEXT_RE = re.compile(r"^##\s+(.+?)\s*$", re.M)
-REC_HEADING_RE = re.compile(r"^##\s+([A-Za-z]\d+)\s*\(([^)]*)\)\s*:\s*(.+?)\s*$", re.M)
+# UA-01 D1: an id is the audit date plus R<n>, such as `2026-10-30 R3`.
+REC_HEADING_RE = re.compile(r"^##\s+(\d{4}-\d{2}-\d{2} R\d+)\s*\(([^)]*)\)\s*:\s*(.+?)\s*$", re.M)
+LETTER_ID_HEADING_RE = re.compile(r"^##\s+([A-Za-z]\d+)\s*\(", re.M)
 WHO_ACTS_LINE_RE = re.compile(r"^\*\*Who acts:\*\*\s*(.+?)\s*$", re.M)
 MECHANISM_LINE_RE = re.compile(r"^\*\*Mechanism:\*\*\s*(.+?)\s*$", re.M)
 DRIVE_LETTER_RE = re.compile(r"[A-Za-z]:[\\/]")
@@ -212,12 +214,21 @@ def check_r3(bundle, findings):
     if text is None:
         return
     all_starts = sorted(m.start() for m in SECTION_HEADING_TEXT_RE.finditer(text))
+    for m in LETTER_ID_HEADING_RE.finditer(text):
+        findings.append(
+            "R3: 05-recommendations.md: recommendation %s uses a letter id; ids are the audit "
+            "date plus R<n>, such as '2026-10-30 R3'" % m.group(1))
     rec_matches = [m for m in REC_HEADING_RE.finditer(text) if m.group(2).strip()]
     if not rec_matches:
         findings.append(
             "R3: 05-recommendations.md: no recommendation heading of the form "
-            "'## <ID> (<handle>): <title>' with a non-empty handle")
+            "'## <YYYY-MM-DD> R<n> (<handle>): <title>' with a non-empty handle")
         return
+    dates = sorted(set(m.group(1).split()[0] for m in rec_matches))
+    if len(dates) > 1:
+        findings.append(
+            "R3: 05-recommendations.md: recommendation ids carry %d dates (%s); every id in a "
+            "bundle carries that audit's date" % (len(dates), ", ".join(dates)))
     for m in rec_matches:
         rec_id = m.group(1)
         later = [s for s in all_starts if s > m.start()]
@@ -404,6 +415,16 @@ def mutate_r3(copy_dir):
         os.path.join(copy_dir, "05-recommendations.md"), "**Who acts:** owner decides", "**Who acts:** maybe")
 
 
+def mutate_r3_letter_id(copy_dir):
+    # A heading in the retired letter form, such as `## A1 (handle): title`.
+    _replace_once(os.path.join(copy_dir, "05-recommendations.md"), "## 2026-10-25 R2 (", "## A2 (")
+
+
+def mutate_r3_two_dates(copy_dir):
+    # Every id in one bundle carries that bundle's date.
+    _replace_once(os.path.join(copy_dir, "05-recommendations.md"), "## 2026-10-25 R3 (", "## 2026-10-24 R3 (")
+
+
 def mutate_r4(copy_dir):
     _replace_once(os.path.join(copy_dir, "data", "README.md"), "## Ledger\n", "## The Ledger\n")
 
@@ -444,7 +465,8 @@ def mutate_r9(copy_dir):
 
 
 MUTATIONS = [
-    ("R1", mutate_r1), ("R2", mutate_r2), ("R3", mutate_r3), ("R4", mutate_r4),
+    ("R1", mutate_r1), ("R2", mutate_r2), ("R3", mutate_r3), ("R3", mutate_r3_letter_id),
+    ("R3", mutate_r3_two_dates), ("R4", mutate_r4),
     ("R5", mutate_r5), ("R6", mutate_r6), ("R7", mutate_r7), ("R8", mutate_r8),
     ("R9", mutate_r9),
 ]
@@ -464,8 +486,8 @@ def self_test():
             raise Broken("the committed sample fails its own checker: %s" % "; ".join(findings))
 
         proved = 0
-        for rule_id, mutate in MUTATIONS:
-            copy_dir = os.path.join(root, "mutant-" + rule_id)
+        for n, (rule_id, mutate) in enumerate(MUTATIONS):
+            copy_dir = os.path.join(root, "mutant-%d-%s" % (n, rule_id))
             shutil.copytree(str(SAMPLE_DIR), copy_dir)
             mutate(copy_dir)
             got = run_checks(copy_dir, [])

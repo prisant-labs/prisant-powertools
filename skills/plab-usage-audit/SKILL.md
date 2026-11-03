@@ -5,8 +5,8 @@ argument-hint: "[--date YYYY-MM-DD] [--config <path>] [--digest <digest.jsonl>] 
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.0.0"
-  updated: 2026-10-30
+  version: "1.1.0"
+  updated: 2026-11-03
 ---
 
 # Usage Audit
@@ -66,7 +66,7 @@ Launch the three brief workers in `references/workflow.md` in parallel: usage, s
 
 ### 6. Write the bundle
 
-Write `README.md` and `01` to `05` from the briefs and the data, in the format of `references/bundle-format.md`. Correct a brief wherever the data disagrees, and note each correction for step 7. Remove any claim that the owner approved, chose or declined something unless it quotes the record (`references/scorecard.md`). Take recommendation ids from `audit-facts.json`'s `next_series_letter`. Write `data/README.md` with every required heading except `## Verification`.
+Write `README.md` and `01` to `05` from the briefs and the data, in the format of `references/bundle-format.md`. Correct a brief wherever the data disagrees, and note each correction for step 7. Remove any claim that the owner approved, chose or declined something unless it quotes the record (`references/scorecard.md`). Number recommendations `<audit_date> R1`, `<audit_date> R2` and so on, taking the date from `audit-facts.json`'s `audit_date`, and map any letter id from an earlier audit as `references/scorecard.md` says. Write `data/README.md` with every required heading except `## Verification`.
 
 ### 7. Verify
 

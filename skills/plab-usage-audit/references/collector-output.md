@@ -81,7 +81,6 @@ None of these four keys has a built-in value in the shipped code: a run with no 
 | `model_pins` | keys matching a model-pin name; the value is printed only when it looks like a model id, otherwise withheld |
 | `credentials` | per `credential_files` entry: `exists`, `mtime`, and `inline_keys` (key names only; a value is never read into this output) |
 | `insights_report` | the newest `~/.claude/usage-data/report*.html` next to the configured `claude_settings` file, and whether it postdates the last audit |
-| `next_series_letter` | the recommendation-id letter this run should use, from the state or settings `recommendation_series`, skip-adjusted |
 | `previous_bundle` | the newest `*_claude-usage` folder under `output_dir` other than the one this run is writing |
 | `settings_snapshot` | the full key-to-sha256 snapshot, carried through so `--commit-state` writes exactly what this run compared against, never the live file re-read later |
 | `findings` | reasons this run exits 1: an over-tolerance workflow gap, a reproduction mismatch, or an unregistered settings change |
@@ -89,4 +88,4 @@ None of these four keys has a built-in value in the shipped code: a run with no 
 
 Exit codes: 0 clean, 1 when `findings` is non-empty, 2 only when `--data` is missing or unreadable.
 
-`derive-audit-facts.py --config <settings> --state <state> --commit-state --facts <facts file>` reads that facts file and advances the state atomically: `last_claude_version`, the `settings_snapshot` it carried, `last_audit_date` (the facts file's `audit_date`), and `recommendation_series.next` moved past the letter the facts file used.
+`derive-audit-facts.py --config <settings> --state <state> --commit-state --facts <facts file>` reads that facts file and advances the state atomically: `last_claude_version`, the `settings_snapshot` it carried, and `last_audit_date` (the facts file's `audit_date`). Recommendation ids take their date from `audit_date` (`references/scorecard.md`), so nothing about them is stored; a `recommendation_series` key left by an earlier version is dropped.

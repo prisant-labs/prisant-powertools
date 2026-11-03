@@ -2,7 +2,19 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.1.0 | 2026-11-03 | unreleased | changed | Recommendation ids are date-scoped, such as `2026-11-03 R2`, in place of a rotating letter. `bundle-check.py` rule R3 requires the new form and one date per bundle. Older letter ids map to their bundle's date plus the letter. UA-01 D1. |
 | 1.0.0 | 2026-10-30 | v0.11.0 | added | First version, specified by UA-01 (usage audit skill). Runs the owner's weekly audit of their own Claude Code usage and writes a scrubbed, verified bundle. Manual invocation only. Built on six working-default decisions, D1 to D6 in the UA-01 spec, all still `Open` pending the maintainer's ratification. |
+
+## 1.1.0 - 2026-11-03
+
+**Changed: recommendation ids carry their audit's date.** An id is now the audit date, a space, `R` and a number, such as `2026-11-03 R2`. Through 1.0.0 each audit took the next letter of a rotating series stored in the state file, so ids repeated once the series wrapped, and an id could not be placed in time without a lookup. The maintainer chose date-scoped ids on 2026-11-01 (UA-01 D1): "D1 b actually makes sense, perhaps the year should also be a part of it." The full date carries the year.
+
+- `scripts/derive-audit-facts.py` no longer computes `next_series_letter`. `--commit-state` drops a `recommendation_series` key that an earlier state file carries, and the settings key of the same name is no longer read.
+- `scripts/bundle-check.py` rule R3 accepts only `## <YYYY-MM-DD> R<n> (<handle>): <title>`, reports a heading in the old letter form by name, and reports a bundle whose ids carry more than one date. Two new self-test mutations prove both findings, and each mutant now gets its own folder.
+- `references/scorecard.md` says how to refer to an id from before this version: the date of the bundle that raised it plus its letter id, such as `2026-10-09 X3`, so an open ask keeps one id and its asked count across the change.
+- The sample bundle uses the new ids, and its previous-audit ids use the mapped form.
+
+Before the change, the self-test reported the converted sample as failing R3 and two `test-derive-audit-facts.py` checks failed. After it, the self-test passes with 11 mutations and the suite passes 55 of 55. Run against the real 2026-10-30 bundle, R3 names each of its letter ids.
 
 ## 1.0.0 - 2026-10-30
 

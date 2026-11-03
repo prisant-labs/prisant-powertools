@@ -24,7 +24,7 @@ One folder per run, named `YYYY-MM-DD_claude-usage`, where the date is the audit
 
 **R2, the five-minute version.** `README.md` has a level-2 heading that starts with `Five-minute version`, and a table whose header row contains `ID` and `Who acts`.
 
-**R3, recommendations.** `05-recommendations.md` has at least one recommendation. A recommendation is a level-2 heading of the form `## <ID> (<handle>): <title>`, where `<ID>` is one letter followed by digits, such as `A1`, and `<handle>` is non-empty. Inside each recommendation's section:
+**R3, recommendations.** `05-recommendations.md` has at least one recommendation. A recommendation is a level-2 heading of the form `## <ID> (<handle>): <title>`, where `<ID>` is the audit date, a space, `R` and a number, such as `2026-10-30 R3`, and `<handle>` is non-empty. Every id in one bundle carries the same date, the audit date from `audit-facts.json`. A heading in the retired letter form, such as `## A1 (handle)`, is a finding. Inside each recommendation's section:
 
 - a line starting `**Who acts:**` whose value is one of `owner decides`, `owner acts`, `agent`, `agent after a yes`;
 - a line starting `**Mechanism:**` whose value is one of `setting`, `rule`, `hook`, `skill`, `script`, `decision`, `habit`.

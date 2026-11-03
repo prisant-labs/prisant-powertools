@@ -1,6 +1,6 @@
 # plab-usage-audit
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Source:** [`skills/plab-usage-audit/`](../../../skills/plab-usage-audit/)
 
 Audit one week of your own Claude Code usage against the week before: what it cost by lane and by the model that actually ran, whether routing met your rules, whether last week's recommendations happened, what changed in your configuration, and the few changes worth making next. Every number comes from a script, and a verifier checks the bundle before you read it. Manual invocation only.
@@ -15,7 +15,7 @@ Audit one week of your own Claude Code usage against the week before: what it co
 /plab-usage-audit
 ```
 
-The bundle lands in `<output_dir>/YYYY-MM-DD_claude-usage/`, where `output_dir` comes from your settings file. Start with its `README.md`, which holds the five-minute version and the recommendations table.
+The bundle lands in `<output_dir>/YYYY-MM-DD_claude-usage/`, where `output_dir` comes from your settings file. Start with its `README.md`, which holds the five-minute version and the recommendations table. Each recommendation's id is the audit date plus a number, such as `2026-11-03 R2`, so it can be placed in time with no lookup.
 
 ### Common Invocations
 

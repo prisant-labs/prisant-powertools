@@ -36,7 +36,7 @@
     "max_gap_hours": 19
   },
   "due_overdue": [
-    {"id": "Y6", "handle": "drop-weekly-manual-prompts", "consecutive_audits": 4},
-    {"id": "Y5", "handle": "backup-health-line", "consecutive_audits": 2}
+    {"id": "2026-10-18 Y6", "handle": "drop-weekly-manual-prompts", "consecutive_audits": 4},
+    {"id": "2026-10-18 Y5", "handle": "backup-health-line", "consecutive_audits": 2}
   ]
 }

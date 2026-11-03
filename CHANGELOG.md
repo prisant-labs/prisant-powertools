@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **`plab-wrap-session` writes the log before it asks any hygiene question.** It then asks every proposal in one numbered batch, answered in one line such as `H1 y, H2 n`, amends the log with the answers, and checks it again. A terminal closed while a question is open now still leaves a complete log. Pruning remote-tracking refs whose branch is gone from origin, deleting a merged branch whose upstream is gone, pruning stale worktree records, and filing old logs run without asking and are recorded in the log, with each pruned ref's SHA so it can be restored. Parked items are now carried from one log to the next, as Waiting on You items already were. Specified as W-05 (wrap hygiene order). `plab-wrap-session` 1.9.0.
+- **`plab-usage-audit` recommendation ids carry the audit's date.** An id now reads like `2026-11-03 R2` in place of a rotating letter that repeated across audits. The bundle checker requires the new form, and an id from an older audit is cited as its bundle's date plus its letter, such as `2026-10-09 X3`. Decided as UA-01 D1 (recommendation id scheme). `plab-usage-audit` 1.1.0.
 
 ### Added
 
