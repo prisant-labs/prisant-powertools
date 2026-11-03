@@ -17,7 +17,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 | `plab-current-status` | 1.1.0 | **Explicit only** | `[<byline>] [--no-fetch]` | `_local/_status/YYYY-MM-DD_<model>_<byline>.md` (gitignored) |
 | `plab-project-pulse` | 1.0.1 | **Explicit only** | `[--quick\|--week] [--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD/`, private, outside any repository or ignored by it |
 | `plab-usage-audit` | 1.0.0 | **Explicit only** | `[--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD_claude-usage/`; a tracked folder only when the settings allow it |
-| `plab-continue-session` | 1.6.1 | Auto + explicit | `[--log <path>]` | Nothing. Displays context only |
+| `plab-continue-session` | 1.6.2 | Auto + explicit | `[--log <path>]` | Nothing. Displays context only |
 | `plab-guide` | 2.2.3 | Auto + explicit | `<topic-or-repo-url> [--type repo-url\|tool\|concept] [--out <dir>] [--force]` | `_output/plab-guide/` |
 | `plab-init-project` | 1.3.1 | **Explicit only** | `[--profile minimal\|standard\|public] [--type ...] [--dry-run]` | The target repository root |
 | `plab-release-plan` | 1.6.2 | **Explicit only** | `--create \| --promote \| --demote \| --update \| --gate` | `docs/internal/release-plans/plan_NN_<slug>/` |
@@ -48,7 +48,7 @@ The most-used skill in the plugin. Writes a structured session log and hands off
 
 One call to `derive-log-facts.py` gathers the frontmatter facts, the previous log's Waiting on You items, and the detection results of a pre-wrap hygiene sweep across five checks (remote divergence, working tree, release state, documentation drift, session-log store). The agent judges that output and drafts numbered proposals, runs three auto actions, writes the log, and runs one call to `check-log.py` as the Log Self-Check. It then asks every proposal in one batch, amends the log with the answers, and runs `check-log.py` again. It runs the two existing canary-proven detector gates (path citations, dashes) exactly as before, plus the decisions-count comparison, summary length, Tier 1 frontmatter completeness, and the Waiting on You rules, and in deep mode the Uncertainty Ledger and What You May Not Realize presence checks. It reports the same three states as the detectors it calls: `clean`, `findings`, `broken`, where `broken` blocks exactly as `findings` does.
 
-### `plab-continue-session` 1.6.1
+### `plab-continue-session` 1.6.2
 
 Reads the newest session log and replays its recorded handoff.
 

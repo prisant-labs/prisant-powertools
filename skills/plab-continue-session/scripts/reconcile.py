@@ -140,8 +140,12 @@ def run_git(args, cwd, commands_run, timeout=None):
 # ---------------------------------------------------------------------------
 
 FRONTMATTER_SCALAR = re.compile(
-    r'^(date|branch|repo|commit-sha):\s*(.*)$'
+    r'^(date|branch|repo|commit-sha|commit-range):\s*(.*)$'
 )
+
+# The end SHA of a wrap log's `commit-range` (`base..end`), written by
+# plab-wrap-session's derive-log-facts.py since 1.8.0.
+COMMIT_RANGE_END = re.compile(r'^[0-9a-fA-F]{4,40}\.\.([0-9a-fA-F]{4,40})$')
 
 
 def strip_scalar(val):
@@ -160,14 +164,15 @@ def read_log(log_path):
 
 
 def extract_frontmatter(text):
-    """Pull only the four scalar fields this script needs (date, branch, repo, commit-sha)
+    """Pull only the five scalar fields this script needs (date, branch, repo, commit-sha,
+    commit-range)
     out of the log's frontmatter block.
 
     Deliberately NOT a general YAML parser: a real wrap-session log's frontmatter carries
     `files-changed:` as a YAML block list (one `- item` per line), and a parser that refuses
     block sequences (as `scripts/doc-lifecycle-check.py`'s does, by design, for its own
     different job) would report every real log as BROKEN. Scanning line-by-line for these
-    four known scalar key names simply never matches a `- item` continuation line, so the
+    five known scalar key names simply never matches a `- item` continuation line, so the
     block list is silently and correctly ignored rather than tripping a parse error.
     """
     fm = {}
@@ -458,8 +463,8 @@ def _commits_and_touched_by_date(cwd, log_date, ref, commands_run):
 
 
 def check_commits_since(cwd, fm, fetch_state, commands_run):
-    """AC-3: count commits landed since the log, via commit-sha when present, via the date
-    fallback otherwise, measured separately against the log's branch LOCALLY and against
+    """AC-3: count commits landed since the log, via commit-sha when present, else via the
+    end SHA of commit-range (C-02 OQ7), else via the date fallback, measured separately against the log's branch LOCALLY and against
     `origin/<branch>` REMOTELY, because this skill never pulls or merges (AC-9): a resuming
     checkout's local branch can sit stale behind origin indefinitely, and commits that
     landed there (another checkout's push, a PR merged through GitHub) would otherwise be
@@ -475,8 +480,19 @@ def check_commits_since(cwd, fm, fetch_state, commands_run):
     (the fetch did not succeed, or the log names no branch, or no matching remote-tracking
     ref exists), the whole check reports broken rather than a clean or finding result that
     implicitly asserts a remote it never actually checked, mirroring check_release_cut's
-    fetch-state cascade."""
+    fetch-state cascade.
+
+    Why commit-range (C-02 OQ7): a wrap never writes commit-sha, and a log's `date` is taken
+    when the wrap starts, so the date fallback counted a pull request merged during the wrap
+    as new work at the next resume. commit-range's end SHA is the last commit the wrap saw.
+    It is only as fresh as the wrap's derivation run, so a merge after that run still counts."""
     sha = fm.get("commit-sha")
+    anchor_name = "commit-sha"
+    if not sha:
+        m_range = COMMIT_RANGE_END.match(fm.get("commit-range") or "")
+        if m_range:
+            sha = m_range.group(1)
+            anchor_name = "commit-range end"
     branch = fm.get("branch")
 
     local_ref = "HEAD"
@@ -498,10 +514,10 @@ def check_commits_since(cwd, fm, fetch_state, commands_run):
         rc, _out, err, _ = run_git(["rev-parse", "--verify", sha + "^{commit}"], cwd, commands_run)
         if rc != 0:
             return {"state": "broken",
-                    "detail": "commit-sha %s from the log was not found in this repository "
-                              "(a different checkout, or history was rewritten): %s" % (sha, err.strip())}
+                    "detail": "%s %s from the log was not found in this repository "
+                              "(a different checkout, or history was rewritten): %s" % (anchor_name, sha, err.strip())}
         local_count, local_touched, local_err = _commits_and_touched_by_sha(cwd, sha, local_ref, commands_run)
-        local_desc = "commit-sha `%s` on `%s`%s" % (sha, local_ref, local_note)
+        local_desc = "%s `%s` on `%s`%s" % (anchor_name, sha, local_ref, local_note)
     else:
         local_count, local_touched, local_err = _commits_and_touched_by_date(cwd, log_date, local_ref, commands_run)
         local_desc = "the log's date (%s) on `%s`%s" % (fm.get("date"), local_ref, local_note)
@@ -549,8 +565,10 @@ def check_commits_since(cwd, fm, fetch_state, commands_run):
         parts.append("remote commits could not be verified: %s" % remote_broken_reason)
     elif remote_count == 0:
         parts.append("no additional commits on %s" % remote_ref)
+    elif behind == 0:
+        parts.append("%d commit(s) on %s since the log, all already in the local branch" % (remote_count, remote_ref))
     else:
-        parts.append("%d commit(s) on %s not yet reflected in the local branch" % (remote_count, remote_ref))
+        parts.append("%d commit(s) on %s since the log" % (remote_count, remote_ref))
     if behind:
         parts.append("local `%s` is %d commit(s) behind %s" % (local_ref, behind, remote_ref))
     detail = "; ".join(parts) + "."

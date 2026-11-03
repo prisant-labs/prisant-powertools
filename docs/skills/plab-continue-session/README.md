@@ -1,6 +1,6 @@
 # plab-continue-session
 
-**Version:** 1.6.1
+**Version:** 1.6.2
 **Source:** [`skills/plab-continue-session/`](../../../skills/plab-continue-session/)
 
 Resume an interrupted work session by replaying its recorded handoff. Reads the most recent session log, reports what is blocked on you and what the named next action is, then confirms before acting. The read-side companion to `/plab-wrap-session`, which writes the log this reads.
@@ -90,7 +90,7 @@ Extracts from frontmatter: `date`, `repo`, `branch`, `summary`, `status`, `sessi
 
 Before any of the log's content is shown as though it were still current, the skill runs `scripts/reconcile.py` against the project root and the selected log, and pastes its output as the leading "What changed since this log" section of the display. This closes a gap `plab-wrap-session` closed on the write side months earlier: a pre-wrap hygiene sweep checks remote divergence and release state before a log is written, and nothing had checked the equivalent on the read side before a log's claims were acted on.
 
-The script runs nine checks: a non-pruning fetch, ahead/behind counts against the upstream, remote branches with no local counterpart (plus the last five tags), commits landed since the log's date (via its `commit-sha` frontmatter field when present, a date comparison otherwise), a release tag cut since then, the log's branch no longer existing locally or on origin, a continuation-prompt file path that no longer resolves (with a rename-hint attempt), and an advisory when recent commits touch the same files the continuation prompt's next action names. Each check reports `ok`, a `finding`, or `broken`; a check that cannot complete (a dead remote, a timed-out fetch) names itself rather than being silently folded into a clean-looking result. The step is read-only beyond the fetch itself: no `pull`, `merge`, `checkout`, `reset`, or `push` ever runs here.
+The script runs nine checks: a non-pruning fetch, ahead/behind counts against the upstream, remote branches with no local counterpart (plus the last five tags), commits landed since the log (anchored on its `commit-sha` frontmatter field when present, else on the end SHA of its `commit-range` field, else on a date comparison), a release tag cut since then, the log's branch no longer existing locally or on origin, a continuation-prompt file path that no longer resolves (with a rename-hint attempt), and an advisory when recent commits touch the same files the continuation prompt's next action names. Each check reports `ok`, a `finding`, or `broken`; a check that cannot complete (a dead remote, a timed-out fetch) names itself rather than being silently folded into a clean-looking result. The step is read-only beyond the fetch itself: no `pull`, `merge`, `checkout`, `reset`, or `push` ever runs here.
 
 ### Phase 4: Present resumption context
 
@@ -103,7 +103,7 @@ Standard display:
 - Remote fetch: [ok] fetched origin
 - Ahead/behind upstream: [ok] up to date with upstream
 - Remote branches without a local counterpart: [finding] 2 remote branch(es) with no local counterpart: feat/x, fix/y. Recent tags: v0.6.0, v0.6.1, v0.7.0.
-- Commits since the log: [finding] 3 commit(s) landed since commit-sha `a1b2c3d`
+- Commits since the log: [finding] 3 commit(s) landed on the local branch since commit-range end `a1b2c3d` on `main`; 3 commit(s) on origin/main since the log, all already in the local branch.
 - Release cut since the log: [ok] no tag cut since the log's date
 - Log's branch, locally: [ok] branch `main` still exists locally
 - Log's branch, on origin: [ok] branch `main` still exists on origin

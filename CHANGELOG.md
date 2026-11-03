@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`plab-current-status` reports each open pull request's CI state.** The facts script asks GitHub for the check results in the call it already makes, and reduces them to passing, failing, pending or none, naming any failing check, so a snapshot can rank a failing pull request as work. The CS-01 spec also records that the decisions sweep never reads an unmerged branch. Both were decided in the 2026-11-01 walk. `plab-current-status` 1.1.0.
 
+### Fixed
+
+- **A pull request merged during a wrap no longer reads as new work at the next resume.** `plab-continue-session`'s reconciliation counted commits since the log by date, because it read only a `commit-sha` field that no wrap writes, and a log's date is taken when the wrap starts. It now anchors on the end SHA of the log's `commit-range`, which every log from `plab-wrap-session` 1.8.0 onward carries. Its detail line also stops calling remote commits "not yet reflected" when the local branch already has them. Specified as C-02 OQ7 (`reconcile.py` ignores `commit-range`). `plab-continue-session` 1.6.2.
+
 ## [0.11.1] - 2026-11-01
 
 A patch release of fixes in four skills. The session pair lists the newest tags correctly again, two tests stop depending on the machine and the date they run on, and `plab-release-plan` names its final status with the word the schema accepts. CI now also runs four test suites it skipped. Nothing from the 2026-11-01 decision walk's feature decisions ships here; those builds follow in their own pull requests.
