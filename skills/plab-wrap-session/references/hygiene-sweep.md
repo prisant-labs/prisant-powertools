@@ -2,7 +2,7 @@
 
 The checks the wrap runs before it writes the log, and the protocol for resolving what they find after it has. Deep and final modes run all five checks; quick and blocked modes run only check 2 and note the skips in the log.
 
-Detection is read-only. The three auto actions below are the only changes made without asking; every other action waits for the maintainer to approve its number.
+Detection is read-only. The four auto actions below are the only changes made without asking; every other action waits for the maintainer to approve its number.
 
 As of `plab-wrap-session` 1.8.0 (W-02, derived log facts), each check's detection is a field in the single `derive-log-facts.py` invocation Evidence Gathering already runs (`--fetch` in deep and final modes); the wrap reads that field rather than running the commands below by hand. The commands stay documented here as the definition each field is a direct port of, and as what to run by hand if the script is ever unavailable.
 
@@ -135,10 +135,11 @@ Rules:
 
 ## Auto actions
 
-Three actions run without asking, before the log is written. Each one is local, can be undone from what the log records, and is refused by git or the script itself when its precondition does not hold, so the check is a command's, not the agent's.
+Four actions run without asking, before the log is written, in the order of the table. Each one changes only this checkout, can be undone from what the log records, and is refused by git or the script itself when its precondition does not hold, so the check is a command's, not the agent's.
 
 | Rule | Command | When | Why it is safe |
 |---|---|---|---|
+| `fetch-prune` | `git fetch --prune origin` | Deep and final modes only, when `git remote prune origin --dry-run` lists at least one stale ref. Read each listed ref's SHA with `git rev-parse` first | It deletes only remote-tracking refs whose branch is gone from origin; no local branch and no remote branch changes. The record names each ref and its SHA, so `git update-ref refs/remotes/origin/<branch> <sha>` restores it. It runs first, because `git branch -vv` reads an upstream as `gone` only after its tracking ref is pruned |
 | `merged-branch` | `git branch -d <branch>` | `git branch -vv` marks the local branch's upstream `gone`. The facts script does not report this, so `git branch -vv` is the one read the agent adds | `-d` refuses a branch that is not merged. The output names the commit, `(was 1a2b3c4)`, so `git branch <branch> 1a2b3c4` restores it |
 | `worktree-prune` | `git worktree prune` | `git worktree list` marks an entry `prunable` | It removes only git's records of worktree folders that no longer exist |
 | `log-store` | `organize-logs.py <store> --apply` | Check 5 reports moves and no collisions | It moves files and never deletes, and never files the current or previous month |
@@ -146,7 +147,10 @@ Three actions run without asking, before the log is written. Each one is local, 
 Record each one in the Hygiene Sweep section, before any proposal:
 
 ```markdown
+- auto: fetch-prune. `git fetch --prune origin` -> - [deleted] (none) -> origin/feat/x. It pointed at 1a2b3c4.
 - auto: merged-branch. `git branch -d feat/x` -> Deleted branch feat/x (was 1a2b3c4).
 ```
 
-Everything else asks, including `git fetch --prune`. A pruning fetch deleted a remote-tracking ref without confirmation on 2026-09-25, which is why `derive-log-facts.py` fetches with `--no-prune` (W-02, derived log facts, decision D4). Pushes, remote deletes, commits, tags, marketplace repins, `git branch -D`, stash drops, file deletions and content edits all ask.
+**Why the pruning fetch is an auto action.** A pruning fetch deleted a remote-tracking ref without confirmation on 2026-09-25, which is why `derive-log-facts.py` fetches with `--no-prune` (W-02, derived log facts, decision D4). The fault that day was a deletion nobody saw and nothing recorded. The maintainer made the pruning fetch an auto action on 2026-11-03 (W-05, wrap hygiene order, decision D2), so it now runs only as a recorded step whose record carries every pruned ref's SHA. The facts script's own fetch stays `--no-prune`, so check 1 reports the remote as it was before the pruning fetch.
+
+Everything else asks. Pushes, remote deletes, commits, tags, marketplace repins, `git branch -D`, stash drops, file deletions and content edits all ask.

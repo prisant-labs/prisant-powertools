@@ -81,12 +81,15 @@ def run_reconcile(project_root, log_path, *extra_args):
     return proc
 
 
-def log_text(date, branch, repo="prisant-labs/prisant-utilities", commit_sha=None, prompt_body=""):
+def log_text(date, branch, repo="prisant-labs/prisant-utilities", commit_sha=None, prompt_body="",
+             commit_range=None):
     fm = ["---", "date: %s" % date, "repo: %s" % repo, "branch: %s" % branch,
           "summary: test log", "status: completed",
           "files-changed:", "  - some/file.md", "  - other/file.md"]
     if commit_sha:
         fm.append("commit-sha: %s" % commit_sha)
+    if commit_range:
+        fm.append("commit-range: %s" % commit_range)
     fm.append("---")
     body = "\n\n## Continuation Prompt\n\n" + prompt_body + "\n\n## Waiting on You\n\nNothing pending.\n"
     return "\n".join(fm) + body
@@ -274,6 +277,59 @@ def main() -> int:
               report_ra["checks"]["next_action_overlap"]["state"] == "finding"
               and "remote/only.md" in report_ra["checks"]["next_action_overlap"].get("overlap", []),
               report_ra["checks"]["next_action_overlap"])
+        check("remote-ahead: the stale clone is reported behind origin/main",
+              "is 1 commit(s) behind origin/main" in report_ra["checks"]["commits_since"]["detail"],
+              report_ra["checks"]["commits_since"]["detail"])
+
+        # C-02 OQ7, the wording half: the clone that made the commit is not behind, so
+        # its remote commits must not be called "not yet reflected" in the local branch.
+        report_rf = json.loads(run_reconcile(clone_fresh, log_remote_ahead, "--json").stdout)
+        rf_detail = report_rf["checks"]["commits_since"]["detail"]
+        check("OQ7 wording: a clone level with origin is not told its commits are unreflected",
+              "not yet" not in rf_detail and "all already in the local branch" in rf_detail, rf_detail)
+
+        # ---------------------------------------------------------------
+        # 8c. C-02 OQ7, the anchor half: the 2026-10-20 reproduction. A wrap's `date` is
+        # taken when the wrap starts, so a pull request merged during the wrap lands after
+        # that date. The wrap's `commit-range` already ends at that merge. Without the
+        # anchor the date fallback counts the merge as new; with it, nothing is new.
+        # ---------------------------------------------------------------
+        wr_origin = init_bare_origin(tmp / "wrap-merge")
+        wr_repo = init_repo(tmp / "wrap-merge")
+        git(wr_repo, "remote", "add", "origin", str(wr_origin))
+        wr_base = commit(wr_repo, "before the wrap", "2026-10-19T19:00:00-07:00", files={"a.md": "a\n"})
+        wr_merge = commit(wr_repo, "merged during the wrap", "2026-10-19T20:22:00-07:00", files={"b.md": "b\n"})
+        git(wr_repo, "push", "-u", "origin", "main")
+        wrap_start = "2026-10-19T19:28:00-07:00"
+        wr_range = "%s..%s" % (wr_base[:7], wr_merge[:7])
+
+        log_wr_date = tmp / "wrap-merge" / "log_date.md"
+        write_log(log_wr_date, wrap_start, "main", prompt_body="n/a")
+        wr_without = json.loads(run_reconcile(wr_repo, log_wr_date, "--json").stdout)["checks"]["commits_since"]
+        check("OQ7 canary: without commit-range, the merge during the wrap reads as new",
+              wr_without["state"] == "finding" and wr_without["count"] == 1, wr_without)
+
+        log_wr_range = tmp / "wrap-merge" / "log_range.md"
+        write_log(log_wr_range, wrap_start, "main", prompt_body="n/a", commit_range=wr_range)
+        wr_with = json.loads(run_reconcile(wr_repo, log_wr_range, "--json").stdout)["checks"]["commits_since"]
+        check("OQ7: with commit-range, nothing landed since the log",
+              wr_with["state"] == "ok" and wr_with["count"] == 0 and wr_with["remote_count"] == 0, wr_with)
+        check("OQ7: the detail names the commit-range anchor",
+              "commit-range end `%s`" % wr_merge[:7] in wr_with["detail"], wr_with["detail"])
+
+        # A commit after the range's end still counts: the anchor hides only what the log saw.
+        commit(wr_repo, "after the wrap", "2026-10-20T09:00:00-07:00", files={"c.md": "c\n"})
+        wr_after = json.loads(run_reconcile(wr_repo, log_wr_range, "--json").stdout)["checks"]["commits_since"]
+        check("OQ7: a commit after the range's end is still counted",
+              wr_after["state"] == "finding" and wr_after["count"] == 1, wr_after)
+
+        # commit-sha, when present, still wins over commit-range.
+        log_wr_both = tmp / "wrap-merge" / "log_both.md"
+        write_log(log_wr_both, wrap_start, "main", prompt_body="n/a",
+                  commit_sha=wr_base, commit_range=wr_range)
+        wr_both = json.loads(run_reconcile(wr_repo, log_wr_both, "--json").stdout)["checks"]["commits_since"]
+        check("OQ7: commit-sha outranks commit-range",
+              wr_both["count"] == 2 and "commit-sha `%s`" % wr_base in wr_both["detail"], wr_both)
 
         # ---------------------------------------------------------------
         # 9. Fetch failure: origin points at a path that does not exist. Must be BROKEN,

@@ -4,7 +4,7 @@ title: Reconcile the Session Log Against Repo Reality at Resume
 type: spec
 status: committed
 created: 2026-08-23
-updated: 2026-10-26
+updated: 2026-11-03
 linked-effort: the maintainer's private plab-continue-session evolution roadmap, 2026-08-16
 linked-plan: implementation-plan.md
 ac-count: 9
@@ -20,10 +20,10 @@ priority: P1
 ## Task Summary
 
 **Status:** Committed. The maintainer approved this build on 2026-10-15 ("Go ahead and complete the work").
-**Last updated:** 2026-10-20
+**Last updated:** 2026-11-03
 **Linked plan:** `implementation-plan.md`
-**Open questions:** 7 (see Open Questions / Decisions); none are maintainer-decided yet. OQ1 and OQ3 to OQ6 each carry a working default an agent built against under the 2026-10-15 go-ahead, and OQ7 is a defect found on 2026-10-20 with nothing built yet.
-**Revisions:** 3 (initial draft, the 2026-10-15 pre-build refresh, then OQ7 on 2026-10-20; see Revisions)
+**Open questions:** 7 (see Open Questions / Decisions). OQ1 and OQ3 to OQ7 are Decided; OQ7 was built as `plab-continue-session` 1.6.2 on 2026-11-03. OQ2 stays Deferred.
+**Revisions:** 4 (initial draft, the 2026-10-15 pre-build refresh, OQ7 on 2026-10-20, then OQ7 decided and built on 2026-11-03; see Revisions)
 
 ### Acceptance Criteria Fulfillment
 
@@ -88,7 +88,7 @@ This effort is the roadmap's C-2 (zero-padded here to C-02 per this document set
 
 **AC-2:** The delta's remote-and-tag content (branch ahead/behind counts versus its remote, remote branches with no local counterpart, and the last five tags) is produced using the same command sequence as `hygiene-sweep.md` Check 1, with one deliberate deviation: `git fetch --no-prune origin --tags` (not a plain `git fetch origin --tags`), `git status -sb`, `git log --oneline HEAD..@{u}`, `git log --oneline @{u}..HEAD`, `git ls-remote --heads origin`, and `git tag -l` (the last five taken in Python rather than by piping to `tail -5`, since there is no shell pipe at this call site). All six commands run; `test-reconcile.py` asserts their presence in the script's own recorded command list, not merely a subset chosen for convenience. The fetch gains `--no-prune` because a plain fetch prunes whenever `fetch.prune` is set in git config, and on 2026-09-25 a pruning fetch deleted a remote-tracking ref without confirmation, recorded in sibling spec W-02 (derived log facts), decision D4, tested 2026-10-05. If the fetch itself does not succeed, the ahead/behind reading is reported broken rather than computed off a potentially stale `@{u}`, since `@{u}` reflects whatever was fetched last time. [S1][S3]
 
-**AC-3:** Commits landed since the log was written are counted correctly whether or not the log's `commit-sha` field is present: via `git rev-list --count <sha>..HEAD` when present, or by comparing each commit's own date against the log's `date` field in Python when absent, on the log's branch (falling back to `HEAD` with an explicit note if that branch no longer exists locally; see OQ6). The date-fallback path does not use `git log --since=<date>`: that flag's boundary proved inclusive in practice (verified in `test-reconcile.py`), which double-counts the exact commit a wrap session logs against whenever the log's timestamp and that commit's timestamp coincide to the second, the common case since a wrap is normally written immediately after the last commit. [model-inference]
+**AC-3:** Commits landed since the log was written are counted correctly whether or not the log's `commit-sha` field is present: via `git rev-list --count <sha>..HEAD` when present, or by comparing each commit's own date against the log's `date` field in Python when absent (since OQ7, the end SHA of the log's `commit-range` is tried before the date comparison), on the log's branch (falling back to `HEAD` with an explicit note if that branch no longer exists locally; see OQ6). The date-fallback path does not use `git log --since=<date>`: that flag's boundary proved inclusive in practice (verified in `test-reconcile.py`), which double-counts the exact commit a wrap session logs against whenever the log's timestamp and that commit's timestamp coincide to the second, the common case since a wrap is normally written immediately after the last commit. [model-inference]
 
 **AC-4:** A release cut after the log was written is detected by comparing each tag's creation date (`git for-each-ref refs/tags --sort=-creatordate --format='%(refname:short) %(creatordate:iso-strict)'`, not the date-only `%(creatordate:short)`) against the log's `date` frontmatter field, independent of any tag information recorded in the log itself. The precision was widened from date-only to a full timestamp comparison because a date-only format would false-positive a tag cut earlier the same calendar day as the log. [model-inference]
 
@@ -175,6 +175,7 @@ This is distinct from the existing branch-mismatch warning (which fires when the
 | 2026-08-23 | Initial draft created | Claude (agent) |
 | 2026-10-15 | Pre-build refresh under the maintainer's 2026-10-15 go-ahead ("Go ahead and complete the work"), before implementation. Status moved draft to committed. Stale facts corrected: `plab-continue-session` was 1.4.0/1.5.0 in the draft's framing and is 1.5.0 now (this effort takes it to 1.6.0, not 1.5.0); `plab-wrap-session` was described as reaching 1.6.0 and is 1.7.0 now; the "release ladder" and specific release numbers (v0.4.0, v0.6.0, v0.8.0, v0.9.0) are obsolete because versions are assigned to skills only at ship time, per decision register entry 21 (versions assigned at ship time), so every such reference now reads "the release that ships it"; the implementation plan's claim that "this repository has no `.github/` directory yet" was false even when the plan was drafted, since CI already exists at `.github/workflows/gate.yml`. AC-2's fetch command gained `--no-prune` (see AC-2) because a plain fetch prunes when `fetch.prune` is set in git config, which deleted a remote-tracking ref without confirmation on 2026-09-25 (sibling spec W-02, decision D4, tested 2026-10-05). AC-4's tag-date comparison moved from `creatordate:short` to `creatordate:iso-strict` (see AC-4). AC-6's rename-hint command dropped `--follow` after it was proved empirically not to find a rename for a path missing at HEAD (see AC-6). Design change: reconciliation is implemented as a canary-tested script (`skills/plab-continue-session/scripts/reconcile.py`) with a sibling test file (`test-reconcile.py`), not the rung-3 documented convention the implementation plan originally specified; see OQ4. The Open Questions / Decisions section below was reformatted into this plugin's standard decisions-section form (`references/decisions-section.md`) and gained OQ4, OQ5 and OQ6 for decisions an agent took on the maintainer's behalf; none of OQ1, OQ3, OQ4, OQ5 or OQ6 is maintainer-decided, each carries a working default the build proceeded on. | Claude (agent) |
 | 2026-10-20 | Added OQ7 (`reconcile.py` ignores `commit-range`), a defect found on the first resume after the v0.9.0 rename. The commit check reads only `commit-sha`, which the wrap never writes, so a pull request merged during a wrap reads as landing after the log. Recorded here so the `--backlog` sweep sees it. Nothing else in the spec changed. | Claude (agent) |
+| 2026-11-03 | OQ7 decided as Option A and built as `plab-continue-session` 1.6.2. AC-3 gained a parenthesis naming the `commit-range` anchor. OQ2 is untouched, because the walk owns its status. | Claude (agent) |
 
 ## Sources & Evidence
 
@@ -214,7 +215,7 @@ This section follows `references/decisions-section.md`. None of the items below 
 | OQ4 | Implement reconciliation as a script, or as a documented convention | Option A: a canary-tested script | Decided | 2026-10-26 |
 | OQ5 | Build AC-3, AC-4, AC-5, AC-7 and AC-6's rename hint as specified, without a separate per-mechanism maintainer review | Option A: built as specified, deviations disclosed | Decided | 2026-10-26 |
 | OQ6 | AC-3's date-fallback base ref when the log's branch no longer exists locally | Option A: fall back to `HEAD`, named in the output | Decided | 2026-10-26 |
-| OQ7 | `reconcile.py` ignores `commit-range`, so commits merged during a wrap read as new | (none) | Open | 2026-10-20 |
+| OQ7 | `reconcile.py` ignores `commit-range`, so commits merged during a wrap read as new | Option A: anchor on the end SHA of `commit-range` | Decided | 2026-11-03 |
 
 ### OQ1: Hard-block or advisory-only for the next-action-already-done signal (Decided)
 
@@ -358,7 +359,7 @@ This section follows `references/decisions-section.md`. None of the items below 
 > * **Follow-up:** None needed.
 > * **Decided by / date:** JP / 2026-10-26, approving a batch of closures after a read-only check on 2026-10-25 confirmed that the working default shipped and still holds.
 
-### OQ7: `reconcile.py` ignores `commit-range`, so commits merged during a wrap read as new (Open)
+### OQ7: `reconcile.py` ignores `commit-range`, so commits merged during a wrap read as new (Decided)
 
 **Summary.** Whether `reconcile.py` should anchor its commit count on the end SHA of the log's `commit-range` field, and call remote commits unreflected only when the local branch is actually behind.
 
@@ -383,9 +384,10 @@ This item changes the ground under OQ2. OQ2 deferred promoting `commit-sha` on t
 
 ---
 
-> **Maintainer decision:** _(pending)_
+> **Maintainer decision:** Decided 2026-11-03 by jprisant
 >
-> * **Status:** Open
-> * **Choice:** (none)
-> * **Reasoning:** (none)
-> * **Decided by / date:** (none)
+> * **Status:** Decided
+> * **Choice:** Option A, anchor on the end SHA of `commit-range` when `commit-sha` is absent, and call remote commits unreflected only when the local branch is behind
+> * **Reasoning:** The maintainer approved the ready builds in one line, "complete the builds that are ready", after a status reply that listed this item first with Option A as the build. It is a read-side fix of a few lines with an existing canary.
+> * **Follow-up:** Built as `plab-continue-session` 1.6.2 on 2026-11-03, with the 2026-10-20 reproduction as a fixture in `scripts/test-reconcile.py`. Whether OQ2 becomes Superseded is left to the next walk.
+> * **Decided by / date:** jprisant / 2026-11-03

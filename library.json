@@ -37,7 +37,7 @@
       {
         "name": "plab-continue-session",
         "path": "skills/plab-continue-session/SKILL.md",
-        "version": "1.6.1",
+        "version": "1.6.2",
         "tier": "universal",
         "status": "active"
       },

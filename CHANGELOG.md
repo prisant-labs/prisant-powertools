@@ -9,11 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **`plab-wrap-session` writes the log before it asks any hygiene question.** It then asks every proposal in one numbered batch, answered in one line such as `H1 y, H2 n`, amends the log with the answers, and checks it again. A terminal closed while a question is open now still leaves a complete log. Deleting a merged branch whose upstream is gone, pruning stale worktree records, and filing old logs run without asking and are recorded in the log. Parked items are now carried from one log to the next, as Waiting on You items already were. Specified as W-05 (wrap hygiene order). `plab-wrap-session` 1.9.0.
+- **`plab-wrap-session` writes the log before it asks any hygiene question.** It then asks every proposal in one numbered batch, answered in one line such as `H1 y, H2 n`, amends the log with the answers, and checks it again. A terminal closed while a question is open now still leaves a complete log. Pruning remote-tracking refs whose branch is gone from origin, deleting a merged branch whose upstream is gone, pruning stale worktree records, and filing old logs run without asking and are recorded in the log, with each pruned ref's SHA so it can be restored. Parked items are now carried from one log to the next, as Waiting on You items already were. Specified as W-05 (wrap hygiene order). `plab-wrap-session` 1.9.0.
 
 ### Added
 
 - **`plab-current-status` reports each open pull request's CI state.** The facts script asks GitHub for the check results in the call it already makes, and reduces them to passing, failing, pending or none, naming any failing check, so a snapshot can rank a failing pull request as work. The CS-01 spec also records that the decisions sweep never reads an unmerged branch. Both were decided in the 2026-11-01 walk. `plab-current-status` 1.1.0.
+
+### Fixed
+
+- **A pull request merged during a wrap no longer reads as new work at the next resume.** `plab-continue-session`'s reconciliation counted commits since the log by date, because it read only a `commit-sha` field that no wrap writes, and a log's date is taken when the wrap starts. It now anchors on the end SHA of the log's `commit-range`, which every log from `plab-wrap-session` 1.8.0 onward carries. Its detail line also stops calling remote commits "not yet reflected" when the local branch already has them. Specified as C-02 OQ7 (`reconcile.py` ignores `commit-range`). `plab-continue-session` 1.6.2.
 
 ## [0.11.1] - 2026-11-01
 

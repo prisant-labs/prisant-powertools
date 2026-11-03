@@ -2,6 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.6.2 | 2026-11-03 | unreleased | fixed | The commit check anchors on the end SHA of the log's `commit-range` when `commit-sha` is absent, so a pull request merged during a wrap no longer reads as new work. Remote commits are no longer called unreflected when the local branch already has them. C-02 OQ7. |
 | 1.6.1 | 2026-10-31 | v0.11.1 | fixed | The reconciliation's "Recent tags" note lists the five highest versions. `reconcile.py` read a plain `git tag -l`, which sorts as text, so from v0.10.0 onward it showed v0.7.0 to v0.9.0 as the newest tags. |
 | 1.6.0 | 2026-10-15 | v0.8.0 | added | A new Phase 3 reconciles the log's claims against live repository state before anything is displayed, and leads the resumption context with what changed. |
 | 1.5.0 | 2026-09-15 | v0.5.5 | changed | The continuation prompt is no longer dumped verbatim. Phase 3 renders the immediate action and gives the log path; verbatim is opt-in. |
@@ -9,6 +10,14 @@
 | 1.3.0 | 2026-08-18 | v0.2.0 | added | Discovery reads `YYYY-MM/` month folders alongside the flat store. Empty-store message diagnoses version skew. |
 | 1.2.1 | 2026-08-18 | v0.1.2 | fixed | Body trigger list aligned with the narrowed description. Records the 2026-08-17 description change that shipped un-versioned. |
 | 1.2.0 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.2.0; prior history remains there. |
+
+## 1.6.2 - 2026-11-03
+
+**Fixed: a pull request merged during a wrap no longer reads as new work at the next resume.** The commit check in `scripts/reconcile.py` read only the log's `commit-sha` field, which `plab-wrap-session` never writes, so every log fell back to comparing commit dates with the log's `date`. A log's `date` is taken when the wrap starts, so a pull request merged during the wrap counted as landing after the log. The first resume after the v0.9.0 rename reported two such false findings. Since `plab-wrap-session` 1.8.0, every log carries `commit-range`, whose end SHA is the last commit the wrap saw. The check now uses that SHA when `commit-sha` is absent, and keeps the date comparison only for older logs. The anchor is only as fresh as the wrap's derivation run, so a merge after that run still counts. Specified as C-02 OQ7 (`reconcile.py` ignores `commit-range`).
+
+**Fixed: remote commits are no longer called "not yet reflected in the local branch" when they are.** The count behind that phrase was every commit on the remote branch since the anchor, not the commits missing locally. The detail now reads "N commit(s) on origin/<branch> since the log", adds "all already in the local branch" when the local branch is not behind, and keeps the separate "is N commit(s) behind" clause for the real gap.
+
+`scripts/test-reconcile.py` gains a fixture of the 2026-10-20 shape: a commit dated after the wrap started and inside its `commit-range`. Without the anchor it is counted as new; with it, nothing is. Further cases check that a commit after the range still counts, that `commit-sha` still outranks `commit-range`, and the wording on a clone that is level with its remote. Before the fix, 4 of the 38 checks failed; after it, all 38 pass.
 
 ## 1.6.1 - 2026-10-31
 
