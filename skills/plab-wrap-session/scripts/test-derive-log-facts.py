@@ -331,6 +331,37 @@ def main() -> int:
             str(woy2),
         )
 
+        # 4c. Parked items are carried forward too (W-05, wrap hygiene order).
+        # Nothing read a Parked section before 1.9.0, which is how the autonomy
+        # brief dropped out of the logs after 2026-10-09. Same top-level rule
+        # as Waiting on You; a log with no Parked section yields an empty
+        # list, because the section is optional, and no log yields null.
+        parked_log = (
+            "---\ndate: 2026-10-09T15:56:00-07:00\ntype: session-log\n---\n\n"
+            "# Session log\n\n"
+            "## Waiting on You\n\nNothing pending.\n\n"
+            "## Parked\n\n"
+            "- **The autonomy brief** (parked 2026-10-07). A skill that writes /goal prompts.\n"
+            "  - an indented note, not its own item\n"
+            "* **A smoke test never run.**\n\n"
+            "## What's Next\n\n1. Do the next thing.\n"
+        )
+        parked_project = root / "parked-project"
+        parked_project.mkdir()
+        make_log(parked_project / "_local" / "_session-logs", "2026-10-09_15-56_claude_x.md", parked_log)
+        init_repo(parked_project)
+        proc = run_script(str(parked_project), "--json")
+        parked = json.loads(proc.stdout)["evidence-gathering"].get("parked")
+        check("parked carries 2 top-level items verbatim, not the sub-bullet",
+              parked is not None and len(parked) == 2 and "(parked 2026-10-07)" in parked[0], str(parked))
+        digest = run_script(str(parked_project)).stdout
+        check("the digest prints the parked items for carry-forward",
+              "parked (2 item(s)" in digest and "The autonomy brief" in digest, digest[-600:])
+        proc = run_script(str(woy_project), "--json")
+        check("a log with no Parked section yields an empty parked list",
+              json.loads(proc.stdout)["evidence-gathering"].get("parked") == [],
+              str(json.loads(proc.stdout)["evidence-gathering"].get("parked")))
+
         # ------------------------------------------------------------------
         # 5. Log-store discovery: flat, YYYY-MM, legacy; newest wins by filename
         # ------------------------------------------------------------------
@@ -356,6 +387,8 @@ def main() -> int:
         check("no logs anywhere: newest-log is null and waiting-on-you is null",
               data["evidence-gathering"]["newest-log"] is None
               and data["evidence-gathering"]["waiting-on-you"] is None)
+        check("no logs anywhere: parked is null", data["evidence-gathering"].get("parked", "missing") is None,
+              str(data["evidence-gathering"].get("parked", "missing")))
 
         # ------------------------------------------------------------------
         # 6. Capture-record cutoff, with the timezone-conversion canary

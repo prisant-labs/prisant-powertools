@@ -24,7 +24,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 | `plab-resolve-open-items` | 1.2.0 | Auto + explicit | `[--backlog \| <document>]` | Each item's home document; the walk record and any backlog file in `_local/decisions/` |
 | `plab-spec` | 1.3.4 | Auto + explicit | `--effort <id> [--target-release vX.Y.Z] [--revise] [--dry-run]` | `docs/internal/release-plans/_unassigned/` by default |
 | `plab-strategy-brief` | 1.1.1 | Auto + explicit | `[paste raw thinking]` | `_output/plab-strategy-brief/` |
-| `plab-wrap-session` | 1.8.2 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
+| `plab-wrap-session` | 1.9.0 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
 
 **Explicit only** means the skill carries `disable-model-invocation: true` for Claude Code and `policy.allow_implicit_invocation: false` in `agents/openai.yaml` for Codex. It never fires on its own and is absent from the auto-loaded skill listing. It runs when you type its name and only then. **`plab-init-project`, `plab-audit`, `plab-release-plan`, `plab-current-status`, `plab-usage-audit` and `plab-project-pulse` carry it now.** `plab-release-plan` carried it through 1.3.0, was auto-discoverable from 1.4.0 to 1.5.1, and carries it again from 1.6.0, provisionally. `plab-spec` carried it through 1.2.1 and is now auto-discoverable, using an explicit do-NOT-fire clause in its description instead of the binary flag.
 
@@ -32,7 +32,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 
 ## Per-skill detail
 
-### `plab-wrap-session` 1.8.2
+### `plab-wrap-session` 1.9.0
 
 The most-used skill in the plugin. Writes a structured session log and hands off to `plab-continue-session`.
 
@@ -46,7 +46,7 @@ The most-used skill in the plugin. Writes a structured session log and hands off
 | References | 4 files |
 | Paired with | `plab-continue-session`. A session-log format change in one requires a matching change in the other |
 
-One call to `derive-log-facts.py` gathers the frontmatter facts, the previous log's Waiting on You items, and the detection results of a pre-wrap hygiene sweep across five checks (remote divergence, working tree, release state, documentation drift, session-log store). The agent judges and proposes from that output under per-action confirmation, writes the log, then runs one call to `check-log.py` as the Log Self-Check. It runs the two existing canary-proven detector gates (path citations, dashes) exactly as before, plus the decisions-count comparison, summary length, Tier 1 frontmatter completeness, and the Waiting on You rules, and in deep mode the Uncertainty Ledger and What You May Not Realize presence checks. It reports the same three states as the detectors it calls: `clean`, `findings`, `broken`, where `broken` blocks exactly as `findings` does.
+One call to `derive-log-facts.py` gathers the frontmatter facts, the previous log's Waiting on You items, and the detection results of a pre-wrap hygiene sweep across five checks (remote divergence, working tree, release state, documentation drift, session-log store). The agent judges that output and drafts numbered proposals, runs three auto actions, writes the log, and runs one call to `check-log.py` as the Log Self-Check. It then asks every proposal in one batch, amends the log with the answers, and runs `check-log.py` again. It runs the two existing canary-proven detector gates (path citations, dashes) exactly as before, plus the decisions-count comparison, summary length, Tier 1 frontmatter completeness, and the Waiting on You rules, and in deep mode the Uncertainty Ledger and What You May Not Realize presence checks. It reports the same three states as the detectors it calls: `clean`, `findings`, `broken`, where `broken` blocks exactly as `findings` does.
 
 ### `plab-continue-session` 1.6.1
 

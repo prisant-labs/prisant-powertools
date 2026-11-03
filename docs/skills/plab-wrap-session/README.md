@@ -1,9 +1,9 @@
 # plab-wrap-session
 
-**Version:** 1.8.2
+**Version:** 1.9.0
 **Source:** [`skills/plab-wrap-session/`](../../../skills/plab-wrap-session/)
 
-Document and close agentic coding sessions with structured session logs. Deep mode is the default: a full log with evidence index, a verbose copy-paste-ready continuation prompt, a pre-wrap hygiene sweep (remote divergence, release state, doc drift, working-tree reconciliation with per-action confirmation), and a mandatory Waiting on You section listing everything blocked on the maintainer, with links.
+Document and close agentic coding sessions with structured session logs. Deep mode is the default: a full log with evidence index, a verbose copy-paste-ready continuation prompt, a hygiene sweep (remote divergence, release state, doc drift, working-tree reconciliation) whose numbered proposals are asked in one batch after the log is written, and a mandatory Waiting on You section listing everything blocked on the maintainer, with links.
 
 ---
 
@@ -79,7 +79,7 @@ Install via the prisant-labs marketplace:
 | **Files Changed** | From git, grouped by purpose |
 | **Verification** | What was tested, assumed, or skipped |
 | **Outstanding Issues** | Blockers, risks, unfinished work |
-| **Hygiene Sweep** | Pre-wrap sweep findings: state found, actions proposed, taken vs declined |
+| **Hygiene Sweep** | Sweep findings: state found, auto actions, and each numbered proposal with its status |
 | **Waiting on You** | Everything blocked on the maintainer, with reasons and file links; "Nothing pending." when empty |
 | **What's Next** | Ordered list, most important first; names the single unlocking decision when one exists |
 | **Continuation Prompt** | Copy-paste-ready for next session; carries the Waiting on You list |
@@ -90,7 +90,7 @@ Install via the prisant-labs marketplace:
 
 **Output:** Full log + evidence index + detailed verification table. Everything in Final mode, plus forensic-level detail.
 
-Before writing, deep and final modes run the **pre-wrap hygiene sweep** ([`references/hygiene-sweep.md`](../../../skills/plab-wrap-session/references/hygiene-sweep.md)). As of 1.8.0, one call to `scripts/derive-log-facts.py --fetch` returns the detection results for all five checks in a single pass: git fetch and remote comparison (catches parallel work from another checkout), working-tree and worktree state, release hygiene (pending CHANGELOG content, version-vs-tag consistency), documentation drift, and the session-log store. The repo's own validation scripts, when it has any, are still run as a separate step, chained into one shell command so their combined output is read in one call rather than one call per script, and reported, since the script has no way to know what those scripts are. Each finding becomes one concrete proposal executed only on your per-action confirmation; declined proposals are recorded and carried into the continuation prompt.
+Before writing, deep and final modes run the **pre-wrap hygiene sweep** ([`references/hygiene-sweep.md`](../../../skills/plab-wrap-session/references/hygiene-sweep.md)). As of 1.8.0, one call to `scripts/derive-log-facts.py --fetch` returns the detection results for all five checks in a single pass: git fetch and remote comparison (catches parallel work from another checkout), working-tree and worktree state, release hygiene (pending CHANGELOG content, version-vs-tag consistency), documentation drift, and the session-log store. The repo's own validation scripts, when it has any, are still run as a separate step, chained into one shell command so their combined output is read in one call rather than one call per script, and reported, since the script has no way to know what those scripts are. Each finding becomes one numbered proposal. As of 1.9.0 the log is written first; then every proposal is asked in one message, answered in one line such as `H1 y, H2 n`, and the log is amended with the answers and checked again. Three local, reversible actions (deleting a merged branch whose upstream is gone, pruning stale worktree records, filing old logs) run without asking and are recorded. Declined and unanswered proposals stay in the log and the continuation prompt.
 
 ### Blocked
 
@@ -124,14 +124,13 @@ _local/_session-logs/
 
 **The current month and the previous month are never filed.** Recent logs stay flat, which is where resume reads them first. On 2026-08-18 that means 2026-08 and 2026-07 stay put, and 2026-06 and older get filed.
 
-**Nothing moves without your say-so.** The skill runs the organizer in dry run, shows you exactly which files would move where, and asks once. Declining changes nothing.
+**`--organize` asks before it moves anything.** Run by name, the skill runs the organizer in dry run, shows you exactly which files would move where, and asks once. Declining changes nothing.
 
 **Resume is unaffected.** `/plab-continue-session` 1.3.0+ reads the flat store and the month folders as one pooled set, sorted by filename, so an archived log and a hot log order correctly against each other. Filenames never change when a log is filed.
 
-**You do not have to remember this exists.** Deep and final wraps run hygiene Check 5, which reports unfiled logs and offers to file them:
+**You do not have to remember this exists.** Deep and final wraps run hygiene Check 5. As of 1.9.0, when its plan has no collisions, the wrap files the logs without asking, as one of its three auto actions, and records it in the log:
 
-> Log store: 14 logs from 3 closed months (2026-05, 2026-06, 2026-07) are unfiled.
-> File them into month folders? (y/n)
+> auto: log-store. `organize-logs.py _local/_session-logs --apply` -> 14 logs from 3 closed months (2026-05, 2026-06, 2026-07) filed into month folders.
 
 ### Guarantees
 
@@ -279,13 +278,13 @@ See `references/frontmatter-schema.md` for the field-by-field specification (25 
 
 ## Surrounding Document Updates
 
-After writing the log, the skill checks if changes warrant updates to README, CHANGELOG, or active plans. Rules:
+Before writing the log, the skill checks whether changes warrant updates to README, CHANGELOG, or active plans, and adds each intended edit to the hygiene batch. Rules:
 
 - **README:** Only when user-facing capabilities changed
 - **CHANGELOG:** Only when release-worthy (new feature, visible bugfix, breaking change)
 - **Plans:** Only when sequence, scope, or assumptions changed
 
-**Always asks for confirmation** before editing any surrounding document.
+**Never edits a surrounding document** until its numbered proposal is approved.
 
 ---
 
@@ -295,7 +294,7 @@ After writing the log, the skill checks if changes warrant updates to README, CH
 |------|---------|-------------|
 | `references/frontmatter-schema.md` | Complete 25-field metadata specification (3 tiers) | When customizing frontmatter or building tooling |
 | `references/session-log-template.md` | Output skeletons for all 4 modes | When examining exact output structure per mode |
-| `references/hygiene-sweep.md` | The five pre-wrap checks, their commands, and the per-action confirmation protocol | When understanding what the sweep inspects and proposes |
+| `references/hygiene-sweep.md` | The five checks, their commands, the numbered-batch protocol, and the three auto actions | When understanding what the sweep inspects and proposes |
 | `references/doc-update-rules.md` | When/how to update README, CHANGELOG, plans, and ADRs | When understanding the surrounding document update rules |
 | `scripts/derive-log-facts.py` | One call gathers the frontmatter facts, the Waiting on You carry-forward, and the detection results of all five hygiene checks | Run once per wrap, before drafting the log |
 | `scripts/check-log.py` | Log Self-Check: one call runs the decisions-count, summary-length, Tier 1, Waiting on You, and deep-mode-section checks, plus the two detector scripts below | After writing the log |
@@ -315,7 +314,7 @@ skills/plab-wrap-session/
 ├── references/
 │   ├── frontmatter-schema.md       # 25-field metadata reference (3 tiers)
 │   ├── session-log-template.md     # Output templates for all 4 modes
-│   ├── hygiene-sweep.md            # The 5 pre-wrap checks and the confirmation protocol
+│   ├── hygiene-sweep.md            # The 5 checks, the numbered batch, and the auto actions
 │   └── doc-update-rules.md         # README/CHANGELOG/plan/ADR update rules
 ├── scripts/
 │   ├── check-log.py                # Log Self-Check: one call for every mechanical gate
@@ -336,8 +335,9 @@ skills/plab-wrap-session/
 
 - Never embeds full transcripts (references the transcript path only)
 - Never conflates "completed" with "verified"
-- Never auto-commits or pushes
-- Never updates surrounding docs without confirmation
+- Never auto-commits or pushes; only three local, reversible actions run without asking
+- Never asks a hygiene question before the log is written
+- Never updates surrounding docs until their proposal is approved
 - Summary must be 120 characters or less
 - Session log must be self-contained
 

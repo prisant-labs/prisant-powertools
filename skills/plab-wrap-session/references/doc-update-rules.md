@@ -97,8 +97,8 @@ Most sessions don't warrant updating surrounding docs. Only update when the sess
 
 ## How to Confirm
 
-Before editing any surrounding document, say:
+Each intended edit is one numbered proposal in the wrap's hygiene batch, asked after the log is written (`SKILL.md`, Wrap Order):
 
-> "This session [added/changed/fixed X]. I'd update [DOCUMENT] to [specific change]. OK?"
+> **H3** This session [added/changed/fixed X]. Update [DOCUMENT] to [specific change].
 
-Wait for confirmation. If declined, move on.
+Edit only when its number is approved. If declined, record it and move on.

@@ -2,6 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.9.0 | 2026-11-03 | unreleased | changed | W-05 (wrap hygiene order): the wrap writes the log first, asks every hygiene proposal in one numbered batch (`H1 y, H2 n`), then amends the log and runs `check-log.py` again. Three local, reversible actions run without asking and are recorded as `auto:` lines. Parked items are carried forward like Waiting on You. |
 | 1.8.2 | 2026-10-31 | v0.11.1 | fixed | The hygiene sweep's Check 1 tag tail lists the five highest versions. `derive-log-facts.py` and the documented `git tag -l | tail -5` sorted tags as text, so from v0.10.0 onward the tail omitted every two-digit minor version. |
 | 1.8.1 | 2026-10-16 | v0.8.1 | fixed | `scripts/check-log.py` collapses the whole Log Self-Check into one post-write call, `derive-log-facts.py`'s default text output becomes a complete wrap digest that stays well under 20,000 characters on every section except an uncapped `files-changed` on a very large session, two Windows-only Unicode crashes and a leading-space porcelain-parsing bug are fixed, `check4_doc_drift` stops flagging a HISTORY.md-only change as drift, `extract_waiting_on_you()` stops counting an indented sub-bullet as its own item, `frontmatter-schema.md` catches up with the two fields 1.8.0 added, and the hygiene sweep's own-validation-scripts step chains into one command. |
 | 1.8.0 | 2026-10-15 | v0.8.0 | added | `derive-log-facts.py` derives frontmatter facts, the Evidence Gathering inputs, and the hygiene sweep's detection results from git and the environment, in place of model recall and one-at-a-time commands. |
@@ -12,6 +13,16 @@
 | 1.5.0 | 2026-08-18 | v0.2.0 | added | `--organize` files old logs into `YYYY-MM/` folders. Hygiene sweep gained Check 5. |
 | 1.4.1 | 2026-08-18 | v0.1.2 | fixed | Dropped the "what did we do" trigger. Added `type:` to the frontmatter block and `machine:` to the Quick and Blocked templates. |
 | 1.4.0 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.4.0; prior history remains there. |
+
+## 1.9.0 - 2026-11-03
+
+**Changed: the log is written before any hygiene question, and amended after the answers.** Through 1.8.2 the sweep ran "before writing the log", but nothing said to wait for the maintainer's answers, so the logs of 2026-10-09 and 2026-10-16 were both edited after their wraps to record approvals given later. The new Wrap Order section fixes the sequence: gather facts, draft every proposal as `H1` to `Hn`, run the auto actions, write the log with each proposal marked `Status: unanswered`, run `check-log.py`, ask every proposal in one message, carry out the approved ones, change each status word, and run `check-log.py` again. The same-arc archive proposal and surrounding-document edits join the same batch, so a wrap asks one round of questions. The maintainer chose this order, B, on 2026-11-03 over the ask-first order decided on 2026-10-19, because a terminal closed while a question is open still leaves a complete log; `plab-continue-session` already shows its unanswered proposals as re-decidable. It costs one edit and one more `check-log.py` run, and only on wraps that asked something.
+
+**Added: three auto actions.** `git branch -d` on a branch whose upstream is gone, `git worktree prune`, and `organize-logs.py --apply` on a plan with no collisions run without asking, because each is local, reversible from what the log records, and refused by git or the script when its precondition fails. Each is recorded as an `auto:` line. `git fetch --prune` stays manual, after the pruning fetch of 2026-09-25. The constraint that every change needs per-action confirmation now names these three as its only exceptions.
+
+**Added: Parked items are carried forward.** `derive-log-facts.py` reports the newest log's top-level Parked items as `parked`, by the same rule as Waiting on You, and Evidence Gathering step 7 carries them into the new log. Before this, nothing read a Parked section, which is how the autonomy brief dropped out of the logs after 2026-10-09. `test-derive-log-facts.py` gains five checks; a canary that counts indented sub-bullets fails two of them.
+
+Specified as W-05 in `docs/internal/release-plans/_unassigned/W-05_wrap-hygiene-order/spec.md`. Usage suggestions 1 to 3 and the parallel-session fixes, which were proposed alongside the order, are not part of this version.
 
 ## 1.8.2 - 2026-10-31
 

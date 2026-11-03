@@ -68,8 +68,12 @@ resumed-from: # log filename if this session resumed from one. Filename only, ne
 
 ## Hygiene Sweep
 
-<!-- Findings from the pre-wrap sweep (see references/hygiene-sweep.md):
-  state found, actions proposed, actions taken vs declined.
+<!-- Findings from the sweep (see references/hygiene-sweep.md): state found,
+  then one line per auto action, then one line per numbered proposal, written
+  before the question is asked and amended after the answer:
+  - auto: merged-branch. `git branch -d feat/x` -> Deleted branch feat/x (was 1a2b3c4).
+  - **H1** Push 2 unpushed commits on `main` to `origin/main`. Status: unanswered
+  The status becomes done or failed with the result, or declined.
   Include the skip note if checks were skipped. -->
 
 ## Waiting on You
