@@ -139,7 +139,7 @@ Three actions run without asking, before the log is written. Each one is local, 
 
 | Rule | Command | When | Why it is safe |
 |---|---|---|---|
-| `merged-branch` | `git branch -d <branch>` | A local branch whose upstream is gone, which check 1 or 2 reports | `-d` refuses a branch that is not merged. The output names the commit, `(was 1a2b3c4)`, so `git branch <branch> 1a2b3c4` restores it |
+| `merged-branch` | `git branch -d <branch>` | `git branch -vv` marks the local branch's upstream `gone`. The facts script does not report this, so `git branch -vv` is the one read the agent adds | `-d` refuses a branch that is not merged. The output names the commit, `(was 1a2b3c4)`, so `git branch <branch> 1a2b3c4` restores it |
 | `worktree-prune` | `git worktree prune` | `git worktree list` marks an entry `prunable` | It removes only git's records of worktree folders that no longer exist |
 | `log-store` | `organize-logs.py <store> --apply` | Check 5 reports moves and no collisions | It moves files and never deletes, and never files the current or previous month |
 

@@ -69,7 +69,7 @@ Detect and judge before writing the log; resolve after it, in one numbered batch
 
 **Resolution: one numbered batch, after the log.** For each finding, draft one concrete proposal (commit these files with this message, push, apply this doc update) and number it `H1`, `H2` and so on. Each proposal runs only when the maintainer approves its number. Unanswered and declined proposals stay recorded in the log and in the continuation prompt.
 
-**Auto actions.** Three actions run without asking, because each is local, reversible, and refused by git or the script when its precondition fails: deleting a local branch with `git branch -d` once its upstream is gone, `git worktree prune`, and `organize-logs.py --apply` on a plan with no collisions. Each is recorded in the Hygiene Sweep section as `auto: <rule>`, with its command and its output. Every other action asks. `references/hygiene-sweep.md` holds the rules and the record format.
+**Auto actions.** Three actions run without asking, because each is local, reversible, and refused by git or the script when its precondition fails: deleting a local branch with `git branch -d` once its upstream is gone, `git worktree prune`, and `organize-logs.py --apply` on a plan with no collisions. Each is recorded in the Hygiene Sweep section as `auto: <rule>`, with its command and its output. Every other action asks. The facts already carry `git worktree list`, which marks a prunable entry, and check 5's plan; the one extra read is `git branch -vv`, which marks a branch whose upstream is gone. `references/hygiene-sweep.md` holds the rules and the record format.
 
 In quick and blocked modes, run only check 2 and note the skips.
 
