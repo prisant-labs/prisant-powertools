@@ -1,6 +1,6 @@
 # plab-project-pulse
 
-**Version:** 1.0.1
+**Version:** 1.1.0
 **Source:** [`skills/plab-project-pulse/`](../../../skills/plab-project-pulse/)
 
 Roll every repository you keep into one private weekly pulse: what shipped, what each project says is next, and what waits on you, ranked across projects with the age of each waiting item. It reuses fresh `plab-current-status` snapshots instead of re-reading those repositories, and writes a self-contained dashboard. Manual invocation only.
@@ -52,7 +52,9 @@ Copy the example in [`references/settings-example.md`](../../../skills/plab-proj
 1. `derive-pulse-facts.py` finds every repository, sweeps git read-only, optionally asks `gh`, classifies each repository as active or dormant, carries dormant entries forward, reads fresh snapshots, ages waiting items and finds recent work in folders git does not protect.
 2. In `--week`, log readers and scouts read only the active repositories without a fresh snapshot, and each scout's count is checked.
 3. The main loop picks at most ten next steps across everything.
-4. `build-pulse.py` writes `pulse.json` and `coverage.md`, and updates the state only after validation; `render.py` writes the dashboard; `pulse-check.py` checks all of it.
+4. `build-pulse.py` writes `pulse.json` and `coverage.md`, and updates the state only after validation.
+5. In `--week`, `readiness.py` and one judge agent rank the active repositories' work by readiness for a long autonomous run, against seven criteria: a GitHub remote, passing tests, a spec with acceptance criteria, agent instructions, checkpointed stages, safe tests and a clean branch. Three are scored by the script, and four by the judge.
+6. `render.py` writes the dashboard, and `pulse-check.py` checks all of it.
 
 ## Safety
 
@@ -62,4 +64,4 @@ Copy the example in [`references/settings-example.md`](../../../skills/plab-proj
 
 ## Specification
 
-[PP-01 (project pulse skill)](../../internal/release-plans/_unassigned/PP-01_project-pulse/spec.md). Its five design decisions are built on working defaults and await your ratification.
+[PP-01 (project pulse skill)](../../internal/release-plans/_unassigned/PP-01_project-pulse/spec.md). D1, D2, D4 and D5 were decided on 2026-11-01, and D2's readiness ranking was built in 1.1.0. D3, a GitHub Projects feed, waits until the board's trial ends on 2026-11-08.

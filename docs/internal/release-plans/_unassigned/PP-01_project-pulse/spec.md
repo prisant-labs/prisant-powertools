@@ -4,12 +4,12 @@ title: "plab-project-pulse: what shipped, what is next, and what waits on the ow
 type: spec
 status: committed
 created: 2026-10-30
-updated: 2026-10-30
+updated: 2026-11-03
 linked-effort: "the maintainer's instruction of 2026-10-30 in session to enrich and build the two audit skills, and the maintainer-local packaging analysis of 2026-10-16 with its ruling of 2026-10-30 (two skills, the pulse kept clearly apart from plab-current-status)"
 linked-plan: implementation-plan.md
 linked-release: null
-ac-count: 26
-source-count: 10
+ac-count: 29
+source-count: 11
 requires-human-review: true
 target-release: null
 priority: P2
@@ -22,8 +22,8 @@ priority: P2
 **Status:** committed, shipped in v0.11.0; scout escalation (AC-16), the digest (AC-19) and the first `--week` run (AC-26) are still to be shown
 **Last updated:** 2026-10-30 by claude (Opus 5.5), written under the maintainer's instruction to enrich the two audit-skill specs and build them
 **Linked plan:** `implementation-plan.md` in this folder
-**Open questions:** 5, each built on its recommendation as a working default and awaiting ratification (see Open Questions / Decisions)
-**Revisions:** 2
+**Open questions:** 5. D1, D2, D4 and D5 were decided on 2026-11-01, and D2 was built as 1.1.0 on 2026-11-03; D3 is deferred to 2026-11-08 (see Open Questions / Decisions)
+**Revisions:** 3
 
 ### Acceptance Criteria Fulfillment
 
@@ -53,10 +53,13 @@ priority: P2
 - [x] AC-24: The checker proves each rule can fail against its committed sample
 - [x] AC-25: `--quick` makes no model call
 - [ ] AC-26: A live run on the maintainer's tree produces output the checker passes
+- [x] AC-27: Three readiness criteria are scored without a model, and candidates are capped
+- [x] AC-28: The checker requires and validates `readiness.json` in a week run
+- [x] AC-29: The dashboard shows the readiness ranking without changing the card count
 
 ### Currently In Progress
 
-Built on 2026-10-30 on `feat/audit-skills`. Evidence: AC-2 to AC-10 by `test-discover-sweep.py`, including a hash of every file in each fixture repository before and after a sweep (AC-9); AC-11 to AC-15 by `test-derive-pulse-facts.py` (30 checks); AC-17, AC-18 and AC-20 to AC-22 by `test-build-render.py` and by `pulse-check.py --self-test`, whose mutations make each of its ten rules fail against the committed sample (AC-24); AC-23 by `check-placement.py`, which is byte-identical to the copy `plab-usage-audit`'s `test-scrub.py` exercises; AC-25 by a live `--quick` run on the maintainer's tree that made no model call, swept every repository under the configured roots in 11 seconds and passed the checker. AC-1's eval case exists but the eval suite has not been run, because each case is a full session on the maintainer's credential. Still open: AC-16, because `test-workflow-reference.py` proves every agent names a model but only a `--week` run can show a short scout being escalated; AC-19, because digest records come from the log agents of a `--week` run; and AC-26, that run itself.
+Built on 2026-10-30 on `feat/audit-skills`. Evidence: AC-2 to AC-10 by `test-discover-sweep.py`, including a hash of every file in each fixture repository before and after a sweep (AC-9); AC-11 to AC-15 by `test-derive-pulse-facts.py` (30 checks); AC-17, AC-18 and AC-20 to AC-22 by `test-build-render.py` and by `pulse-check.py --self-test`, whose mutations make each of its ten rules fail against the committed sample (AC-24); AC-23 by `check-placement.py`, which is byte-identical to the copy `plab-usage-audit`'s `test-scrub.py` exercises; AC-25 by a live `--quick` run on the maintainer's tree that made no model call, swept every repository under the configured roots in 11 seconds and passed the checker. AC-1's eval case exists but the eval suite has not been run, because each case is a full session on the maintainer's credential. AC-27 to AC-29 were built on 2026-11-03: AC-27 by `test-readiness.py` (23 checks, with a canary on the level rule), AC-28 by `pulse-check.py --self-test`'s two R11 mutations, AC-29 by the re-rendered sample dashboard, which passes R10 with the new section. Still open: AC-16, because `test-workflow-reference.py` proves every agent names a model but only a `--week` run can show a short scout being escalated; AC-19, because digest records come from the log agents of a `--week` run; and AC-26, that run itself.
 
 ---
 
@@ -99,7 +102,6 @@ A one-line test for which to run: "where is this project?" runs `plab-current-st
 3. **Changing any repository.** No fetch, pull, checkout, branch deletion or commit, ever.
 4. **Publishing.** No upload and no board update in v1; see D3.
 5. **The `--full` re-scout of every repository.** A later version; `--week` re-scouts any repository the moment it becomes active.
-6. **Ranking readiness for autonomous runs.** See D2.
 
 ## Users / Actors
 
@@ -200,6 +202,7 @@ Every script exits 0 when clean, 1 when it has findings, and 2 when it could not
 21. Per-repository spend, when supplied, matches by exact folder-qualified name, so no repository's spend is counted twice [S2].
 22. An output folder inside a git repository is refused unless `git check-ignore` confirms it is ignored [S6].
 23. Nothing the skill writes is committed, pushed or published by the skill.
+24. In `--week`, after `pulse.json` is built, the run ranks the active repositories' work by readiness for an hours-long unattended run against seven criteria: a GitHub remote, passing tests, a spec with acceptance criteria, agent instructions, checkpointed stages, safe tests, and a clean branch. A script scores the three it can read from git and the file system, and one judge agent scores the other four within the agent cap [S2, S11].
 
 ## Acceptance Criteria
 
@@ -255,6 +258,12 @@ Every script exits 0 when clean, 1 when it has findings, and 2 when it could not
 
 **AC-26:** A `--week` run on the maintainer's tree writes output that `pulse-check.py` passes. [model-inference: the live run is this spec's own test design]
 
+**AC-27:** `readiness.py candidates` leaves dormant and alias repositories out, puts a repository with an agent-actionable What's Next item first, caps the list, and scores `github_pr_flow`, `agent_instructions` and `clean_branch` with evidence and no model call. [S11]
+
+**AC-28:** `pulse-check.py` fails a week run with no `readiness.json`, and a `readiness.json` whose level disagrees with its criteria; its self-test proves both. [S11]
+
+**AC-29:** `render.py --readiness` writes a readiness section whose items are not `repo-card` elements, and with no `readiness.json` it writes an empty-state line. [S11]
+
 ## Behavior / Examples
 
 ### Example 1: a weekly run
@@ -287,6 +296,7 @@ A repository's newest log lists a merge as blocked, but git shows the commit on 
 |------|--------|------|-------------|
 | 2026-10-30 | claude | added | Initial spec, from the maintainer-local spec brief of 2026-10-16 and its review of 2026-10-30. Changes from the brief: the comparison with `plab-current-status` and the snapshot reader, the shared vocabulary, waiting-item ages, unprotected work, the dashboard card check, the credential rule in C5, the facts script and assembly step, Pacific examples, and the stale board context in D3. The decisions below are built on their recommendations as working defaults and stay `Open` until the maintainer ratifies or overturns them. |
 | 2026-10-30 | claude | changed | Status moved to `committed` with 23 of 26 criteria ticked on the evidence in Currently In Progress. AC-16, AC-19 and AC-26 stay open until a live `--week` run. |
+| 2026-11-03 | claude | changed | D2 built as `plab-project-pulse` 1.1.0. Non-Goal 6 became Requirement 24, AC-27 to AC-29 were added and ticked, S11 added, and the summary's decision count brought up to date. |
 
 ## Sources & Evidence
 
@@ -300,6 +310,7 @@ A repository's newest log lists a merge as blocked, but git shows the commit on 
 - **[S8]** `skills/plab-current-status/SKILL.md` and `references/status-format.md`, whose frontmatter counts exist so that a page listing every project's snapshot can read them. Class A.
 - **[S9]** The maintainer's subagent model-routing rule. Maintainer-local global instructions. Class A.
 - **[S10]** The maintainer-local review of the two spec briefs, 2026-10-30. Class A.
+- **[S11]** The maintainer's D2 ruling of 2026-11-01, Option B: rank readiness in `--week`, recorded in D2 below. Class A.
 
 ### Unverified Claims
 
@@ -368,7 +379,7 @@ A repository's newest log lists a merge as blocked, but git shows the commit on 
 > * **Status:** Decided
 > * **Choice:** Option B, rank readiness in v1
 > * **Reasoning:** The maintainer chose to rank work that is ready for long autonomous runs now rather than in a later version. Readiness has been ranked by hand twice, each time with a judge agent. It is a feature, so it ships separately from the v0.11.1 fixes.
-> * **Follow-up:** Add a readiness-ranking stage to `--week` that reads `pulse.json`; its own pull request after v0.11.1; tracked in the 2026-11-01 walk record until then.
+> * **Follow-up:** Add a readiness-ranking stage to `--week` that reads `pulse.json`; its own pull request after v0.11.1; tracked in the 2026-11-01 walk record until then. Built 2026-11-03 as `plab-project-pulse` 1.1.0 (Requirement 24, AC-27 to AC-29).
 > * **Decided by / date:** jprisant / 2026-11-01
 
 ### D3: A GitHub Projects feed (Deferred)

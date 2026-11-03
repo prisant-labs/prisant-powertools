@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-30T16:25:00Z",
+  "window": {
+    "start": "2026-10-24",
+    "end": "2026-10-30",
+    "prior_start": "2026-10-17",
+    "timezone": "America/Los_Angeles"
+  },
+  "agent": {
+    "stage": "readiness-judge",
+    "label": "judge-1",
+    "model": "sonnet",
+    "assigned": 4,
+    "returned": 4,
+    "escalated": false
+  },
+  "items": [
+    {
+      "rank": 1,
+      "repo": "work/beta-lib",
+      "work_item": "add integration tests for the retry queue",
+      "source": "docs/plan.md",
+      "level": "medium",
+      "met_count": 6,
+      "criteria": {
+        "github_pr_flow": {
+          "met": false,
+          "evidence": "remote is not on GitHub: git@example.com:owner/beta-lib.git"
+        },
+        "tests_pass": {
+          "met": true,
+          "evidence": "`make test` is the documented command, and the newest session log records it passing on 2026-10-29"
+        },
+        "spec_with_acs": {
+          "met": true,
+          "evidence": "docs/specs/retry-queue.md lists AC-1 to AC-6 for the integration tests"
+        },
+        "agent_instructions": {
+          "met": true,
+          "evidence": "AGENTS.md at the root"
+        },
+        "checkpointed_stages": {
+          "met": true,
+          "evidence": "docs/plan.md splits the work into three test files, each its own commit"
+        },
+        "safe_tests": {
+          "met": true,
+          "evidence": "the tests run against an in-memory queue and write only to a temporary folder"
+        },
+        "clean_branch": {
+          "met": true,
+          "evidence": "0 modified and 0 staged file(s)"
+        }
+      }
+    },
+    {
+      "rank": 2,
+      "repo": "work/alpha-app",
+      "work_item": "add a second export format",
+      "source": "_local/_status/2026-10-29_opus-5-5_ship-export-next.md",
+      "level": "medium",
+      "met_count": 5,
+      "criteria": {
+        "github_pr_flow": {
+          "met": false,
+          "evidence": "remote is not on GitHub: git@example.com:owner/alpha-app.git"
+        },
+        "tests_pass": {
+          "met": true,
+          "evidence": "`npm test` passed in the 2026-10-29 snapshot's verification line"
+        },
+        "spec_with_acs": {
+          "met": false,
+          "evidence": "no spec names acceptance criteria for a second export format"
+        },
+        "agent_instructions": {
+          "met": true,
+          "evidence": "AGENTS.md and CLAUDE.md at the root"
+        },
+        "checkpointed_stages": {
+          "met": true,
+          "evidence": "the format, its writer and its tests are separable commits"
+        },
+        "safe_tests": {
+          "met": true,
+          "evidence": "the export tests write to a temporary folder"
+        },
+        "clean_branch": {
+          "met": true,
+          "evidence": "0 modified and 0 staged file(s)"
+        }
+      }
+    },
+    {
+      "rank": 3,
+      "repo": "work/delta-tool",
+      "work_item": "cut a patch release",
+      "source": "_local/_session-logs/2026-10-29_08-15_haiku-4-5_patch-fixes.md",
+      "level": "low",
+      "met_count": 3,
+      "criteria": {
+        "github_pr_flow": {
+          "met": false,
+          "evidence": "remote is not on GitHub: git@example.com:owner/delta-tool.git"
+        },
+        "tests_pass": {
+          "met": true,
+          "evidence": "`cargo test` is named in the README and passed in the newest session log"
+        },
+        "spec_with_acs": {
+          "met": false,
+          "evidence": "a patch release has no spec"
+        },
+        "agent_instructions": {
+          "met": false,
+          "evidence": "no AGENTS.md or CLAUDE.md at the root"
+        },
+        "checkpointed_stages": {
+          "met": false,
+          "evidence": "a release is one step that ends in a tag"
+        },
+        "safe_tests": {
+          "met": true,
+          "evidence": "the tests read fixtures only"
+        },
+        "clean_branch": {
+          "met": true,
+          "evidence": "0 modified and 0 staged file(s)"
+        }
+      }
+    },
+    {
+      "rank": 4,
+      "repo": "work/gamma-service",
+      "work_item": "move the deploy notes into the session log",
+      "source": "_local/_session-logs/2026-10-27_deploy-notes.md",
+      "level": "low",
+      "met_count": 2,
+      "criteria": {
+        "github_pr_flow": {
+          "met": false,
+          "evidence": "remote is not on GitHub: git@example.com:owner/gamma-service.git"
+        },
+        "tests_pass": {
+          "met": false,
+          "evidence": "no test command is documented"
+        },
+        "spec_with_acs": {
+          "met": false,
+          "evidence": "no spec covers the deploy notes"
+        },
+        "agent_instructions": {
+          "met": false,
+          "evidence": "no AGENTS.md or CLAUDE.md at the root"
+        },
+        "checkpointed_stages": {
+          "met": false,
+          "evidence": "a single file move"
+        },
+        "safe_tests": {
+          "met": true,
+          "evidence": "there are no tests to cause side effects"
+        },
+        "clean_branch": {
+          "met": true,
+          "evidence": "0 modified and 0 staged file(s)"
+        }
+      }
+    }
+  ],
+  "gaps": []
+}

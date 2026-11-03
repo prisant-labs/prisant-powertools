@@ -132,6 +132,8 @@ Rules `pulse-check.py` enforces:
 7. `totals.repos` equals the number of repository records, and `totals.active` plus `totals.dormant` equals it.
 8. Every agent in `agents` names a `model`; `returned` is at most `assigned`.
 
+`pulse-check.py` also enforces R11 on `readiness.json`, below.
+
 A repository whose status is unknown, `sweep-only`, has `status.summary` null and empty lists.
 
 ## `state.json`, the carry-forward store
@@ -143,6 +145,18 @@ A repository whose status is unknown, `sweep-only`, has `status.summary` null an
 ```
 
 The normalized text is lowercase, with runs of whitespace collapsed and leading and trailing punctuation removed. `build-pulse.py` writes the state file only after `pulse.json` validates.
+
+## `readiness.json`, written by `readiness.py build` (week mode)
+
+```json
+{"schema_version": 1, "generated_at": "2026-10-30T16:25:00Z", "window": {"...": "as in pulse.json"},
+ "agent": {"stage": "readiness-judge", "label": "judge-1", "model": "sonnet", "assigned": 4, "returned": 4, "escalated": false},
+ "items": [{"rank": 1, "repo": "group/name", "work_item": "...", "source": "docs/plan.md", "level": "medium", "met_count": 6,
+            "criteria": {"github_pr_flow": {"met": true, "evidence": "..."}, "...": "the seven keys of references/workflow.md"}}],
+ "gaps": [{"source": "readiness-judge", "detail": "no usable judgement for group/other"}]}
+```
+
+`readiness-candidates.json` holds the same three mechanical criteria per candidate, with its path and What's Next items; `readiness-judge.json` holds the judge's `results` and its `agent` record. R11: a `--week` run holds `readiness.json`; its judge names a model; items rank 1 to n; each names a repository in `pulse.json`, a work item and a source; each carries exactly the seven criteria, every one with a boolean `met` and non-empty `evidence`; and `met_count` and `level` agree with the criteria (`high` at seven, `medium` at five or six, `low` below five).
 
 ## `digest.jsonl`
 

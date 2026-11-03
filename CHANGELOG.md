@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **`plab-current-status` reports each open pull request's CI state.** The facts script asks GitHub for the check results in the call it already makes, and reduces them to passing, failing, pending or none, naming any failing check, so a snapshot can rank a failing pull request as work. The CS-01 spec also records that the decisions sweep never reads an unmerged branch. Both were decided in the 2026-11-01 walk. `plab-current-status` 1.1.0.
+- **`plab-project-pulse --week` ranks work by readiness for a long autonomous run.** A script scores three of seven criteria from git and the file system, and one Sonnet judge scores the other four, so the weekly run costs one more agent within the existing cap of ten. The dashboard and readout show the ranking, and the checker validates it as rule R11. The owner had ranked readiness by hand twice. Decided as PP-01 D2 (readiness ranking in v1). `plab-project-pulse` 1.1.0.
 
 ### Fixed
 

@@ -3,7 +3,8 @@
 
 USAGE
 -----
-  render.py --pulse pulse.json --out dashboard.html [--template assets/dashboard.html]
+  render.py --pulse pulse.json --out dashboard.html [--readiness readiness.json]
+            [--template assets/dashboard.html]
 
 EXIT-CODE CONTRACT
 ------------------
@@ -127,6 +128,26 @@ def waiting_on_you_html(items):
     return "\n".join(rows)
 
 
+def readiness_html(readiness):
+    """PP-01 D2. A --quick run has no readiness.json, and the section says so.
+    Items use `readiness-item`, never `repo-card`, which R10 counts."""
+    items = (readiness or {}).get("items") or []
+    if not items:
+        return '      <li class="empty">Readiness was not ranked in this run.</li>'
+    rows = []
+    for item in items:
+        crit = item.get("criteria") or {}
+        missing = [k.replace("_", " ") for k, c in crit.items() if not (c or {}).get("met")]
+        rows.append(
+            '      <li class="readiness-item">%s <span class="badge">%s</span> '
+            '<span class="meta">%s - %s of %s criteria met%s - %s</span></li>'
+            % (md_inline(item.get("work_item")), esc(item.get("level")), esc(item.get("repo")),
+               esc(item.get("met_count")), esc(len(crit)),
+               ("; missing: " + esc(", ".join(missing))) if missing else "", esc(item.get("source")))
+        )
+    return "\n".join(rows)
+
+
 def folder_options_html(folders):
     return "\n".join('        <option value="%s">%s</option>' % (esc(f), esc(f)) for f in folders)
 
@@ -227,7 +248,7 @@ def embed_json(pulse):
     return json.dumps(pulse, ensure_ascii=False).replace("</", "<\\/")
 
 
-def render(pulse, template_text):
+def render(pulse, template_text, readiness=None):
     folders = sorted({r.get("folder") or "" for r in pulse.get("repos", [])})
     replacements = {
         "__TITLE__": "Project Pulse",
@@ -235,6 +256,7 @@ def render(pulse, template_text):
         "__TOTALS__": totals_html(pulse.get("totals", {})),
         "__WHATS_NEXT__": whats_next_html(pulse.get("whats_next", [])),
         "__WAITING_ON_YOU__": waiting_on_you_html(pulse.get("waiting_on_you", [])),
+        "__READINESS__": readiness_html(readiness),
         "__FOLDER_OPTIONS__": folder_options_html(folders),
         "__CARDS__": cards_html(pulse.get("repos", [])),
         "__PULSE_JSON__": embed_json(pulse),
@@ -254,13 +276,15 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Render pulse.json into dashboard.html.")
     parser.add_argument("--pulse", required=True)
     parser.add_argument("--out", required=True)
+    parser.add_argument("--readiness", help="readiness.json from a --week run (PP-01 D2)")
     parser.add_argument("--template", default=str(DEFAULT_TEMPLATE))
     args = parser.parse_args(argv)
 
     try:
         pulse = json.loads(Path(args.pulse).read_text(encoding="utf-8-sig"))
         template_text = Path(args.template).read_text(encoding="utf-8-sig")
-        output = render(pulse, template_text)
+        readiness = json.loads(Path(args.readiness).read_text(encoding="utf-8-sig")) if args.readiness else None
+        output = render(pulse, template_text, readiness)
         Path(args.out).write_text(output, encoding="utf-8")
     except (OSError, ValueError, Broken) as exc:
         print("BROKEN: %s" % exc)
