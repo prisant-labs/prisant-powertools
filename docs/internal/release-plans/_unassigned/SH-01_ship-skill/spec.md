@@ -22,8 +22,8 @@ priority: P2
 **Status:** committed. Built on `feat/plab-ship`; AC-15 waits on the first run in another repository
 **Last updated:** 2026-11-06 by claude (Opus 5.5), writing and building under the maintainer's instruction to deliver the skill
 **Linked plan:** none. The spec and the build landed together, under the instruction to deliver
-**Open questions:** D1 and D2 (see Open Questions / Decisions). Neither blocks the skill, which fails safe until they are settled
-**Revisions:** 2
+**Open questions:** D2 (see Open Questions / Decisions). It does not block the skill. D1 was decided on 2026-11-06
+**Revisions:** 3
 
 ### Acceptance Criteria Fulfillment
 
@@ -160,6 +160,7 @@ The maintainer runs the skill on a machine whose instructions hold no merge rule
 | Date | Author | Type | Description |
 |------|--------|------|-------------|
 | 2026-11-06 | claude | added | Initial spec, written and built under the maintainer's instruction to deliver the skill. |
+| 2026-11-06 | claude | decided | D1 decided: the maintainer approved the merge rule sentence, and it is installed. |
 | 2026-11-06 | claude | added | Requirement 14 and AC-16, the plain-English value summary, at the maintainer's request before the v0.13.0 tag. |
 
 ## Sources & Evidence
@@ -182,14 +183,14 @@ The maintainer runs the skill on a machine whose instructions hold no merge rule
 
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
-| D1 | The sentence in the merge rule that lets `--release` answer the merge check's `release` ask | Pending | Open | 2026-11-06 |
+| D1 | The sentence in the merge rule that lets `--release` answer the merge check's `release` ask | Added to both copies of the rule | Decided | 2026-11-06 |
 | D2 | Where the merge check keeps its backups | Pending | Open | 2026-11-06 |
 
-### D1: The sentence in the merge rule (Open)
+### D1: The sentence in the merge rule (Decided)
 
 **Summary.** The merge rule stops on any ask and requires the maintainer's yes for tags and releases, so `--release` cannot merge a release pull request or tag until the rule says it may.
 
-**Why it is not built.** The rule lives in the maintainer's private configuration and sets what an agent may do unasked, so an agent should not widen it for itself. The skill fails safe in the meantime: it stops at the ask and names it.
+**Resolution.** The maintainer approved the sentence in session on 2026-11-06, and it was added to both copies of the rule, with a row in the private change register for review on 2026-11-24. The approval had to be the maintainer's, because the rule sets what an agent may do unasked. On a machine whose rule lacks the sentence, the skill still fails safe: it stops at the ask and names it.
 
 **Proposed text.** "Running `/plab-ship --release` is the maintainer's yes for that run's tag and release. It answers a `release` ask from the merge check and no other check."
 
