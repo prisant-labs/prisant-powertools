@@ -50,6 +50,11 @@
       "description": "Walk the maintainer through every open question, decision and task in the current session, then write each answer back to the document it came from. Use when the user asks to go through what is pending: 'walk me through the pending questions and decisions', 'resolve open items', 'what do you need me to decide', 'decision sitting'. Presents items as Q, D and T, D items with lettered options and a recommendation, takes a one-line answer such as 'D1 A, Q1: the NAS', and writes a walk record. Can be pointed at one named document. Do NOT fire on a request to walk through code or a file, on a single standalone decision question, or on a status question like 'where are we' or 'what's next'; answer those directly. '--backlog' sweeps every spec, plan and the newest session log for pending items, triages them, and walks up to ten, oldest first, writing a dated backlog file."
     },
     {
+      "name": "plab-ship",
+      "path": "skills/plab-ship/SKILL.md",
+      "description": "Ship finished branches: document them in depth across human, technical and agentic docs, verify them, screen them, merge what passes the merge check, clean up, and report what changed, with an optional release whose version the model decides. Writes one run record to _local/_shipped/. Explicit invocation only: run /plab-ship; it does not fire on its own."
+    },
+    {
       "name": "plab-spec",
       "path": "skills/plab-spec/SKILL.md",
       "description": "Write a feature specification with numbered, source-cited acceptance criteria into a per-effort folder under docs/internal/release-plans/. Produces a spec.md carrying frontmatter, an agent-updated Task Summary block, and links to the related effort and plan. Writes into _unassigned/ by default; pass --target-release vX.Y.Z to write straight into a release folder. Use when the problem space is already explored and the requirements need a durable home that survives rewrites of the plan beneath them: 'write the spec', 'spec this effort', 'turn this into acceptance criteria'. Do NOT fire on a passing mention of the word spec, on questions about an existing spec, or on a request to implement one. Defines WHAT to build; the implementation-plan template under docs/internal/release-plans/ defines HOW and /plab-strategy-brief explores WHY."
