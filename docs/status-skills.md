@@ -258,7 +258,7 @@ Documents, verifies, screens and merges finished branches in one pass, with an o
 |---|---|
 | Invocation | `disable-model-invocation: true`, from 1.0.0 |
 | Output | `_local/_shipped/YYYY-MM-DD_<byline>.md`, appended as each merge lands; merges; a version only with `--release` |
-| Scripts | `derive-ship-facts.py`; `screen-branch.py`; `ship-check.py`, its own output gate, which proves ten rules against the committed sample on every run; `test-ship-scripts.py` |
+| Scripts | `derive-ship-facts.py`; `screen-branch.py`; `ship-check.py`, its own output gate, which proves eleven rules against the committed sample on every run; `test-ship-scripts.py` |
 | Setup required | Python 3 and git. `gh` for pull requests, without which they are a named gap. A merge rule with its check in the agent's instructions, without which the skill never merges. Optional documentation map at `.claude/plab-ship.local.md` |
 | References | 2 files |
 

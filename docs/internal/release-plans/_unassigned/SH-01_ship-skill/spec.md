@@ -8,7 +8,7 @@ updated: 2026-11-06
 linked-effort: "the maintainer's request of 2026-11-05 in session to turn a pasted close-out prompt into a skill"
 linked-plan: null
 linked-release: null
-ac-count: 15
+ac-count: 16
 source-count: 7
 requires-human-review: true
 target-release: null
@@ -23,7 +23,7 @@ priority: P2
 **Last updated:** 2026-11-06 by claude (Opus 5.5), writing and building under the maintainer's instruction to deliver the skill
 **Linked plan:** none. The spec and the build landed together, under the instruction to deliver
 **Open questions:** D1 and D2 (see Open Questions / Decisions). Neither blocks the skill, which fails safe until they are settled
-**Revisions:** 1
+**Revisions:** 2
 
 ### Acceptance Criteria Fulfillment
 
@@ -41,11 +41,12 @@ priority: P2
 - [x] AC-12: Every new flag and skill must appear in a human-layer file
 - [x] AC-13: The run record is written before the first merge and appended as merges land
 - [x] AC-14: The closing report lists the documents updated, per layer
+- [x] AC-16: The report opens in plain English, with end-user value and technical value, and a record without both fails
 - [ ] AC-15: A first run in a repository other than this one produces a record the checker passes
 
 ### Currently In Progress
 
-Built on 2026-11-06. Evidence: AC-2, AC-4 and AC-7 to AC-9 by `test-ship-scripts.py`; AC-10 to AC-12 by `ship-check.py --self-test`, which proves ten rules on mutations; AC-1 by the eval case `ship-manual-no-fire` and `scripts/codex-invocation-check.py`.
+Built on 2026-11-06. Evidence: AC-2, AC-4 and AC-7 to AC-9 by `test-ship-scripts.py`; AC-10 to AC-12 by `ship-check.py --self-test`, which proves eleven rules on mutations; AC-1 by the eval case `ship-manual-no-fire` and `scripts/codex-invocation-check.py`.
 
 ---
 
@@ -94,7 +95,8 @@ The maintainer also ruled that high-quality, multi-depth human, technical and ag
 11. A feature or behaviour change gets a cold reader on Sonnet, and its gaps are fixed before the merge [S2, S6].
 12. The run record lives at `_local/_shipped/YYYY-MM-DD_<byline>.md`, outside the session-log folder, is created before the first merge, and is appended as each merge lands [S1, S7].
 13. The closing report lists the documents updated for each branch, per layer [S2].
-14. `ship-check.py` exits 0, 1 or 2 on the repository's three-state contract, and proves every rule can fail before reporting clean [S3].
+14. The closing report and the record open with a plain-English account of everything the session accomplished and the ship delivered, as end-user value and technical value, naming no file, flag, id or commit [S2].
+15. `ship-check.py` exits 0, 1 or 2 on the repository's three-state contract, and proves every rule can fail before reporting clean [S3].
 
 ## Acceptance Criteria
 
@@ -126,6 +128,8 @@ The maintainer also ruled that high-quality, multi-depth human, technical and ag
 
 **AC-14:** `SKILL.md` step 9 requires a documents table per merged branch in the closing report. [S2]
 
+**AC-16:** `SKILL.md` step 9 opens the report with both values, and `ship-check.py` rejects a record lacking either line or naming a file, flag, id, hash or backtick in that section. This is a proxy for plainness. [S2]
+
 **AC-15:** Running `/plab-ship` on a repository other than this one, once this version is installed, writes one record that `ship-check.py --repo` passes. [model-inference: the live run is this spec's own test design]
 
 ## Behavior / Examples
@@ -156,6 +160,7 @@ The maintainer runs the skill on a machine whose instructions hold no merge rule
 | Date | Author | Type | Description |
 |------|--------|------|-------------|
 | 2026-11-06 | claude | added | Initial spec, written and built under the maintainer's instruction to deliver the skill. |
+| 2026-11-06 | claude | added | Requirement 14 and AC-16, the plain-English value summary, at the maintainer's request before the v0.13.0 tag. |
 
 ## Sources & Evidence
 

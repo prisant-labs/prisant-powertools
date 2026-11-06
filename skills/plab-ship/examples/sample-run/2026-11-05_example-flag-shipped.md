@@ -11,6 +11,12 @@ model: opus-5-5
 
 This is an invented run, kept as the worked example of the format and as the sample `ship-check.py` proves its rules against.
 
+## In Plain English
+
+**End-user value:** You can now turn on the example behaviour with one option instead of editing a settings file by hand, and the guide explains what it does and what it defaults to. It is live in the new release. The half-finished export is not included, so exports work as they did before.
+
+**Technical value:** The new option is covered by the existing test suite and described in the design notes, so a later change that breaks it fails a test rather than reaching a user. Every merge has a recorded way back, and a check confirmed that the documents named in this record really changed.
+
 ## Merged
 
 | Branch | PR | Commit | Undo point | Merge check |

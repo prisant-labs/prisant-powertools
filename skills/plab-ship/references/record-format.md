@@ -25,6 +25,7 @@ The level-2 sections are exactly these, in this order. A section with nothing to
 
 | Section | Holds |
 |---|---|
+| `## In Plain English` | A `**End-user value:**` line and a `**Technical value:**` line, covering everything the session accomplished and the ship delivered. No file names, flags, reference ids, commit hashes or backticks |
 | `## Merged` | One table row per merge: branch, pull request with a short handle, commit, undo point, what the merge check said |
 | `## Left Open` | Each branch that did not merge, why, and the next action |
 | `## Needs Your Decision` | Each decision a person must make, with its id, a short handle and its home document |
@@ -80,5 +81,6 @@ All twelve rows are required. `New surface` holds each token in backticks, or th
 | R8 | A file listed as `updated` did not change in that merge, a changed document is not listed, or a `correct` file does not exist |
 | R9 | A new-surface token appears in no Human-layer file named by the record |
 | R10 | A recorded version has no tag |
+| R11 | In Plain English lacks either value line, a line is under eight words, or it holds a backtick, reference id, commit hash, flag or file name. This is a proxy for plainness and cannot prove a person understands it |
 
 Rules R8 to R10 need `--repo`. Without it they are skipped, and the result line says so. A document here is a file ending in `.md`, `.mdx`, `.rst`, `.adoc` or `.txt`, outside `evals/`, `tests/`, `test/`, `fixtures/`, and any `examples/` or `fixtures/` folder.
