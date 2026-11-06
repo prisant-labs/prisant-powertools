@@ -171,7 +171,7 @@ The maintainer runs the skill on a machine whose instructions hold no merge rule
 
 - Requirements 6 and 7 are model inference, marked above.
 - Whether the credential patterns are enough. They were tested on fixtures, not against a corpus of real leaks.
-- Whether the cold reader finds gaps a maintainer would care about. It was run once by hand on this skill's own usage README, and no baseline exists.
+- Whether the cold reader finds gaps a maintainer would care about. It was run twice by hand on this skill's own usage README, finding gaps both times, and no baseline exists.
 
 ## Open Questions / Decisions
 
