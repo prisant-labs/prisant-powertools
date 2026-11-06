@@ -79,6 +79,7 @@ SERIES_LEGEND = [
     ("CS", "current-status roadmap item"),
     ("UA", "usage-audit roadmap item"),
     ("PP", "project-pulse roadmap item"),
+    ("SH", "ship-skill roadmap item"),
 ]
 SERIES_LEGEND_MAP = dict(SERIES_LEGEND)
 

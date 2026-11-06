@@ -2,7 +2,7 @@
 
 The current configuration of every skill in `prisant-powertools`, as declared in the repository. One row per skill, plus the setup each one needs and where its output lands.
 
-**Plugin version:** 0.12.0 **Skills:** 13 (7 auto-discoverable, 6 explicit-invocation only) **Verified against:** `library.json`, `manifest.generated.json`, and each `skills/*/SKILL.md` **As of:** 2026-11-03
+**Plugin version:** 0.12.0 **Skills:** 14 (7 auto-discoverable, 7 explicit-invocation only) **Verified against:** `library.json`, `manifest.generated.json`, and each `skills/*/SKILL.md` **As of:** 2026-11-03
 
 > This file describes what the repository declares, not what is installed on any given machine. To check a local install, read `~/.claude/plugins/installed_plugins.json`.
 
@@ -25,6 +25,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 | `plab-spec` | 1.3.4 | Auto + explicit | `--effort <id> [--target-release vX.Y.Z] [--revise] [--dry-run]` | `docs/internal/release-plans/_unassigned/` by default |
 | `plab-strategy-brief` | 1.1.1 | Auto + explicit | `[paste raw thinking]` | `_output/plab-strategy-brief/` |
 | `plab-wrap-session` | 1.9.0 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
+| `plab-ship` | 1.0.0 | **Explicit only** | `[<branch\|PR> ...] [--release] [--no-fetch]` | `_local/_shipped/YYYY-MM-DD_<byline>.md` (gitignored), plus merges and any release |
 
 **Explicit only** means the skill carries `disable-model-invocation: true` for Claude Code and `policy.allow_implicit_invocation: false` in `agents/openai.yaml` for Codex. It never fires on its own and is absent from the auto-loaded skill listing. It runs when you type its name and only then. **`plab-init-project`, `plab-audit`, `plab-release-plan`, `plab-current-status`, `plab-usage-audit` and `plab-project-pulse` carry it now.** `plab-release-plan` carried it through 1.3.0, was auto-discoverable from 1.4.0 to 1.5.1, and carries it again from 1.6.0, provisionally. `plab-spec` carried it through 1.2.1 and is now auto-discoverable, using an explicit do-NOT-fire clause in its description instead of the binary flag.
 
@@ -246,6 +247,22 @@ Rolls every repository under the configured roots into one private weekly pulse.
 | References | 6 files |
 
 **Reads `plab-current-status`, never writes it.** A repository whose newest snapshot is newer than its last commit takes its status from the snapshot and costs no agent.
+
+---
+
+### `plab-ship` 1.0.0, explicit only
+
+Documents, verifies, screens and merges finished branches in one pass, with an optional release, and writes a checked run record.
+
+| Property | Value |
+|---|---|
+| Invocation | `disable-model-invocation: true`, from 1.0.0 |
+| Output | `_local/_shipped/YYYY-MM-DD_<byline>.md`, appended as each merge lands; merges; a version only with `--release` |
+| Scripts | `derive-ship-facts.py`; `screen-branch.py`; `ship-check.py`, its own output gate, which proves ten rules against the committed sample on every run; `test-ship-scripts.py` |
+| Setup required | Python 3 and git. `gh` for pull requests, without which they are a named gap. A merge rule with its check in the agent's instructions, without which the skill never merges. Optional documentation map at `.claude/plab-ship.local.md` |
+| References | 2 files |
+
+**It decides the version, not the merge.** The merge check decides each merge. With `--release`, the model decides patch, minor or major from what the changes do, and only a repository with no version tag stops to ask.
 
 ---
 

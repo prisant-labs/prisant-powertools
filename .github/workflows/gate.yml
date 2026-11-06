@@ -285,6 +285,18 @@ jobs:
         if: always()
         run: python3 skills/plab-project-pulse/scripts/test-readiness.py
 
+      # plab-ship (SH-01). The checker's self-test proves each of its ten
+      # rules fails on a mutation, building a throwaway repository for the
+      # rules that read commits, so exit 2 means a rule has gone blind. The
+      # script tests build throwaway repositories and name an absent `gh`.
+      - name: The ship record checker, against its committed sample
+        if: always()
+        run: python3 skills/plab-ship/scripts/ship-check.py --self-test
+
+      - name: The ship facts and screen scripts, against fixture repositories
+        if: always()
+        run: python3 skills/plab-ship/scripts/test-ship-scripts.py
+
       # The session pair, plab-wrap-session and plab-continue-session. These
       # four suites existed and passed locally but never ran here, so the
       # tag-sort defect fixed in PR #60 shipped past a green CI. Each builds
