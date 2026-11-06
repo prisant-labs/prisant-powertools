@@ -39,6 +39,11 @@ THE RULES (SH-01, the ship skill)
       file the record names in its Human layer. This is the mechanical half of
       the documentation standard: it proves presence, not quality
   R10 a version other than `none` exists as a tag
+  Always, because the rule reads only the record:
+  R11 In Plain English carries `**End-user value:**` and `**Technical value:**`,
+      each at least eight words, and neither holds a backtick, a reference id, a
+      commit hash, a flag or a file name. This is a proxy: it rejects the common
+      ways a summary stops being plain, and cannot prove a person understands it
 
 WHAT THIS DOES NOT PROVE
 ------------------------
@@ -58,7 +63,7 @@ import tempfile
 from fnmatch import fnmatch
 from pathlib import Path
 
-SECTIONS = ["Merged", "Left Open", "Needs Your Decision", "Documents", "Release", "Cleanup", "Unverified"]
+SECTIONS = ["In Plain English", "Merged", "Left Open", "Needs Your Decision", "Documents", "Release", "Cleanup", "Unverified"]
 LAYERS = ["Human", "Technical", "Agentic"]
 DEPTHS = ["Discover", "Use", "Understand", "Trust"]
 STATES = {"updated", "correct", "n/a"}
@@ -75,6 +80,13 @@ NOT_CODE = ("evals/*", "tests/*", "test/*", "fixtures/*", "*/examples/*", "*/fix
 FLAG_DEF_RE = re.compile(r"""^\s*[\w.]*add_argument\(\s*["'](--[\w-]+)["']""")
 ARG_HINT_RE = re.compile(r"^argument-hint:\s*(.*)$")
 FLAG_RE = re.compile(r"--[a-z][\w-]*")
+NOT_PLAIN = [
+    ("a backtick", re.compile(r"`")),
+    ("a reference id", re.compile(r"(?<![\w-])(?:#\d+|[A-Z]{1,3}-\d+|AC-\d+)\b")),
+    ("a commit hash", re.compile(r"\b(?=[0-9a-f]*\d)(?=[0-9a-f]*[a-f])[0-9a-f]{7,40}\b")),
+    ("a flag", re.compile(r"(?<![\w-])--[a-z]")),
+    ("a file name", re.compile(r"\b[\w./-]+\.(?:md|py|json|ya?ml|js|mjs|ts|toml|sh)\b")),
+]
 GIT_ENV = dict(os.environ, GIT_TERMINAL_PROMPT="0", LC_ALL="C")
 
 SAMPLE_DIR = Path(__file__).resolve().parent.parent / "examples" / "sample-run"
@@ -378,7 +390,24 @@ def r10_tag(path, text, repo):
     return []
 
 
-RULES = [r1_path, r2_frontmatter, r3_sections, r4_merged, r5_cells, r6_lines, r7_release, r8_diff, r9_surface, r10_tag]
+def r11_plain(path, text, repo):
+    _, secs = section_map(text)
+    lines = secs.get("In Plain English", [])
+    out = []
+    for label in ("End-user value", "Technical value"):
+        value = marked_line(lines, label)
+        if value is None:
+            out.append("R11: In Plain English has no `**%s:**` line" % label)
+        elif len(value.split()) < 8:
+            out.append("R11: `**%s:**` holds fewer than eight words" % label)
+    body = "\n".join(lines)
+    for name, pattern in NOT_PLAIN:
+        if pattern.search(body):
+            out.append("R11: In Plain English holds %s; say what the thing does instead" % name)
+    return out
+
+
+RULES = [r1_path, r2_frontmatter, r3_sections, r4_merged, r5_cells, r6_lines, r7_release, r8_diff, r9_surface, r10_tag, r11_plain]
 
 
 def check(path, text, repo):
@@ -463,6 +492,8 @@ def self_test():
         ("R5", logical, _replace_once(text, "| Human | Use | updated |", "| Human | Use | skipped |")),
         ("R6", logical, _replace_once(text, "**Cold reader:**", "**Reader:**")),
         ("R7", logical, _replace_once(text, "**Why:**", "**Because:**").replace("Why:", "Because:")),
+        ("R11", logical, _replace_once(text, "**Technical value:**", "**Technical:**")),
+        ("R11", logical, _replace_once(text, "**End-user value:** ", "**End-user value:** See the `README.md` file. ")),
     ]
     for rule_id, path, mutated in mutations:
         if not [f for f in check(path, mutated, None) if f.startswith(rule_id + ":")]:
@@ -483,7 +514,7 @@ def self_test():
         for rule_id, mutated in repo_mutations:
             if not [f for f in check(logical, mutated, tmp) if f.startswith(rule_id + ":")]:
                 raise Broken("self-test: rule %s did not fail its mutation, so it cannot be trusted" % rule_id)
-    return len(mutations) + len(repo_mutations)
+    return len({m[0] for m in mutations} | {m[0] for m in repo_mutations})
 
 
 def main(argv=None):

@@ -27,7 +27,7 @@ Merging needs no flag. Whether a merge may happen without asking is decided by t
 
 - Merged branches, as the merge check permits, and a new version when `--release` was passed.
 - One run record, `_local/_shipped/YYYY-MM-DD_<byline>.md`, in the format of `references/record-format.md`.
-- A closing report, whose documents list follows step 9.
+- A closing report that opens in plain English, split into end-user value and technical value, and whose documents list follows step 9.
 
 ## Workflow
 
@@ -120,7 +120,16 @@ Then release through the repository's own path:
 - Remove a worktree only if it is clean and no live session holds it.
 - Confirm the working tree is clean and that `tracked_local_files` is still empty.
 
-### 9. Check the record, and report
+### 9. Explain it, check the record, and report
+
+First write the record's `## In Plain English` section. In plain English, explain everything this session accomplished and this ship delivered, as it relates to end-user value and technical value. Cover the whole of the work, including problems found and fixed along the way, and not only the merges.
+
+- `**End-user value:**` What someone using this can now do that they could not before, or what stopped going wrong for them.
+- `**Technical value:**` What is now safer, simpler, faster, better tested or easier to maintain, and why that matters.
+
+Write for someone who was not in the session and does not know the code. Use full sentences. Name no file, flag, reference id or commit: say what the thing does. Claim only what was delivered and verified, and say what is not yet reachable, such as work that is merged but not installed. If nothing merged, say so, and say what the run established.
+
+Then check the record:
 
 ```bash
 python <this skill's base directory>/scripts/ship-check.py <record> --repo <project root>
@@ -130,12 +139,13 @@ Exit 0 means the record satisfies every rule, and that its documents list matche
 
 Then report, in this order:
 
-1. What merged, each with its undo point.
-2. What stayed open, and why.
-3. What needs the maintainer's decision.
-4. The release: the version and why, or that none was approved.
-5. **Documents updated.** One table per merged branch, with a row for each layer and columns for updated, already correct, and does not apply with the reason. Link each file, so it can be opened. Add the cold reader's result on one line.
-6. What is unverified, and the checker's result line.
+1. **In plain English.** The section above, with end-user value and technical value under their own labels.
+2. What merged, each with its undo point.
+3. What stayed open, and why.
+4. What needs the maintainer's decision.
+5. The release: the version and why, or that none was approved.
+6. **Documents updated.** One table per merged branch, with a row for each layer and columns for updated, already correct, and does not apply with the reason. Link each file, so it can be opened. Add the cold reader's result on one line.
+7. What is unverified, and the checker's result line.
 
 List every merge in the session's final message: the repository, the pull request or branch, and the undo point.
 

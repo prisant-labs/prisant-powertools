@@ -157,7 +157,15 @@ Every merge is appended to the run record as it lands, so the list survives a co
 
 ## Output
 
-**The run record** is `_local/_shipped/YYYY-MM-DD_<byline>.md`, with sections Merged, Left Open, Needs Your Decision, Documents, Release, Cleanup and Unverified. A worked example is [`skills/plab-ship/examples/sample-run/`](../../../skills/plab-ship/examples/sample-run/).
+**The plain-English summary** opens the closing report and the record. It explains everything the session accomplished and the ship delivered, with no file names, flags or ids, under two labels:
+
+```text
+End-user value: You can now turn on the example behaviour with one option instead of editing a settings file by hand, and the guide explains what it does. It is live in the new release.
+
+Technical value: The new option is covered by the existing test suite, so a later change that breaks it fails a test rather than reaching a user. Every merge has a recorded way back.
+```
+
+**The run record** is `_local/_shipped/YYYY-MM-DD_<byline>.md`, with sections In Plain English, Merged, Left Open, Needs Your Decision, Documents, Release, Cleanup and Unverified. A worked example is [`skills/plab-ship/examples/sample-run/`](../../../skills/plab-ship/examples/sample-run/).
 
 **The documents list in the closing report** looks like this:
 
@@ -178,7 +186,7 @@ Cold reader: ran the quick start; 1 gap found and fixed.
 
 ## Its Own Gate
 
-The skill runs this itself at the end of every run. To run it by hand, from the installed skill's `scripts` folder, use `python ship-check.py <record> --repo <root>`. It checks the record against ten rules, listed in [`references/record-format.md`](../../../skills/plab-ship/references/record-format.md), and `--self-test` proves the rules alone. Three of the rules read the real commits: every file listed as updated must have changed in that merge, every changed document must be listed, and every new flag or skill must appear in a human-facing file. So the documents list cannot overclaim. Each run first proves that every rule fails on a mutated copy of the committed sample, and CI runs that proof on every pull request.
+The skill runs this itself at the end of every run. To run it by hand, from the installed skill's `scripts` folder, use `python ship-check.py <record> --repo <root>`. It checks the record against eleven rules, listed in [`references/record-format.md`](../../../skills/plab-ship/references/record-format.md), and `--self-test` proves the rules alone. Three of the rules read the real commits: every file listed as updated must have changed in that merge, every changed document must be listed, and every new flag or skill must appear in a human-facing file. So the documents list cannot overclaim. Each run first proves that every rule fails on a mutated copy of the committed sample, and CI runs that proof on every pull request.
 
 It proves presence, not quality. Only the cold reader tests whether the documents actually work for someone new.
 
@@ -208,6 +216,7 @@ It proves presence, not quality. Only the cold reader tests whether the document
 | `screen-branch.py` FINDINGS | A file holds a credential shape, or `_local/` is tracked | Inspect the named file. If the match is a false positive, merge it yourself |
 | `ship-check.py` R8 | The record and the real commits disagree | Correct the record, or ship the missing document on a new branch |
 | `ship-check.py` R9 | A new flag or skill appears in no human-facing file | Document it. This is the gate working |
+| `ship-check.py` R11 | The plain-English section is missing a value line, or it names a file, flag, id or commit | The agent rewrites it to say what the thing does. A person still judges whether it reads plainly |
 | `ship-check.py` any other rule | The record's format is wrong. [`references/record-format.md`](../../../skills/plab-ship/references/record-format.md) says what each rule wants | Correct the record, and the agent runs the check again |
 | `ship-check.py` exit 2 | The checker could not prove itself, or could not read the record | Treat the record as unverified. The line above the exit names the cause |
 | It asks before writing the record | `_local/` is not gitignored | Accept the offer to ignore it. The record carries candid notes that should not ship |

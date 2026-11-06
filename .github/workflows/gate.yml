@@ -285,7 +285,7 @@ jobs:
         if: always()
         run: python3 skills/plab-project-pulse/scripts/test-readiness.py
 
-      # plab-ship (SH-01). The checker's self-test proves each of its ten
+      # plab-ship (SH-01). The checker's self-test proves each of its eleven
       # rules fails on a mutation, building a throwaway repository for the
       # rules that read commits, so exit 2 means a rule has gone blind. The
       # script tests build throwaway repositories and name an absent `gh`.

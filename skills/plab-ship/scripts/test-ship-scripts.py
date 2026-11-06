@@ -197,6 +197,9 @@ def test_skill_text():
     check("the skill names the merge rule rather than a path to the check", "solo-repo merge rule" in text)
     check("a missing check fails closed", "never a pass" in text)
     check("the cold reader names a model", re.search(r"cold reader[^\n]*Sonnet|Sonnet[^\n]*cold reader", all_text, re.I))
+    check("the report opens in plain English, with both kinds of value",
+          "## In Plain English" in text and "End-user value" in text and "Technical value" in text
+          and "1. **In plain English.**" in text)
     for name in ("derive-ship-facts.py", "screen-branch.py", "ship-check.py"):
         check("the workflow runs %s" % name, name in text)
 
