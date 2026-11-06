@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-06
+
+A minor release that adds one skill, `plab-ship`, and changes no existing skill. It replaces the close-out prompt with a manual-only command that documents, verifies, screens and merges finished branches in one pass. Until your merge rule says `--release` answers the merge check's `release` ask, `--release` stops at that ask and names it, so nothing publishes by accident.
+
 ### Added
 
 - **`plab-ship` 1.0.0, a new manual-only skill.** `/plab-ship` carries finished branches over the line in one pass and stops. It documents each branch against a twelve-cell standard (human, technical and agentic docs, at four depths), runs a Sonnet cold reader on a feature or behaviour change, verifies the branch, screens it for tracked `_local/` files and credential shapes before the merge, and merges only on `VERDICT: merge` from your merge check. `--release` approves one release for that run; it takes no number, and the model decides patch, minor or major from what the changes do. Each run writes a record to `_local/_shipped/`, and its closing report opens in plain English, explaining everything the session accomplished and the ship delivered as end-user value and technical value, then lists the documents updated per layer. `ship-check.py` compares that list with the real commits, so the report cannot overclaim. The skill does not merge when your merge rule or its check is missing.

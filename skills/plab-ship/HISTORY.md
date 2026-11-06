@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 1.0.0 | 2026-11-06 | unreleased | added | First version, specified by SH-01 (the ship skill). Documents, verifies, screens and merges finished branches in one pass, with an optional `--release` whose version the model decides, and writes a checked run record to `_local/_shipped/`. Manual invocation only. |
+| 1.0.0 | 2026-11-06 | v0.13.0 | added | First version, specified by SH-01 (the ship skill). Documents, verifies, screens and merges finished branches in one pass, with an optional `--release` whose version the model decides, and writes a checked run record to `_local/_shipped/`. Manual invocation only. |
 
 ## 1.0.0 - 2026-11-06
 
