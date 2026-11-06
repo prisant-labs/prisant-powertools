@@ -5,13 +5,15 @@
 
 Carry finished branches over the line in one pass: documented in depth, verified, screened, merged where your merge check allows, cleaned up and reported. It can also publish a new version, and it decides the version number itself. Manual invocation only.
 
+It is built for this plugin's maintainer, whose private merge rule and merge check it relies on. Anyone else needs their own rule and a check that ends in `VERDICT: merge`, or the skill will not merge.
+
 ---
 
 ## Getting Started
 
 ### Before You Start
 
-You need Python 3, git and `gh`, signed in to GitHub. To merge anything, your agent's instructions must also hold a merge rule and its check, which [Words Used Here](#words-used-here) explains. To confirm that, ask the agent "what does your merge rule say?" before the first run. Without a rule, the skill still documents and verifies, and then leaves the branch open.
+You need Python 3, git and `gh`, signed in to GitHub. To merge anything, your agent's instructions must also hold a merge rule and its check, which [Words Used Here](#words-used-here) explains. To confirm that, ask the agent "what does your merge rule say?" before the first run. A good answer names the rule and the exact command that runs the check. Without a rule, the skill still documents and verifies, and then leaves the branch open.
 
 ### Quick Start
 
@@ -19,7 +21,7 @@ You need Python 3, git and `gh`, signed in to GitHub. To merge anything, your ag
 /plab-ship feat/my-branch
 ```
 
-Replace `feat/my-branch` with your branch, either pushed with a pull request or local only. This edits and commits documentation on that branch, runs its tests, merges it if the merge check, the documents, the review threads and the pending decisions all allow it, and publishes nothing.
+Replace `feat/my-branch` with your branch, either pushed with a pull request or local only. This edits, commits and pushes documentation on that branch, runs its tests, merges it if the merge check, the documents, the review threads and the pending decisions all allow it, and publishes nothing.
 
 The run is unattended unless it needs you. It asks only when you named no branch, when `_local/` is not gitignored, or when `--release` meets a repository with no version tag.
 
@@ -104,7 +106,7 @@ The flag does not override anything else. Failing tests, merge conflicts, delete
 
 ### Before `--release` can merge a release pull request
 
-Your merge rule has to allow it, because a merge check that sees a release pull request asks you first. Add a sentence like this one to the rule, and to any copy of it for another harness:
+Your merge rule has to allow it, because a merge check that sees a release pull request asks you first. The rule lives in your agent's global instructions: for Claude Code, in `CLAUDE.md` or a file under `.claude/rules/` in your home folder, and for Codex, in `.codex/AGENTS.md` there. Add a sentence like this one to the rule, and to any copy of it for another harness:
 
 > Running `/plab-ship --release` is the maintainer's yes for that run's tag and release. It answers a `release` ask from the merge check and no other check.
 
@@ -198,6 +200,8 @@ It proves presence, not quality. Only the cold reader tests whether the document
 | The report says nothing merged because no rule or check was available | The agent's instructions hold no merge rule, or the check could not run | Install the rule, or merge by hand. A missing check is never a pass |
 | The record's Unverified section names `pull requests` as a gap | `gh` is missing or not signed in, so pull requests and review threads were not read | Install `gh` and run `gh auth login`, then run the skill again |
 | A branch stayed open with test output in the report | Its tests, build or validation scripts failed | Fix them on the branch and run the skill again |
+| The run stopped partway | A crash, a closed session or a limit | Run it again, naming the branches still open. This is safe, because a merged branch is no longer a candidate and each merge is checked again. The earlier record stays, and the new run writes its own |
+| The cold reader reports a gap that cannot be fixed now | The documents do not yet work for a new reader | The gap is fixed before the merge, or the agent records why not under Unverified. Read that section |
 | The first step hangs | `git fetch` cannot reach the remote | Run again with `--no-fetch`. The comparison with the remote then becomes a named gap |
 | `VERDICT: ask` naming `release` | A release pull request needs your merge rule to accept `--release` | Add the sentence above to your rule |
 | `VERDICT: ask` naming another check | That check found something the skill must not decide | Read what it reported. The branch stays open |
@@ -210,7 +214,7 @@ It proves presence, not quality. Only the cold reader tests whether the document
 
 ### Undoing a merge
 
-The report gives an undo point. To reverse a merge on GitHub, run `git revert` on the merge's commit, adding `-m 1` if it is a merge commit, and put the revert through a pull request. Do not rewrite the main branch.
+The record's Merged table gives two things for each merge: the commit, and the undo point, which is the main branch just before it. To reverse a merge, create a new branch from the main branch, run `git revert <commit>` there, adding `-m 1` if the commit is a merge commit, and put the revert through a pull request. Use the undo point to compare against, such as `git diff <undo point> main`. Do not rewrite the main branch.
 
 ---
 
