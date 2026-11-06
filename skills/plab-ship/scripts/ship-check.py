@@ -71,7 +71,8 @@ TICK_RE = re.compile(r"`([^`]+)`")
 DOC_SUFFIXES = (".md", ".mdx", ".rst", ".adoc", ".txt")
 NOT_DOCS = ("evals/*", "tests/*", "test/*", "fixtures/*", "*/examples/*", "*/fixtures/*", "_local/*")
 NOT_CODE = ("evals/*", "tests/*", "test/*", "fixtures/*", "*/examples/*", "*/fixtures/*", "*/test-*", "test-*", "*/test_*")
-FLAG_DEF_RE = re.compile(r"""add_argument\(\s*["'](--[\w-]+)["']""")
+# Anchored to the start of the statement, so a flag quoted inside a string is not a definition.
+FLAG_DEF_RE = re.compile(r"""^\s*[\w.]*add_argument\(\s*["'](--[\w-]+)["']""")
 ARG_HINT_RE = re.compile(r"^argument-hint:\s*(.*)$")
 FLAG_RE = re.compile(r"--[a-z][\w-]*")
 GIT_ENV = dict(os.environ, GIT_TERMINAL_PROMPT="0", LC_ALL="C")
@@ -338,7 +339,7 @@ def detected_surface(repo, row):
                 if hint:
                     tokens.update(FLAG_RE.findall(hint.group(1)))
             elif is_code(current):
-                tokens.update(FLAG_DEF_RE.findall(line))
+                tokens.update(FLAG_DEF_RE.findall(line[1:]))
     return tokens
 
 
@@ -428,7 +429,9 @@ def _build_fixture(repo):
                   "AGENTS.md": "# Agents\n\nThe tool takes `--example-flag`.\n",
                   "docs/guide.md": "# Guide\n\nUse `--example-flag`.\n",
                   "docs/internal/spec.md": "# Spec\n\nThe flag.\n",
-                  "tool.py": "parser.add_argument('--example-flag')\n",
+                  # The second line is an anti-canary: a flag quoted in a string defines nothing,
+                  # and ship-check.py's own fixture is exactly that case.
+                  "tool.py": "parser.add_argument('--example-flag')\nTEXT = \"parser.add_argument('--quoted-flag')\"\n",
                   "evals/case/prompt.md": "An eval prompt is not a document.\n"})
     _fixture_git(repo, "add", "-A")
     _fixture_git(repo, "commit", "-q", "-m", "feat: add the flag")
