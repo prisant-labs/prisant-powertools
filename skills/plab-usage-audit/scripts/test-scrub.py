@@ -16,6 +16,7 @@ Covers (Requirement 30, AC-20, AC-22):
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import shutil
@@ -221,6 +222,92 @@ def test_placement_outside_repo(tmp_root: Path) -> None:
           "stdout=%r stderr=%r" % (result.stdout, result.stderr))
 
 
+def load_script(name: str, alias: str):
+    spec = importlib.util.spec_from_file_location(alias, SCRIPTS_DIR / name)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def r8_findings(bundle: Path, patterns: list[str] | None = None) -> list[str]:
+    findings: list[str] = []
+    load_script("bundle-check.py", "ua_bundle_check_under_test").check_r8(str(bundle), patterns or [], findings)
+    return findings
+
+
+def test_scrub_and_r8_agree_on_drive_paths_and_urls(tmp_root: Path) -> None:
+    # Built by concatenation, so this source never holds a real-looking path (AC-11).
+    forward = "E" + ":" + "/work/repo-one"
+    backward = "D" + ":" + "\\" + "work" + "\\" + "repo-two"
+    url = "https://github.com/example/repo.git"
+    ssh = "git@github.com:example/repo.git"
+    local = "http://localhost:8080/page"
+
+    bundle = tmp_root / "drive-bundle"
+    (bundle / "data").mkdir(parents=True)
+    target = bundle / "data" / "sweep.json"
+    target.write_text(json.dumps({"path": forward, "note": "cloned to " + backward, "remote": url,
+                                  "ssh": ssh, "page": local}), encoding="utf-8")
+    prose = bundle / "02-shipped.md"
+    prose.write_text("The clone at %s pushes to %s.\n" % (backward, url), encoding="utf-8")
+
+    result = run_scrub(bundle, [])
+    check("scrub.py exits 0 on a bundle with drive paths and URLs", result.returncode == 0, result.stdout + result.stderr)
+    data = json.loads(target.read_text(encoding="utf-8"))
+    check("scrub.py replaces a plain drive prefix and keeps the path's tail",
+          data["path"] == "<drive>/work/repo-one", data["path"])
+    check("scrub.py replaces a backslash drive prefix inside a sentence",
+          data["note"].startswith("cloned to <drive>") and "repo-two" in data["note"], data["note"])
+    check("scrub.py leaves an https URL alone", data["remote"] == url, data["remote"])
+    check("scrub.py leaves an ssh remote alone", data["ssh"] == ssh, data["ssh"])
+    check("scrub.py leaves a localhost URL alone", data["page"] == local, data["page"])
+    text = prose.read_text(encoding="utf-8")
+    check("scrub.py handles prose the same way", "<drive>" in text and url in text, text)
+    findings = r8_findings(bundle)
+    check("R8 finds nothing in a bundle scrub.py has cleaned", findings == [], findings)
+
+    scrub_mod = load_script("scrub.py", "ua_scrub_under_test")
+    checker_mod = load_script("bundle-check.py", "ua_bundle_check_patterns")
+    check("scrub.py and bundle-check.py use one drive-letter pattern",
+          getattr(scrub_mod, "DRIVE_LETTER_RE", None) is not None
+          and scrub_mod.DRIVE_LETTER_RE.pattern == checker_mod.DRIVE_LETTER_RE.pattern)
+
+
+def test_r8_still_catches_a_real_drive_path(tmp_root: Path) -> None:
+    drive = "E" + ":"
+    cases = {
+        "plain text": "See " + drive + "\\" + "work for the log.",
+        "after a quote": 'path: "' + drive + '/work"',
+        "escaped in JSON": json.dumps({"path": drive + "\\" + "work"}),
+        "start of the file": drive + "/work",
+        "inside a URL": "file:///" + drive + "/work",
+        "lower case": "e" + ":" + "/work",
+    }
+    for label, content in cases.items():
+        bundle = tmp_root / ("r8-" + label.replace(" ", "-"))
+        bundle.mkdir()
+        (bundle / "note.md").write_text(content + "\n", encoding="utf-8")
+        check("R8 flags a drive path: " + label, any("drive-letter" in f for f in r8_findings(bundle)), content)
+
+    bundle = tmp_root / "r8-url-only"
+    bundle.mkdir()
+    (bundle / "note.md").write_text("https://example.com/a and ftp://example.com/b and h2c://example.com/c\n",
+                                    encoding="utf-8")
+    findings = r8_findings(bundle)
+    check("R8 passes a file holding only URLs", findings == [], findings)
+
+
+def test_private_pattern_in_a_url_keeps_the_scheme(tmp_root: Path) -> None:
+    bundle = tmp_root / "url-pattern"
+    bundle.mkdir()
+    target = bundle / "note.md"
+    target.write_text("https://example.com/_local/notes.md\n", encoding="utf-8")
+    run_scrub(bundle, ["_local/"])
+    text = target.read_text(encoding="utf-8").strip()
+    check("scrub.py redacts the pattern inside a URL without eating the scheme",
+          text == "https://example.com/<private>notes.md", text)
+
+
 def main() -> int:
     tmp_root = Path(tempfile.mkdtemp(prefix="plab-ua-test-scrub-"))
     try:
@@ -228,6 +315,9 @@ def main() -> int:
         test_jsonl_lines_still_parse(tmp_root)
         test_markdown_pattern_redacted(tmp_root)
         test_scrub_missing_bundle_exits_2()
+        test_scrub_and_r8_agree_on_drive_paths_and_urls(tmp_root)
+        test_r8_still_catches_a_real_drive_path(tmp_root)
+        test_private_pattern_in_a_url_keeps_the_scheme(tmp_root)
         test_placement_ignored(tmp_root)
         test_placement_unignored(tmp_root)
         test_placement_unignored_allow_tracked(tmp_root)

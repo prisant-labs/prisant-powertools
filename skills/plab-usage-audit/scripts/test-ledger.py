@@ -34,6 +34,75 @@ def measurement_row(period_start="2026-10-24", period_end="2026-10-30", populati
             "method": m or method(), "volume": {"sessions_dedup": 3}}
 
 
+def legacy_row(half="focus", population="interactive", cutoff="2026-10-30T16:00:00Z"):
+    return {"schema_version": 1, "collector_version": "2026-10-23", "price_file_as_of": "2026-10-06",
+            "window_start": "2026-10-17", "window_end": "2026-10-30", "cutoff": cutoff, "half": half,
+            "population": population, "executor_cost_per_lane": {"main": 5.25, "workflow": 2.5}, "cost_advisor": 1.25}
+
+
+def test_schema_1_view_and_earlier_row(tmp):
+    legacy = legacy_row()
+    mapping_path = os.path.join(tmp, "mapping.json")
+    with open(mapping_path, "w", encoding="utf-8") as f:
+        json.dump({ledger.legacy_key(legacy): {"period_start": "2026-10-24", "period_end": "2026-10-30"}}, f)
+    ledger_path = os.path.join(tmp, "legacy-ledger.jsonl")
+    with open(ledger_path, "w", encoding="utf-8") as f:
+        f.write(json.dumps(legacy) + "\n")
+
+    # ---- a mapped schema-1 row reads as a schema-2 row, in memory only.
+    view = ledger.with_mapping(legacy, ledger.load_mapping(mapping_path))
+    check("schema 1: the mapped view has a deterministic row_id", bool(view.get("row_id")), view)
+    check("schema 1: the mapped view has a method carrying the row's cutoff",
+          (view.get("method") or {}).get("cutoff") == legacy["cutoff"], view)
+    check("schema 1: the mapped view sums the lanes into executor_cost_total",
+          (view.get("cost") or {}).get("executor_cost_total") == 7.75, view)
+    check("schema 1: the mapped view keeps the advisor apart",
+          (view.get("cost") or {}).get("advisor_cost_total") == 1.25, view)
+    with open(ledger_path, encoding="utf-8") as f:
+        check("schema 1: the stored row is untouched", json.loads(f.read()) == legacy)
+
+    # ---- `find_row` finds the synthetic id only when the mapping is given.
+    try:
+        found = ledger.find_row(ledger_path, view.get("row_id"), mapping_path)
+        check("schema 1: find_row resolves the id through the mapping",
+              bool(found) and found.get("row_id") == view.get("row_id"), found)
+    except TypeError as exc:
+        check("schema 1: find_row resolves the id through the mapping", False, exc)
+    check("schema 1: find_row without the mapping does not resolve it",
+          ledger.find_row(ledger_path, view.get("row_id") or "no-id") is None)
+
+    # ---- `latest_measurement` no longer hands back a mapped row with no id.
+    latest = ledger.latest_measurement(ledger_path, "2026-10-24", "2026-10-30", "interactive", mapping_path)
+    check("schema 1: latest_measurement returns the view", bool(latest) and bool(latest.get("row_id")), latest)
+
+    # ---- `earlier_measurement` skips this run's own rows by their cutoff.
+    earlier = getattr(ledger, "earlier_measurement", None)
+    check("earlier_measurement exists", earlier is not None)
+    if earlier is None:
+        return
+    mixed = os.path.join(tmp, "mixed-ledger.jsonl")
+    published_m = method(cutoff="2026-10-30T16:00:00Z")
+    own_m = method(cutoff="2026-11-06T17:00:00Z")
+    ledger.append(mixed, measurement_row(m=published_m))
+    ledger.append(mixed, measurement_row(m=own_m))
+    args = (mixed, "2026-10-24", "2026-10-30", "interactive")
+    row = earlier(*args, this_cutoff="2026-11-06T17:00:00Z", zone="America/Los_Angeles")
+    check("earlier_measurement: skips the row at this run's cutoff",
+          row and row["method"]["cutoff"] == "2026-10-30T16:00:00Z", row)
+    check("earlier_measurement: marks a row cut within the period as published",
+          row and row.get("published_as_focus") is True, row)
+    only_own = earlier(*args, this_cutoff="2026-10-30T16:00:00Z", zone="America/Los_Angeles")
+    check("earlier_measurement: a row at or after this run's cutoff is never earlier", only_own is None, only_own)
+
+    # ---- a cutoff late on the last local day is still inside the period, though its UTC date is the next day.
+    evening = os.path.join(tmp, "evening-ledger.jsonl")
+    ledger.append(evening, measurement_row(m=method(cutoff="2026-10-31T04:00:00Z")))  # 21:00 local on 2026-10-30
+    row = earlier(evening, "2026-10-24", "2026-10-30", "interactive", this_cutoff="2026-11-06T17:00:00Z",
+                  zone="America/Los_Angeles")
+    check("earlier_measurement: reads the row's cutoff in the configured zone",
+          row and row.get("published_as_focus") is True, row)
+
+
 def main():
     tmp = tempfile.mkdtemp(prefix="ua-ledger-test-")
     try:
@@ -151,6 +220,8 @@ def main():
         r2 = subprocess.run(cli[:-6], capture_output=True, text=True)
         check("append-run: an agent with no model is a finding, exit 1", r2.returncode == 1 and "nameless" in r2.stdout,
               (r2.returncode, r2.stdout))
+
+        test_schema_1_view_and_earlier_row(tmp)
 
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

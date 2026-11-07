@@ -66,6 +66,7 @@ def make_settings_file(path, **overrides):
         "output_dir": overrides.get("output_dir", ""),
         "transcript_root": overrides.get("transcript_root", ""),
         "timezone": overrides.get("timezone", "America/New_York"),
+        "ledger_mapping": overrides.get("ledger_mapping", ""),
     }
     lines = ["---"]
     for k, v in body.items():
@@ -525,6 +526,234 @@ def test_reproduce_found_row_reproduces():
                       rows[0].get("reproduced") is True, str(rows[0]))
 
 
+# ---------------------------------------------------------------- reconciliation of an earlier audit
+RECON_TZ = "America/Los_Angeles"
+EARLIER_CUTOFF = "2026-01-07T17:00:00Z"  # 09:00 local on the earlier audit's day
+THIS_CUTOFF = "2026-01-14T17:00:00Z"  # 09:00 local on this audit's day
+LATER_CUTOFF = "2026-01-14T18:00:00Z"  # a re-run of this audit, an hour on
+EARLIER_MEASURED_AT = "2026-01-07T17:30:00Z"
+PRIOR = ("2026-01-01", "2026-01-07")
+
+
+def recon_response(n, ts):
+    return {"type": "assistant", "timestamp": ts, "requestId": f"req_recon_{n}",
+            "message": {"role": "assistant", "model": "claude-sonnet-5", "id": f"msg_recon_{n}",
+                        "content": [{"type": "text", "text": "ok"}],
+                        "usage": {"input_tokens": 1000000, "output_tokens": 0,
+                                  "cache_read_input_tokens": 0, "cache_creation_input_tokens": 0}}}
+
+
+def make_recon_fixture(tmp, mapping=None):
+    """Three priced responses: one before the earlier audit's cutoff, one after it on the same
+    local day, and one in this audit's focus week. So the prior week read at the earlier cutoff
+    holds one response, and the same week read at this audit's cutoff holds two."""
+    root = os.path.join(tmp, "projects")
+    write(os.path.join(root, "fixture-project", "fx-recon.jsonl"), "\n".join(json.dumps(x) for x in [
+        recon_response(1, "2026-01-07T15:00:00Z"),
+        recon_response(2, "2026-01-07T20:00:00Z"),
+        recon_response(3, "2026-01-14T16:00:00Z"),
+    ]) + "\n")
+    settings_path = os.path.join(tmp, "settings.local.md")
+    claude_settings = os.path.join(tmp, "claude-settings.json").replace("\\", "/")
+    write_json(claude_settings, {})
+    overrides = {"transcript_root": root.replace("\\", "/"), "timezone": RECON_TZ, "claude_settings": claude_settings}
+    if mapping is not None:
+        mapping_path = os.path.join(tmp, "mapping.json").replace("\\", "/")
+        write_json(mapping_path, mapping)
+        overrides["ledger_mapping"] = mapping_path
+    make_settings_file(settings_path, **overrides)
+    return {"tmp": tmp, "root": root, "settings": settings_path, "ledger": os.path.join(tmp, "ledger.jsonl")}
+
+
+def run_collect(fx, start, end, focus_start, cutoff, name):
+    out = os.path.join(fx["tmp"], name)
+    proc = subprocess.run([sys.executable, "-I", os.path.join(HERE, "collect.py"), "--config", fx["settings"],
+                           "--start", start, "--end", end, "--focus-start", focus_start, "--cutoff", cutoff,
+                           "--out", out, "--ledger", fx["ledger"]], capture_output=True, text=True)
+    check(f"fixture: collect.py wrote run '{name}' (exit {proc.returncode})", proc.returncode in (0, 1),
+          proc.stdout + proc.stderr)
+    return out
+
+
+def run_earlier_audit(fx):
+    """A real earlier audit wrote its rows a week before this run. measured_at has one-second
+    resolution, so two runs in one test can tie; dating these rows keeps the order true to life."""
+    out = run_collect(fx, "2025-12-25", "2026-01-07", "2026-01-01", EARLIER_CUTOFF, "earlier")
+    rows = ledger_mod.read_rows(fx["ledger"])
+    for row in rows:
+        row["measured_at"] = EARLIER_MEASURED_AT
+    write(fx["ledger"], "".join(json.dumps(row) + "\n" for row in rows))
+    return out
+
+
+def run_this_audit(fx, cutoff=THIS_CUTOFF, name="this"):
+    return run_collect(fx, "2026-01-01", "2026-01-14", "2026-01-08", cutoff, name)
+
+
+def run_recon(fx, data_dir):
+    out_path = os.path.join(fx["tmp"], "facts.json")
+    if os.path.exists(out_path):
+        os.remove(out_path)
+    proc = run_tool(["--config", fx["settings"], "--data", data_dir, "--ledger", fx["ledger"],
+                     "--state", os.path.join(fx["tmp"], "state.json"), "--out", out_path],
+                    env={"PLAB_CLAUDE_BIN": "no-such-claude-binary-xyz"})
+    facts = json.loads(open(out_path, encoding="utf-8").read()) if os.path.exists(out_path) else {}
+    return proc, facts
+
+
+def interactive_row(facts):
+    rows = (facts.get("reconciliation") or {}).get("rows") or []
+    return next((r for r in rows if r.get("population") == "interactive"), {})
+
+
+def prior_rows(fx, cutoff):
+    return [r for r in ledger_mod.read_rows(fx["ledger"])
+            if r.get("period_start") == PRIOR[0] and r.get("period_end") == PRIOR[1]
+            and r.get("population") == "interactive" and (r.get("method") or {}).get("cutoff") == cutoff]
+
+
+def row_total(row):
+    return round(row["cost"]["executor_cost_total"] + row["cost"]["advisor_cost_total"], 2)
+
+
+def test_reconciliation_reproduces_the_earlier_audits_row():
+    """The skill's real step order: an earlier audit's collector run, then this audit's, which
+    appends its own row for the same week. The check must test the earlier row, at its cutoff."""
+    with tempfile.TemporaryDirectory() as tmp:
+        fx = make_recon_fixture(tmp)
+        run_earlier_audit(fx)
+        data_dir = run_this_audit(fx)
+        earlier, own = prior_rows(fx, EARLIER_CUTOFF), prior_rows(fx, THIS_CUTOFF)
+        check("fixture: the ledger holds both rows for the prior week", len(earlier) == 1 and len(own) == 1,
+              (len(earlier), len(own)))
+        check("fixture: this run's own row holds more than the earlier audit's",
+              row_total(own[0]) >= row_total(earlier[0]) + 1, (row_total(own[0]), row_total(earlier[0])))
+        proc, facts = run_recon(fx, data_dir)
+        row = interactive_row(facts)
+        check("reconciliation: tests the earlier audit's row, not this run's own",
+              row.get("row_id") == earlier[0]["row_id"], (row, earlier[0]["row_id"], own[0]["row_id"]))
+        check("reconciliation: names the cutoff it reproduced at", row.get("row_cutoff") == EARLIER_CUTOFF, row)
+        check("reconciliation: marks the row as measured when that week was the focus",
+              row.get("published_as_focus") is True, row)
+        check("reconciliation: the recorded total is the earlier figure",
+              row.get("recorded_total_usd") == row_total(earlier[0]), (row, row_total(earlier[0])))
+        check("reconciliation: the earlier figure reproduces at its own cutoff", row.get("reproduced") is True, row)
+        check("reconciliation: an honest match adds no finding", proc.returncode == 0, facts.get("findings"))
+
+
+def test_reconciliation_only_this_runs_own_row_is_not_found():
+    """A self-check is not a reconciliation: with no earlier row there is nothing to reproduce."""
+    with tempfile.TemporaryDirectory() as tmp:
+        fx = make_recon_fixture(tmp)
+        data_dir = run_this_audit(fx)
+        _, facts = run_recon(fx, data_dir)
+        recon = facts.get("reconciliation") or {}
+        check("reconciliation: this run's own row alone reports found false", recon.get("found") is False, recon)
+        check("reconciliation: the note says why", "this run" in (recon.get("note") or ""), recon)
+
+
+def test_reconciliation_can_fail():
+    """A gate that cannot fail is not a gate: an earlier figure the transcripts do not support
+    must come back as a finding and exit 1."""
+    with tempfile.TemporaryDirectory() as tmp:
+        fx = make_recon_fixture(tmp)
+        ok, reason, written = ledger_mod.append(fx["ledger"], {
+            "period_start": PRIOR[0], "period_end": PRIOR[1], "population": "interactive",
+            "method": {"cutoff": EARLIER_CUTOFF, "excluded_sessions": [], "price_file_as_of": "2026-01-01",
+                       "collector_version": "1.0.0"},
+            "measured_at": EARLIER_MEASURED_AT,
+            "cost": {"executor_cost_total": 50.0, "advisor_cost_total": 0.0}})
+        check("fixture: a wrong earlier row was appended", ok, reason)
+        data_dir = run_this_audit(fx)
+        proc, facts = run_recon(fx, data_dir)
+        row = interactive_row(facts)
+        check("reconciliation: a wrong earlier figure is tested", row.get("row_id") == written["row_id"], row)
+        check("reconciliation: a wrong earlier figure does not reproduce", row.get("reproduced") is False, row)
+        check("reconciliation: a wrong earlier figure exits 1", proc.returncode == 1, proc.returncode)
+        check("reconciliation: a wrong earlier figure is a finding",
+              any("did not agree" in f for f in facts.get("findings", [])), facts.get("findings"))
+
+
+def test_reconciliation_schema_1_row_through_the_mapping():
+    """A row from before schema 2 has no row_id, no method and no period dates. The owner's
+    mapping file names its period, and it must reproduce like any other row."""
+    with tempfile.TemporaryDirectory() as tmp:
+        probe = make_recon_fixture(os.path.join(tmp, "probe"))
+        run_earlier_audit(probe)
+        cost_a = row_total(prior_rows(probe, EARLIER_CUTOFF)[0])
+
+        legacy = {"schema_version": 1, "collector_version": "2026-10-23", "price_file_as_of": "2026-01-01",
+                  "window_start": "2025-12-25", "window_end": "2026-01-07", "cutoff": EARLIER_CUTOFF,
+                  "day_zone": RECON_TZ, "half": "focus", "population": "interactive", "sessions": 1, "projects": 1,
+                  "responses_per_lane": {"main": 1}, "executor_cost_per_lane": {"main": cost_a},
+                  "advisor_calls": 0, "cost_advisor": 0.0}
+        mapping = {ledger_mod.legacy_key(legacy): {"period_start": PRIOR[0], "period_end": PRIOR[1]}}
+
+        fx = make_recon_fixture(os.path.join(tmp, "mapped"), mapping=mapping)
+        write(fx["ledger"], json.dumps(legacy) + "\n")
+        data_dir = run_this_audit(fx)
+        proc, facts = run_recon(fx, data_dir)
+        check("schema 1: the facts script does not crash on a mapped row", bool(facts), proc.stderr[-400:])
+        row = interactive_row(facts)
+        check("schema 1: the row carries a row id", bool(row.get("row_id")), row)
+        check("schema 1: reproduced at the row's own cutoff", row.get("row_cutoff") == EARLIER_CUTOFF, row)
+        check("schema 1: the recorded total sums the row's lanes and advisor",
+              row.get("recorded_total_usd") == cost_a, (row, cost_a))
+        check("schema 1: the earlier figure reproduces", row.get("reproduced") is True, row)
+
+        if row.get("row_id"):
+            direct = subprocess.run([sys.executable, "-I", os.path.join(HERE, "collect.py"), "--reproduce", row["row_id"],
+                                     "--ledger", fx["ledger"], "--config", fx["settings"]],
+                                    capture_output=True, text=True)
+            check("schema 1: collect.py --reproduce reads the mapping from --config", direct.returncode == 0,
+                  direct.stdout + direct.stderr)
+
+        unmapped = make_recon_fixture(os.path.join(tmp, "unmapped"))
+        write(unmapped["ledger"], json.dumps(legacy) + "\n")
+        data_dir = run_this_audit(unmapped)
+        _, facts = run_recon(unmapped, data_dir)
+        check("schema 1: with no mapping the row has no period, so found is false",
+              (facts.get("reconciliation") or {}).get("found") is False, facts.get("reconciliation"))
+
+
+def test_reconciliation_prefers_the_published_row_over_a_rerun():
+    with tempfile.TemporaryDirectory() as tmp:
+        fx = make_recon_fixture(os.path.join(tmp, "published"))
+        run_earlier_audit(fx)
+        run_this_audit(fx)
+        data_dir = run_this_audit(fx, cutoff=LATER_CUTOFF, name="rerun")
+        _, facts = run_recon(fx, data_dir)
+        row = interactive_row(facts)
+        check("re-run: the row the earlier audit published beats the first run of this one",
+              row.get("row_cutoff") == EARLIER_CUTOFF and row.get("published_as_focus") is True, row)
+
+        fx = make_recon_fixture(os.path.join(tmp, "restated"))
+        run_this_audit(fx)
+        data_dir = run_this_audit(fx, cutoff=LATER_CUTOFF, name="rerun")
+        _, facts = run_recon(fx, data_dir)
+        row = interactive_row(facts)
+        check("re-run: with no published row, an earlier run's restatement is tested and marked as one",
+              row.get("row_cutoff") == THIS_CUTOFF and row.get("published_as_focus") is False, row)
+
+
+def test_reconciliation_without_a_recorded_cutoff_is_a_gap():
+    """A data folder from before global.json carried `cutoff` cannot name this run's own rows.
+    The published row still wins, and the gap says what could not be checked."""
+    with tempfile.TemporaryDirectory() as tmp:
+        fx = make_recon_fixture(tmp)
+        run_earlier_audit(fx)
+        data_dir = run_this_audit(fx)
+        global_path = os.path.join(data_dir, "global.json")
+        global_json = json.loads(open(global_path, encoding="utf-8").read())
+        global_json.pop("cutoff", None)
+        write_json(global_path, global_json)
+        _, facts = run_recon(fx, data_dir)
+        row = interactive_row(facts)
+        check("no cutoff in global.json: the published row still wins", row.get("row_cutoff") == EARLIER_CUTOFF, row)
+        check("no cutoff in global.json: the gap names it",
+              any("cutoff" in g for g in facts.get("gaps", [])), facts.get("gaps"))
+
+
 def main():
     test_ac15_no_value_leak()
     test_ac16_cost_gap_exits_1()
@@ -537,6 +766,12 @@ def main():
     test_claude_version_found_and_changed()
     test_reproduce_no_prior_row_reports_not_found()
     test_reproduce_found_row_reproduces()
+    test_reconciliation_reproduces_the_earlier_audits_row()
+    test_reconciliation_only_this_runs_own_row_is_not_found()
+    test_reconciliation_can_fail()
+    test_reconciliation_schema_1_row_through_the_mapping()
+    test_reconciliation_prefers_the_published_row_over_a_rerun()
+    test_reconciliation_without_a_recorded_cutoff_is_a_gap()
 
     failed = [c for c in CHECKS if not c[1]]
     print(f"\n{len(CHECKS) - len(failed)}/{len(CHECKS)} checks passed")

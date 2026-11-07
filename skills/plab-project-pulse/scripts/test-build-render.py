@@ -75,6 +75,15 @@ def base_sweep(repo, head="aaa1111"):
     }
 
 
+def spend_repo(name, sweep=None):
+    return {
+        "repo": name, "path": "/home/owner/src/%s" % name, "folder": "work", "alias_of": None,
+        "sweep": sweep or base_sweep(name), "gh": None, "activity": "active", "logs_in_window": [],
+        "snapshot": None, "status_source": "sweep-only", "carried": None, "unprotected_work": [],
+        "to_scout": False, "current_status_candidate": False,
+    }
+
+
 def main():
     tmp_root = Path(tempfile.mkdtemp(prefix="pp-test-"))
     try:
@@ -283,6 +292,78 @@ def run_tests(tmp_root: Path) -> None:
     rc3 = build_pulse.run(args2)
     check("a first run with no prior state.json exits 0 and creates it",
           rc3 == 0 and fresh_state_path.is_file(), "exit=%d" % rc3)
+
+
+    # -----------------------------------------------------------------
+    # pre-merge backup tags are not releases: the totals count them apart.
+    # -----------------------------------------------------------------
+    facts = base_facts()
+    tagged = base_sweep("work/tagged")
+    tagged["tags_in_window"] = [{"tag": "v1.0.0", "date": "2026-10-29"}]
+    tagged["pre_merge_tags_in_window"] = [{"tag": "pre-merge/2026-10-29-a", "date": "2026-10-29"},
+                                          {"tag": "pre-merge/2026-10-30-b", "date": "2026-10-30"}]
+    facts["repos"] = [spend_repo("work/tagged", tagged)]
+    pulse, _ = build_pulse.build_pulse(facts, [], {}, {}, {"repos": {}, "first_seen": {}})
+    check("totals: tags_in_window counts releases only", pulse["totals"]["tags_in_window"] == 1, pulse["totals"])
+    check("totals: pre_merge_tags_in_window counts the backup tags apart",
+          pulse["totals"].get("pre_merge_tags_in_window") == 2, pulse["totals"])
+
+    # -----------------------------------------------------------------
+    # --spend joins the collector's projects.json onto the repositories.
+    # -----------------------------------------------------------------
+    def spend_run(name, spend_rows, repo_names):
+        case = tmp_root / name
+        facts = base_facts()
+        facts["repos"] = [spend_repo(n) for n in repo_names]
+        write_json(case / "pulse-facts.json", facts)
+        write_json(case / "curation.json", {})
+        write_json(case / "projects.json", spend_rows)
+
+        class SpendArgs:
+            pass
+        args = SpendArgs()
+        args.facts, args.scouts = str(case / "pulse-facts.json"), None
+        args.curation, args.digest = str(case / "curation.json"), None
+        args.spend, args.state = str(case / "projects.json"), str(case / "state.json")
+        args.out = str(case / "out")
+        rc = build_pulse.run(args)
+        pulse = json.loads((case / "out" / "pulse.json").read_text(encoding="utf-8"))
+        return rc, {r["repo"]: r.get("spend_usd") for r in pulse["repos"]}, pulse.get("gaps", [])
+
+    def row(project, half, population, cost):
+        return {"project": project, "display": project.strip("-"), "half": half, "population": population,
+                "cost_total": cost}
+
+    rc, spend, gaps = spend_run("spend", [
+        row("-home-owner-src-work-alpha", "focus", "interactive", 10.0),
+        row("-home-owner-src-work-alpha", "focus", "automated", 2.5),
+        row("-home-owner-src-work-alpha", "prior", "interactive", 99.0),
+        row("-home-owner-src-work-alpha--claude-worktrees-fix-1", "focus", "interactive", 1.5),
+        row("-home-owner-src-work-alpha-two", "focus", "interactive", 4.0),
+        row("-home-owner-src-work-site-github-io", "focus", "interactive", 3.0),
+        row("-home-owner-src-scratch", "focus", "interactive", 7.0),
+        row("-home-owner-src-old-prior-only", "prior", "interactive", 8.0),
+    ], ["work/alpha", "work/alpha-two", "work/site.github.io", "work/quiet"])
+    check("--spend: a real projects.json still validates", rc == 0, "exit=%d" % rc)
+    check("--spend: sums the focus half across populations and adds the repository's own worktrees",
+          spend.get("work/alpha") == 14.0, spend)
+    check("--spend: a longer name that shares a prefix stays its own repository",
+          spend.get("work/alpha-two") == 4.0, spend)
+    check("--spend: a dotted repository name matches its transcript folder",
+          spend.get("work/site.github.io") == 3.0, spend)
+    check("--spend: a repository with no transcripts has no figure", spend.get("work/quiet") is None, spend)
+    check("--spend: a folder that matches no repository is named as a gap",
+          any(g.get("source") == "spend" and "-home-owner-src-scratch" in g.get("detail", "") for g in gaps), gaps)
+    check("--spend: a folder with no focus-week spend is not a gap",
+          not any("old-prior-only" in g.get("detail", "") for g in gaps), gaps)
+
+    rc, spend, gaps = spend_run("spend-none", [row("-elsewhere-entirely", "focus", "interactive", 7.0)], ["work/alpha"])
+    check("--spend: a file that matches nothing cannot pass silently",
+          any(g.get("source") == "spend" for g in gaps), gaps)
+
+    rc, spend, gaps = spend_run("spend-listed", [{"repo": "work/alpha", "spend_usd": 5.0}], ["work/alpha"])
+    check("--spend: the {repo, spend_usd} shape still works", spend.get("work/alpha") == 5.0, spend)
+    check("--spend: the {repo, spend_usd} shape raises no gap", not any(g.get("source") == "spend" for g in gaps), gaps)
 
 
 if __name__ == "__main__":

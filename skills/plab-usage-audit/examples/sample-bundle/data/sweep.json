@@ -1,0 +1,11 @@
+{
+ "schema_version": 1,
+ "source": "sweep",
+ "window": {"start": "2026-10-19", "end": "2026-10-25", "prior_start": "2026-10-12", "timezone": "America/Los_Angeles"},
+ "repos": [
+  {"repo": "alpha-app", "remote": "https://github.com/example/alpha-app.git", "commits_focus": 11, "commits_prior": 6, "tags_in_window": [{"tag": "v2.3.0", "date": "2026-10-22"}], "pre_merge_tags_in_window": [{"tag": "pre-merge/2026-10-22-release-plan", "date": "2026-10-22"}]},
+  {"repo": "beta-lib", "remote": "git@github.com:example/beta-lib.git", "commits_focus": 3, "commits_prior": 2, "tags_in_window": [], "pre_merge_tags_in_window": []}
+ ],
+ "totals": {"repos_with_activity": 2, "commits_focus": 14, "commits_prior": 8, "tags_in_window": 1, "pre_merge_tags_in_window": 1},
+ "gaps": []
+}

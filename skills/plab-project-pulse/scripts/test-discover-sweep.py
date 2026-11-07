@@ -325,6 +325,7 @@ def main() -> int:
         write(rich / "README.md")
         commit_all(rich, "first", epoch_utc(2026, 10, 1, 12, 0))
         git(rich, "tag", "v0.1.0")
+        git(rich, "tag", "pre-merge/2026-10-01-topic")
         git(rich, "checkout", "-q", "-b", "unmerged-topic")
         write(rich / "topic-only.txt")
         commit_all(rich, "topic commit, never merged", epoch_utc(2026, 10, 1, 13, 0))
@@ -365,6 +366,12 @@ def main() -> int:
                                          "America/Los_Angeles", r"Test Owner")
         check("tags_in_window finds a tag created inside the window",
               any(t["tag"] == "v0.1.0" for t in rich_rec_wide["tags_in_window"]), str(rich_rec_wide["tags_in_window"]))
+        check("tags_in_window leaves out a pre-merge backup tag",
+              not any(t["tag"].startswith("pre-merge/") for t in rich_rec_wide["tags_in_window"]),
+              str(rich_rec_wide["tags_in_window"]))
+        check("pre_merge_tags_in_window keeps the backup tag countable",
+              [t["tag"] for t in rich_rec_wide.get("pre_merge_tags_in_window", [])] == ["pre-merge/2026-10-01-topic"],
+              str(rich_rec_wide.get("pre_merge_tags_in_window")))
 
         sweep_cli = run_cli(SWEEP_PY, "--repo", str(alpha), "--start", "2026-10-01", "--end", "2026-10-07",
                            "--prior-start", "2026-09-24", "--tz", "America/Los_Angeles",
@@ -374,7 +381,7 @@ def main() -> int:
         check("sweep.py CLI produces every C2 field",
               set(json.loads(sweep_cli.stdout)[0]) >= {
                   "repo", "path", "folder", "remote", "branch", "head", "commits_prior", "commits_focus",
-                  "active_days_focus", "last_commit_date", "tags_in_window", "dirty_files", "staged_files",
+                  "active_days_focus", "last_commit_date", "tags_in_window", "pre_merge_tags_in_window", "dirty_files", "staged_files",
                   "untracked_files", "ahead", "behind", "has_upstream", "remote_state_as_of",
                   "unmerged_branches", "worktrees", "stashes", "alias_of", "snapshot_utc"},
               sweep_cli.stdout)

@@ -100,6 +100,97 @@ def walk_counts(obj, path, container_key, bad):
             walk_counts(item, f"{path}[{idx}]", container_key, bad)
 
 
+def like_for_like_response(n, ts):
+    """One priced response with one advisor iteration, so both the executor and the advisor
+    columns have a figure to compare. Every response costs the same, which makes each expected
+    figure a whole number of units."""
+    return {"type": "assistant", "timestamp": ts, "requestId": f"req_lfl_{n}",
+            "message": {"role": "assistant", "model": "claude-sonnet-5", "id": f"msg_lfl_{n}",
+                        "content": [{"type": "text", "text": "ok"}],
+                        "usage": {"input_tokens": 1000000, "output_tokens": 0,
+                                  "cache_read_input_tokens": 0, "cache_creation_input_tokens": 0,
+                                  "iterations": [{"type": "message", "input_tokens": 1000000, "output_tokens": 0},
+                                                 {"type": "advisor_message", "model": "claude-fable-5-1",
+                                                  "input_tokens": 100000, "output_tokens": 0}]}}}
+
+
+def test_like_for_like_prior():
+    """The focus half stops at the cutoff. The prior half runs through its whole last day. This
+    window crosses the US clock change of 2026-11-01, so 09:00 local is 16:00 UTC on the prior
+    week's last day and 17:00 UTC on the focus week's: subtracting seven days of absolute time
+    would put the prior cut at 17:00 UTC and wrongly count response 3."""
+    tz = "America/Los_Angeles"
+    with tempfile.TemporaryDirectory() as tmp:
+        base = os.path.join(tmp, "projects")
+        os.makedirs(os.path.join(base, "fixture-project"))
+        with open(os.path.join(base, "fixture-project", "fx-lfl.jsonl"), "w", encoding="utf-8") as f:
+            for n, ts in enumerate(["2026-10-25T18:00:00Z",  # prior, an earlier day: in
+                                    "2026-10-30T15:59:00Z",  # prior, last day, before 09:00 local: in
+                                    "2026-10-30T16:30:00Z",  # prior, last day, after 09:00 local: out
+                                    "2026-11-06T16:30:00Z",  # focus, before the cutoff
+                                    "2026-11-06T17:30:00Z"], 1):  # focus, after the cutoff: never counted
+                f.write(json.dumps(like_for_like_response(n, ts)) + "\n")
+
+        def run(name, *extra, cutoff="2026-11-06T17:00:00Z"):
+            out = os.path.join(tmp, name)
+            args = [sys.executable, "-I", TOOL, "--start", "2026-10-24", "--end", "2026-11-06",
+                    "--tz", tz, "--base", base, "--out", out] + (["--cutoff", cutoff] if cutoff else []) + list(extra)
+            proc = subprocess.run(args, capture_output=True, text=True)
+            check(f"like-for-like: collect.py ran for '{name}' (exit {proc.returncode})", proc.returncode in (0, 1),
+                  proc.stdout + proc.stderr)
+            return load(out, "global.json")
+
+        ledger_path = os.path.join(tmp, "ledger.jsonl")
+        g = run("cut", "--focus-start", "2026-10-31", "--ledger", ledger_path)
+        check("global.json names this run's cutoff", g.get("cutoff") == "2026-11-06T17:00:00Z", g.get("cutoff"))
+        same = g.get("prior_same_cutoff") or {}
+        check("like-for-like: the prior cut is the same local time, with daylight saving applied per timestamp",
+              same.get("cutoff") == "2026-10-30T16:00:00Z", same.get("cutoff"))
+
+        whole = g["halves"]["prior"]["interactive"]
+        whole_executor = sum(c["dedup"]["cost"] for b in whole["lanes"].values() for c in b.values())
+        focus = g["halves"]["focus"]["interactive"]
+        unit = sum(c["dedup"]["cost"] for b in focus["lanes"].values() for c in b.values())
+        check("like-for-like: fixture sanity, the whole prior half holds three responses",
+              approx(whole_executor, 3 * unit, 0.02), (whole_executor, unit))
+        block = same.get("interactive") or {}
+        check("like-for-like: executor cost stops at the prior cut",
+              approx(block.get("executor_cost_total"), 2 * unit, 0.02), (block, unit))
+        check("like-for-like: executor cost is split by lane",
+              approx((block.get("cost_by_lane") or {}).get("main"), 2 * unit, 0.02), block)
+        check("like-for-like: advisor cost stops at the prior cut",
+              approx(block.get("advisor_cost_total"), whole["cost_advisor"] * 2 / 3, 0.02), (block, whole["cost_advisor"]))
+        check("like-for-like: the total adds the two",
+              approx(block.get("total"), (block.get("executor_cost_total") or 0) + (block.get("advisor_cost_total") or 0), 0.011),
+              block)
+        check("like-for-like: the automated population has its own block",
+              (same.get("automated") or {}).get("total") == 0.0, same.get("automated"))
+
+        rows = ledger_mod.read_rows(ledger_path)
+        prior_row = next(r for r in rows if r["period_end"] == "2026-10-30" and r["population"] == "interactive")
+        focus_row = next(r for r in rows if r["period_end"] == "2026-11-06" and r["population"] == "interactive")
+        recorded = prior_row.get("same_cutoff") or {}
+        check("like-for-like: the prior ledger row records the figure and its cutoff",
+              recorded.get("cutoff") == "2026-10-30T16:00:00Z"
+              and approx(recorded.get("executor_cost_total"), 2 * unit, 0.02), recorded)
+        check("like-for-like: the prior ledger row still holds the whole week as its cost",
+              approx(prior_row["cost"]["executor_cost_total"], 3 * unit, 0.02), prior_row["cost"])
+        check("like-for-like: the focus row needs no such field", "same_cutoff" not in focus_row, focus_row)
+        check("like-for-like: the figure is not part of the method, so the duplicate check is unchanged",
+              set(prior_row["method"]) == {"cutoff", "excluded_sessions", "price_file_as_of", "collector_version"},
+              prior_row["method"])
+
+        g = run("no-cutoff", "--focus-start", "2026-10-31", cutoff=None)
+        same = g.get("prior_same_cutoff") or {}
+        check("like-for-like: with no cutoff the focus half is whole, so the prior half is whole too",
+              "cutoff" in same and same.get("cutoff") is None
+              and approx((same.get("interactive") or {}).get("executor_cost_total"), 3 * unit, 0.02), same)
+
+        g = run("no-prior")
+        check("like-for-like: a window with no prior half has no figure",
+              "prior_same_cutoff" in g and g.get("prior_same_cutoff") is None, g.get("prior_same_cutoff"))
+
+
 def main():
     with tempfile.TemporaryDirectory() as out_dir:
         r = run_tool(FIXTURES, out_dir)
@@ -421,6 +512,10 @@ def main():
     except ValueError as exc:
         example, example_ok = str(exc), False
     check("settings: the shipped settings example parses", example_ok, example)
+    check("settings: the shipped settings example carries no retired recommendation_series key",
+          isinstance(example, dict) and "recommendation_series" not in example, example)
+
+    test_like_for_like_prior()
 
     passed = sum(1 for _, ok, _ in CHECKS if ok)
     print(f"\n{passed}/{len(CHECKS)} checks passed")

@@ -29,9 +29,10 @@ def main():
         facts = {
             "window": {"start": "2026-10-24", "end": "2026-10-30", "prior_start": "2026-10-17", "timezone": "UTC"},
             "repos": [
-                {"repo": "work/busy", "alias_of": None, "sweep": {"repo": "work/busy", "commits_focus": 5, "commits_prior": 2, "tags_in_window": [{"tag": "v1.0.0", "date": "2026-10-29"}]}},
+                {"repo": "work/busy", "alias_of": None, "sweep": {"repo": "work/busy", "commits_focus": 5, "commits_prior": 2, "tags_in_window": [{"tag": "v1.0.0", "date": "2026-10-29"}], "pre_merge_tags_in_window": [{"tag": "pre-merge/2026-10-29-topic", "date": "2026-10-29"}]}},
                 {"repo": "work/tagged", "alias_of": None, "sweep": {"repo": "work/tagged", "commits_focus": 0, "commits_prior": 0, "tags_in_window": [{"tag": "v0.2.0", "date": "2026-10-25"}]}},
                 {"repo": "work/quiet", "alias_of": None, "sweep": {"repo": "work/quiet", "commits_focus": 0, "commits_prior": 4, "tags_in_window": []}},
+                {"repo": "work/backup-only", "alias_of": None, "sweep": {"repo": "work/backup-only", "commits_focus": 0, "commits_prior": 0, "tags_in_window": [], "pre_merge_tags_in_window": [{"tag": "pre-merge/2026-10-28-topic", "date": "2026-10-28"}]}},
                 {"repo": "work/link", "alias_of": "work/busy", "sweep": {"repo": "work/link", "commits_focus": 5, "commits_prior": 2, "tags_in_window": []}},
             ],
         }
@@ -44,7 +45,8 @@ def main():
         check("pulse-facts: exits 0", r.returncode == 0, r.stdout + r.stderr)
         check("pulse-facts: keeps repositories with commits or tags in the window, drops the quiet one and the alias",
               names == ["work/busy", "work/tagged"], names)
-        check("pulse-facts: totals add up", data.get("totals") == {"repos_with_activity": 2, "commits_focus": 5, "commits_prior": 2, "tags_in_window": 2}, data.get("totals"))
+        check("pulse-facts: totals add up", data.get("totals") == {"repos_with_activity": 2, "commits_focus": 5, "commits_prior": 2, "tags_in_window": 2, "pre_merge_tags_in_window": 1}, data.get("totals"))
+        check("both skills ship the same sweep.py", (HERE / "sweep.py").read_bytes() == (HERE.parent.parent / "plab-project-pulse" / "scripts" / "sweep.py").read_bytes())
         check("pulse-facts: a missing file exits 2", run(["--pulse-facts", str(tmp / "absent.json")]).returncode == 2)
 
         cfg = tmp / "s.local.md"
