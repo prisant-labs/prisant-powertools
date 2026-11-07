@@ -288,6 +288,8 @@ def build_pulse(facts, scouts, curation, spend_map, old_state):
         "aliases": sum(1 for r in repos if r.get("alias_of")),
         "commits_focus": sum((r.get("sweep") or {}).get("commits_focus", 0) or 0 for r in repos),
         "tags_in_window": sum(len((r.get("sweep") or {}).get("tags_in_window", []) or []) for r in repos),
+        "pre_merge_tags_in_window": sum(len((r.get("sweep") or {}).get("pre_merge_tags_in_window", []) or [])
+                                        for r in repos),
         "waiting_on_you": len(waiting_on_you),
         "snapshots_fresh": sum(1 for r in repos if r["status_source"] == "snapshot"),
     }

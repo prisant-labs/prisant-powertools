@@ -17,6 +17,10 @@ inclusive. `--author-pattern` is a Python regex matched with `re.search`
 against `"<name> <email>"` for each commit, in Python, not passed to
 `git log --author`, so there is exactly one regex dialect in play.
 
+`tags_in_window` holds release tags. The merge check writes a backup tag named
+`pre-merge/<date>-<branch>` before each merge, and those outnumber real releases
+many times over, so they go in `pre_merge_tags_in_window` and are counted apart.
+
 READ-ONLY, NEVER FETCH
 ------------------------
 Every git call here is one of: `log`, `status --porcelain`,
@@ -55,6 +59,7 @@ sys.dont_write_bytecode = True
 
 GIT_ENV = dict(os.environ, GIT_OPTIONAL_LOCKS="0", GIT_TERMINAL_PROMPT="0")
 UNIT_SEP = "\x1f"
+PRE_MERGE_TAG_PREFIX = "pre-merge/"
 
 
 class Broken(Exception):
@@ -245,6 +250,7 @@ def sweep_repo(path, start: str, end: str, prior_start: str, tz: str, author_pat
 
     dirty, staged, untracked = status_counts(repo)
     upstream, ahead, behind, has_upstream = ahead_behind(repo)
+    tags = tags_in_window(repo, start_d, end_d, zone)
 
     return {
         "repo": repo_name or repo.name,
@@ -257,7 +263,8 @@ def sweep_repo(path, start: str, end: str, prior_start: str, tz: str, author_pat
         "commits_focus": sum(1 for d in all_own_dates if start_d <= d <= end_d),
         "active_days_focus": len(focus_dates),
         "last_commit_date": max(all_own_dates).isoformat() if all_own_dates else None,
-        "tags_in_window": tags_in_window(repo, start_d, end_d, zone),
+        "tags_in_window": [t for t in tags if not t["tag"].startswith(PRE_MERGE_TAG_PREFIX)],
+        "pre_merge_tags_in_window": [t for t in tags if t["tag"].startswith(PRE_MERGE_TAG_PREFIX)],
         "dirty_files": dirty,
         "staged_files": staged,
         "untracked_files": untracked,
