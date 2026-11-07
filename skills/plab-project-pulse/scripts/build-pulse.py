@@ -66,6 +66,8 @@ from pathlib import Path
 sys.dont_write_bytecode = True  # importing pulse-check.py below must not write __pycache__
 
 WHATS_NEXT_CAP = 10
+CLAUDE_WORKTREE_INFIX = "--claude-worktrees-"  # <repo>/.claude/worktrees/<name>, as a transcript folder
+SPEND_GAP_NAMES = 5  # how many unmatched transcript folders a gap names
 
 
 class Broken(Exception):
@@ -116,18 +118,66 @@ def read_jsonl(path):
     return out
 
 
-def spend_map_from(spend_data):
-    """Accepts {repo: usd, ...} or [{"repo": ..., "spend_usd": ...}, ...]. Exact-name match only."""
+def transcript_folder(path):
+    """The name Claude Code gives a working directory's transcript folder: every character that
+    is not a letter or a digit becomes a hyphen. The collector lowercases it as `project`."""
+    return re.sub(r"[^a-zA-Z0-9]", "-", str(path)).lower()
+
+
+def spend_from_projects(rows, repos):
+    """Join plab-usage-audit's projects.json onto the repositories, by each repository's own path.
+
+    `project` is a transcript folder name, and a repository's name is not, so the join encodes the
+    path and matches exactly. Claude Code's own worktrees (`<repo>/.claude/worktrees/<name>`) and any
+    other worktree the sweep lists count toward the repository, unless that path is a repository in
+    its own right. A spend figure is the focus half's `cost_total`, summed across populations; the
+    file has no advisor figure per project, so neither does this. Returns (spend map, gaps): spend that
+    matches no repository is named as a gap, so a join that finds nothing cannot pass silently."""
+    owners = {}
+    for repo in repos:
+        path = repo.get("path") or (repo.get("sweep") or {}).get("path")
+        if path:
+            owners[transcript_folder(path)] = repo.get("repo")
+    for repo in repos:
+        for worktree in (repo.get("sweep") or {}).get("worktrees") or []:
+            if worktree.get("path"):
+                owners.setdefault(transcript_folder(worktree["path"]), repo.get("repo"))
+
+    spend, unmatched = {}, {}
+    for row in rows:
+        if row.get("half") != "focus":
+            continue
+        folder = str(row.get("project") or "").lower()
+        owner = owners.get(folder) or owners.get(folder.split(CLAUDE_WORKTREE_INFIX, 1)[0])
+        cost = float(row.get("cost_total") or 0.0)
+        if owner:
+            spend[owner] = spend.get(owner, 0.0) + cost
+        elif cost > 0:
+            unmatched[folder] = unmatched.get(folder, 0.0) + cost
+
+    gaps = []
+    if unmatched:
+        largest = sorted(unmatched, key=lambda name: -unmatched[name])[:SPEND_GAP_NAMES]
+        gaps.append({"source": "spend", "detail": "%d transcript folder(s) holding $%.2f of the focus week's spend "
+                     "match no repository: %s" % (len(unmatched), sum(unmatched.values()), ", ".join(largest))})
+    return {name: round(value, 2) for name, value in spend.items()}, gaps
+
+
+def spend_map_from(spend_data, repos=()):
+    """Returns (spend map, gaps). Accepts plab-usage-audit's projects.json, which is what SKILL.md
+    passes; or {repo: usd, ...} or [{"repo": ..., "spend_usd": ...}, ...], matched by exact name."""
     if spend_data is None:
-        return {}
+        return {}, []
     if isinstance(spend_data, dict):
-        return dict(spend_data)
+        return dict(spend_data), []
+    if any(isinstance(row, dict) and "project" in row for row in spend_data):
+        return spend_from_projects(spend_data, repos)
     out = {}
     for row in spend_data:
         name = row.get("repo")
         if name:
             out[name] = row.get("spend_usd")
-    return out
+    return out, []
 
 
 # ---------------------------------------------------------------------------
@@ -419,7 +469,8 @@ def run(args):
     old_state = (read_json(args.state, default=None) if state_path.is_file()
                  else {"schema_version": 1, "repos": {}, "first_seen": {}})
 
-    spend_map = spend_map_from(spend_data)
+    spend_map, spend_gaps = spend_map_from(spend_data, facts.get("repos") or [])
+    facts["gaps"] = list(facts.get("gaps") or []) + spend_gaps
     pulse, new_state = build_pulse(facts, scouts, curation, spend_map, old_state)
 
     findings = pulse_check.check_pulse(pulse)

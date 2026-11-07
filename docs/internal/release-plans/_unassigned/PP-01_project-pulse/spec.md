@@ -138,7 +138,8 @@ One JSON object per repository. No command in the sweep writes to the repository
 | `remote`, `branch`, `head` | `origin` URL, the current branch, and the head commit's short hash |
 | `commits_prior`, `commits_focus`, `active_days_focus` | Own commits on all branches, by commit date in the configured zone |
 | `last_commit_date` | The newest own commit's local date, or null |
-| `tags_in_window` | Tags created in the window, with dates |
+| `tags_in_window` | Release tags created in the window, with dates |
+| `pre_merge_tags_in_window` | The merge check's `pre-merge/*` backup tags created in the window, with dates, counted apart because they are not releases |
 | `dirty_files`, `staged_files`, `untracked_files` | Counts from `git status --porcelain` |
 | `ahead`, `behind`, `has_upstream` | Against `@{u}`, without fetching |
 | `remote_state_as_of` | The modification time of `.git/FETCH_HEAD`, so a reader knows how old `behind` is |
