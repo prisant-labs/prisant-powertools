@@ -7,8 +7,9 @@ USAGE
 -----
   scrub.py <bundle> [--private-pattern P [--private-pattern P2 ...]]
 
-Every occurrence of a configured `--private-pattern` is replaced with `<private>`, and
-every form of the current machine's home path is replaced with `~`. A `.json` file is
+Every occurrence of a configured `--private-pattern` is replaced with `<private>`, every
+form of the current machine's home path is replaced with `~`, and every remaining drive
+letter is replaced with `<drive>/`, keeping the path's tail. A `.json` file is
 decoded, every string in it is redacted, and it is re-encoded, so a redaction can never
 corrupt an escaped quote or backslash the way a blind text replace could. A `.jsonl` file
 is handled the same way, one line at a time. Every other file is redacted as plain text.
@@ -24,8 +25,9 @@ EXIT CODES
   2  broken   the bundle directory does not exist
 
 This script does not implement R8 itself; it is the thing R8 checks the *absence* of.
-`bundle-check.py` still has to be run after this to prove the redaction actually worked,
-including the drive-letter check that catches a path scrub.py was not told to look for.
+`bundle-check.py` imports `DRIVE_LETTER_RE` from here, so the two cannot disagree about
+what a drive-letter path is, and a clean run of this script always clears that half of R8.
+`bundle-check.py` still has to be run after this to prove the redaction actually worked.
 """
 
 from __future__ import annotations
@@ -39,12 +41,17 @@ import sys
 
 PRIVATE_PLACEHOLDER = "<private>"
 HOME_PLACEHOLDER = "~"
+DRIVE_PLACEHOLDER = "<drive>/"
 
-# A drive-letter path token: a drive letter, a colon, a separator, then anything up to
-# whitespace or a quoting character. This mirrors the regex bundle-format.md's R8 uses
-# to flag any surviving drive-letter path, so what this script removes is what that rule
-# would otherwise catch.
-DRIVE_PATH_RE = re.compile(r"[A-Za-z]:[\\/][^\s\"'<>]*")
+# One drive letter, a colon and a separator, with no letter or digit before it. The
+# lookbehind is what keeps a URL out: every `https://` ends in a letter, a colon and a slash,
+# and the sweep stores repository URLs, so a bare `[A-Za-z]:[\\/]` matches every live bundle.
+# bundle-check.py's R8 imports this same object.
+DRIVE_LETTER_RE = re.compile(r"(?<![A-Za-z0-9])[A-Za-z]:[\\/]")
+# The prefix with any further separators, which is what the placeholder replaces.
+DRIVE_PREFIX_RE = re.compile(DRIVE_LETTER_RE.pattern + r"[\\/]*")
+# The whole path token: the prefix, then anything up to whitespace or a quoting character.
+DRIVE_PATH_RE = re.compile(DRIVE_LETTER_RE.pattern + r"[^\s\"'<>]*")
 
 
 def home_path_forms(home: str) -> list[str]:
@@ -80,7 +87,8 @@ def redact_drive_paths(text: str, pattern: str) -> tuple[str, int]:
 
 def redact_string(text: str, patterns: list[str], home_forms: list[str]) -> tuple[str, int]:
     """Redact one string: home-path forms first, then each private pattern, drive-letter
-    paths wholesale before the leftover plain substring. Returns (new_text, count)."""
+    paths wholesale before the leftover plain substring, then the drive prefix of every
+    other drive-letter path. Returns (new_text, count)."""
     count = 0
     for form in home_forms:
         if form in text:
@@ -94,7 +102,8 @@ def redact_string(text: str, patterns: list[str], home_forms: list[str]) -> tupl
         if pattern in text:
             count += text.count(pattern)
             text = text.replace(pattern, PRIVATE_PLACEHOLDER)
-    return text, count
+    text, drive_count = DRIVE_PREFIX_RE.subn(DRIVE_PLACEHOLDER, text)
+    return text, count + drive_count
 
 
 def walk_json(value, patterns: list[str], home_forms: list[str], counter: list[int]):

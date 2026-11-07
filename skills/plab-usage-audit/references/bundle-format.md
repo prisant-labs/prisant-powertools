@@ -10,7 +10,7 @@ One folder per run, named `YYYY-MM-DD_claude-usage`, where the date is the audit
 |---|---|
 | `README.md` | The window, whether there was enough history, the five-minute version, the recommendations table, the reading order |
 | `01-usage.md` | Numbers by lane, the reconciliation, the advisor, workflows, depth, the automated population, routing, the model that ran, friction, spend by project |
-| `02-shipped.md` | Tags and commits from the sweep. Status beyond git belongs to `plab-project-pulse` |
+| `02-shipped.md` | Release tags and commits from the sweep, with `pre-merge/*` backup tags counted apart. Status beyond git belongs to `plab-project-pulse` |
 | `03-scorecard.md` | The previous recommendations scored, decision records, due and overdue open items, the decision pattern, the smallest set of asks |
 | `04-config.md` | Findings, settings against the change register, Claude Code versions and changelog entries, credential presence by key name, backup health when configured |
 | `05-recommendations.md` | The recommendations, the practice lessons, and one to-do list |
@@ -39,7 +39,7 @@ Sections whose heading does not match the id form, such as `## What the session 
 
 **R7, JSON.** Every `.json` file under the bundle parses, and every line of every `.jsonl` file parses.
 
-**R8, privacy.** No file under the bundle contains a configured private pattern, the home path, or a drive-letter path (`[A-Za-z]:[\\/]`). The patterns come from `--private-pattern` arguments, repeatable; the home path is checked always. This rule runs after `scrub.py`.
+**R8, privacy.** No file under the bundle contains a configured private pattern, the home path, or a drive-letter path (`(?<![A-Za-z0-9])[A-Za-z]:[\\/]`, so a URL passes and a path inside one does not). The patterns come from `--private-pattern` arguments, repeatable; the home path is checked always. This rule runs after `scrub.py`, which replaces each remaining drive letter with `<drive>/` and keeps the path's tail. `scrub.py` owns the pattern and `bundle-check.py` imports it, so the two cannot disagree.
 
 **R9, approvals.** In `03-scorecard.md` and `05-recommendations.md`, any sentence that says the owner `approved`, `chose`, `decided`, `declined` or `said yes` also contains a backticked path or a quotation in double quotes, which names the record. A claim of approval with no record is the error the verifier exists to catch.
 
