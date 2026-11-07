@@ -780,7 +780,7 @@ def collect(ctx, price_data):
                 "cost_by_bucket": dict(sum((collections.Counter(k["cost_by_bucket"]) for k in wkids), collections.Counter())),
                 "req_models": dict(req)})
 
-    g = {"window": [ctx.win_start, ctx.win_end], "focus_start": ctx.focus_start,
+    g = {"window": [ctx.win_start, ctx.win_end], "focus_start": ctx.focus_start, "cutoff": ctx.cutoff,
          "collector_version": COLLECTOR_VERSION, "price_file_as_of": price_as_of, "day_zone": ctx.day_zone,
          "copied_folders_skipped": {f"{s} -> {k}": n for (s, k), n in sorted(st.copies_skipped.items())},
          "missing_child_files": sorted(st.missing_child_files),
@@ -917,6 +917,8 @@ def build_arg_parser():
     ap.add_argument("--config", default=None, help="a .claude/plab-usage-audit.local.md settings file")
     ap.add_argument("--reproduce", default=None, metavar="ROW_ID",
                      help="re-run a ledger row's recorded method and compare totals; needs --ledger")
+    ap.add_argument("--mapping", default=None,
+                     help="with --reproduce, the mapping file for pre-schema-2 rows; defaults to the settings' ledger_mapping")
     return ap
 
 
@@ -934,7 +936,8 @@ def run_reproduce(args, settings):
     if not args.ledger:
         print("broken: --reproduce needs --ledger")
         return 2
-    old_row = ledger_mod.find_row(args.ledger, args.reproduce)
+    mapping = args.mapping or settings.raw.get("ledger_mapping")
+    old_row = ledger_mod.find_row(args.ledger, args.reproduce, os.path.expanduser(mapping) if mapping else None)
     if old_row is None:
         print(f"broken: no row with row_id {args.reproduce} in {args.ledger}")
         return 2

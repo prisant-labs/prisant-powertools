@@ -16,6 +16,7 @@ Every field whose value is a count of responses or records ends `_dedup` (counte
 |---|---|
 | `window` | `[start, end]` as given |
 | `focus_start` | the start of the focus half |
+| `cutoff` | the UTC instant this run stopped reading at; `derive-audit-facts.py` uses it to tell this run's own ledger rows from an earlier audit's |
 | `collector_version` | `COLLECTOR_VERSION` |
 | `price_file_as_of` | the price file's `as_of` date |
 | `day_zone` | the IANA zone timestamps were attributed in |
@@ -73,7 +74,7 @@ None of these four keys has a built-in value in the shipped code: a run with no 
 
 | Field | Meaning |
 |---|---|
-| `reconciliation` | the prior week's ledger row(s), re-run with `collect.py --reproduce`, and whether the totals agreed; `{"found": false, ...}` when no row exists for that period |
+| `reconciliation` | the row an earlier audit wrote for the prior week, re-run with `collect.py --reproduce` at that row's own cutoff, and whether the totals agreed. Each entry in `rows` names its `row_id`, `row_cutoff`, `recorded_total_usd`, `rerun_total_usd`, `delta_usd` and `reproduced`, and `published_as_focus` says whether the row was measured while that week was the focus. This run's own row is never tested. `{"found": false, ...}` when no earlier row exists for that period |
 | `workflows` | `workflow_count`, `agent_count` and `model_split` for the focus half from `workflow_calls.json`, plus `cost_gap`: the per-workflow costs summed against the workflow lane total from `global.json`, and `over_tolerance` against `workflow_tolerance_usd` (Requirement 18, AC-16) |
 | `compactions` | `compactions_dedup` and `sessions_compacting_dedup` per half and population, read straight from `global.json`'s `waste` block |
 | `claude_version` | the installed `claude --version` against the state file's `last_claude_version` |
