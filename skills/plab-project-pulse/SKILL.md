@@ -5,8 +5,8 @@ argument-hint: "[--quick|--week] [--date YYYY-MM-DD] [--config <path>] [--digest
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.1.0"
-  updated: 2026-11-03
+  version: "1.1.1"
+  updated: 2026-11-06
 ---
 
 # Project Pulse
@@ -62,6 +62,8 @@ Write `curation.json`: at most ten What's Next items across all repositories, or
 ```bash
 python <this skill's base directory>/scripts/build-pulse.py --facts <run>/pulse-facts.json --scouts <run>/scouts.json --curation <run>/curation.json --state <state> --out <run> [--digest <run>/digest.jsonl] [--spend <projects.json>]
 ```
+
+`--spend` takes the `projects.json` that `plab-usage-audit` wrote for the same week. The script encodes each repository's path the way Claude Code names a transcript folder, and sets `spend_usd` to the focus week's `cost_total` for that folder and its worktrees. That figure excludes the advisor, because the file has no advisor figure per project. Spend that matches no repository is named in `gaps`.
 
 In week mode, rank readiness before rendering (PP-01 D2). The judge's prompt and the seven criteria are in `references/workflow.md`.
 

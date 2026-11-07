@@ -5,8 +5,8 @@ argument-hint: "[--date YYYY-MM-DD] [--config <path>] [--digest <digest.jsonl>] 
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.1.0"
-  updated: 2026-11-03
+  version: "1.1.1"
+  updated: 2026-11-06
 ---
 
 # Usage Audit
@@ -53,6 +53,8 @@ python <this skill's base directory>/scripts/shipped.py --config <settings> --st
 ```
 
 When a `plab-project-pulse` run already covered the same week, pass `--pulse-facts <its pulse-facts.json>` to `shipped.py` instead of the window, and it runs no git command.
+
+The focus week stops at the cutoff and the prior week runs through its whole last day, so those two figures are unequal windows. Compare the focus week with `prior_same_cutoff` in `global.json`, which stops the prior week at the same local time. The reconciliation in `audit-facts.json` tests the row an earlier audit wrote, at that row's own cutoff, and never the row this run appended.
 
 The collector exits 1 on findings such as an unpriced model or model drift: carry those into the bundle; they are findings, not failures. Exit 2 from any script stops the run with its named cause. Never write a figure the scripts did not produce.
 

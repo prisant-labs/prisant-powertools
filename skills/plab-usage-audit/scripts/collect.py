@@ -24,6 +24,10 @@ accounting rules kept intact and these changes:
   record counts).
 - Session rows carry `cost_by_half` and `responses_by_half` instead of a
   single `half` label.
+- The focus half stops at the cutoff while the prior half runs through its
+  whole last day, so the two are unequal windows. `prior_same_cutoff` in
+  global.json and `same_cutoff` on the prior ledger row hold the prior half
+  stopped at the same local time, which is the figure a comparison must use.
 - Every ledger row records its full method (the period, the cutoff, the
   excluded sessions, the price file's `as_of`, and the collector version),
   and `--reproduce <row_id> --ledger <file>` re-runs that method and
@@ -254,6 +258,7 @@ class Ctx:
         self.noise_patterns = settings.noise_patterns
         self.aliases = settings.aliases
         self.mtime_floor = (datetime.datetime.fromisoformat(self.win_start) - datetime.timedelta(days=1)).timestamp()
+        self.prior_cutoff = self._prior_same_cutoff()
 
     def half_of(self, day):
         if not day or day < self.win_start or day > self.win_end:
@@ -269,6 +274,28 @@ class Ctx:
             return d.strftime("%Y-%m-%d"), d.hour
         except Exception:
             return None, None
+
+    def _prior_same_cutoff(self):
+        """The UTC instant in the prior half that matches the focus half's cutoff: the same local
+        wall-clock time, one focus half earlier. Arithmetic on the wall clock, not on absolute time,
+        so a clock change between the two weeks moves the UTC figure and not the local one. None when
+        the focus half's last day is whole, because then the prior half's last day is whole too."""
+        period = self.period_for_half("prior")
+        if period is None:
+            return None
+        try:
+            cut = datetime.datetime.fromisoformat(self.cutoff.replace("Z", "+00:00"))
+            if cut.tzinfo is None:
+                cut = cut.replace(tzinfo=datetime.timezone.utc)
+            local = cut.astimezone(self.day_tz)
+        except (ValueError, OverflowError, OSError):
+            return None
+        if local.date().isoformat() > self.win_end:
+            return None
+        focus_length = datetime.date.fromisoformat(self.win_end) - datetime.date.fromisoformat(period[1])
+        wall_clock = local.replace(tzinfo=None) - focus_length
+        shifted = wall_clock.replace(tzinfo=self.day_tz) if self.day_tz else wall_clock.astimezone()
+        return shifted.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     def period_for_half(self, half):
         if half == "prior":
@@ -296,6 +323,8 @@ class State:
         self.depth = collections.defaultdict(lambda: {"responses": collections.Counter(), "cost": collections.Counter()})
         self.copies_skipped = collections.Counter()
         self.missing_child_files = []
+        self.same_cutoff_cost = collections.Counter()  # (population, lane) -> executor cost
+        self.same_cutoff_advisor = collections.Counter()  # population -> advisor cost
 
     @staticmethod
     def _cell():
@@ -350,6 +379,9 @@ def scan_usage(path, proj, pop, lane, ctx, st, price_models, cache_mult):
             for k in ("input", "output", "cache_read", "cache_creation"): up[k] += u[k]
             st.unpriced_count[(h, pop)] += 1
         add_usage(st.ledger[(h, pop, lane, b)]["dedup"], u, c)
+        same_cutoff = h == "prior" and (ctx.prior_cutoff is None or ts <= ctx.prior_cutoff)
+        if same_cutoff:
+            st.same_cutoff_cost[(pop, lane)] += c
         st.daily[day][f"{lane}:{b}"] += c
         st.hourly[(h, hr)] += c
         pk = (proj, h, pop)
@@ -378,6 +410,8 @@ def scan_usage(path, proj, pop, lane, ctx, st, price_models, cache_mult):
                 acell["calls_dedup"] += 1; acell["cost_dedup"] += ac
                 if ab in FRONTIER_BUCKETS: acell["frontier_cost_dedup"] += ac
                 summ["cost_advisor"] += ac; summ["advisor_calls_dedup"] += 1
+                if same_cutoff:
+                    st.same_cutoff_advisor[pop] += ac
                 if am_priced:
                     st.model_responses_dedup_total[am] += 1
                 if not am_priced:
@@ -661,6 +695,24 @@ def advisor_share_total(half, pop, st):
     return round(adv_cost / total, 4) if total > 0 else None
 
 
+def prior_same_cutoff_block(ctx, st):
+    """The prior half stopped at the same local time as the focus half, or None with no prior half."""
+    if ctx.period_for_half("prior") is None:
+        return None
+    block = {"cutoff": ctx.prior_cutoff, "cutoff_local": None}
+    if ctx.prior_cutoff:
+        instant = datetime.datetime.fromisoformat(ctx.prior_cutoff.replace("Z", "+00:00"))
+        block["cutoff_local"] = instant.astimezone(ctx.day_tz).isoformat()
+    for pop in ("interactive", "automated"):
+        lanes = {lane: cost for (p, lane), cost in st.same_cutoff_cost.items() if p == pop}
+        executor = round(float(sum(lanes.values())), 2)
+        advisor = round(float(st.same_cutoff_advisor.get(pop, 0.0)), 2)
+        block[pop] = {"executor_cost_total": executor, "advisor_cost_total": advisor,
+                      "total": round(executor + advisor, 2),
+                      "cost_by_lane": {lane: round(cost, 2) for lane, cost in lanes.items()}}
+    return block
+
+
 def model_drift(st, price_data):
     """Requirement 5: for each model family in the price file, if the family's
     newest priced model has zero responses in the window while an older model of
@@ -780,7 +832,7 @@ def collect(ctx, price_data):
                 "cost_by_bucket": dict(sum((collections.Counter(k["cost_by_bucket"]) for k in wkids), collections.Counter())),
                 "req_models": dict(req)})
 
-    g = {"window": [ctx.win_start, ctx.win_end], "focus_start": ctx.focus_start,
+    g = {"window": [ctx.win_start, ctx.win_end], "focus_start": ctx.focus_start, "cutoff": ctx.cutoff,
          "collector_version": COLLECTOR_VERSION, "price_file_as_of": price_as_of, "day_zone": ctx.day_zone,
          "copied_folders_skipped": {f"{s} -> {k}": n for (s, k), n in sorted(st.copies_skipped.items())},
          "missing_child_files": sorted(st.missing_child_files),
@@ -792,7 +844,8 @@ def collect(ctx, price_data):
                            for (m, lane), v in st.model_report.items()},
          "model_drift": model_drift(st, price_data),
          "unpriced_models": {m: dict(v) for m, v in st.unpriced.items()},
-         "depth": {h: depth_block(h, "interactive", st) for h in ("prior", "focus")}}
+         "depth": {h: depth_block(h, "interactive", st) for h in ("prior", "focus")},
+         "prior_same_cutoff": prior_same_cutoff_block(ctx, st)}
 
     plist = []
     for (proj, h, pop), m in st.proj.items():
@@ -858,6 +911,8 @@ def collect(ctx, price_data):
                            "workflow_agents_no_model_dedup": a["workflow_agent_req_models"].get("(none)", 0)},
                 "plan_limit": None,
             })
+            if half == "prior":
+                rows[-1]["same_cutoff"] = {"cutoff": g["prior_same_cutoff"]["cutoff"], **g["prior_same_cutoff"][pop]}
 
     findings = []
     if any(is_unpriced_finding(m, v) for m, v in g["unpriced_models"].items()):
@@ -917,6 +972,8 @@ def build_arg_parser():
     ap.add_argument("--config", default=None, help="a .claude/plab-usage-audit.local.md settings file")
     ap.add_argument("--reproduce", default=None, metavar="ROW_ID",
                      help="re-run a ledger row's recorded method and compare totals; needs --ledger")
+    ap.add_argument("--mapping", default=None,
+                     help="with --reproduce, the mapping file for pre-schema-2 rows; defaults to the settings' ledger_mapping")
     return ap
 
 
@@ -934,7 +991,8 @@ def run_reproduce(args, settings):
     if not args.ledger:
         print("broken: --reproduce needs --ledger")
         return 2
-    old_row = ledger_mod.find_row(args.ledger, args.reproduce)
+    mapping = args.mapping or settings.raw.get("ledger_mapping")
+    old_row = ledger_mod.find_row(args.ledger, args.reproduce, os.path.expanduser(mapping) if mapping else None)
     if old_row is None:
         print(f"broken: no row with row_id {args.reproduce} in {args.ledger}")
         return 2

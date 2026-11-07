@@ -94,7 +94,7 @@ A list of scout records, one per scouted repository:
   "generated_at": "2026-10-30T16:20:00Z",
   "mode": "week",
   "window": {"start": "2026-10-24", "end": "2026-10-30", "prior_start": "2026-10-17", "timezone": "America/Los_Angeles"},
-  "totals": {"repos": 70, "active": 15, "dormant": 55, "aliases": 1, "commits_focus": 211, "tags_in_window": 16, "waiting_on_you": 23, "snapshots_fresh": 4},
+  "totals": {"repos": 70, "active": 15, "dormant": 55, "aliases": 1, "commits_focus": 211, "tags_in_window": 16, "pre_merge_tags_in_window": 40, "waiting_on_you": 23, "snapshots_fresh": 4},
   "repos": [
     {
       "repo": "group/name", "path": "/abs/...", "folder": "label", "alias_of": null,
@@ -120,6 +120,10 @@ A list of scout records, one per scouted repository:
   "gaps": [{"source": "gh", "detail": "..."}]
 }
 ```
+
+`spend_usd` is the focus week's executor spend for the repository, joined from the `projects.json` that `plab-usage-audit` wrote for the same week. The join encodes the repository's path the way Claude Code names a transcript folder, and adds that repository's own worktrees. It sums both populations and excludes the advisor, because the file has no advisor figure per project. It is `null` with no `--spend` or no matching transcripts. Spend that matches no repository goes in `gaps` with `source: "spend"`.
+
+`totals.tags_in_window` counts release tags. `totals.pre_merge_tags_in_window` counts the merge check's backup tags, which each sweep record lists apart in `pre_merge_tags_in_window`.
 
 Rules `pulse-check.py` enforces:
 

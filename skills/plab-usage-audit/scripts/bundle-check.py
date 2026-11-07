@@ -83,7 +83,10 @@ REC_HEADING_RE = re.compile(r"^##\s+(\d{4}-\d{2}-\d{2} R\d+)\s*\(([^)]*)\)\s*:\s
 LETTER_ID_HEADING_RE = re.compile(r"^##\s+([A-Za-z]\d+)\s*\(", re.M)
 WHO_ACTS_LINE_RE = re.compile(r"^\*\*Who acts:\*\*\s*(.+?)\s*$", re.M)
 MECHANISM_LINE_RE = re.compile(r"^\*\*Mechanism:\*\*\s*(.+?)\s*$", re.M)
-DRIVE_LETTER_RE = re.compile(r"[A-Za-z]:[\\/]")
+# scrub.py owns this pattern, so the checker and the scrubber cannot disagree. The self-test's
+# sample holds a URL, because a pattern that matched `https://` once failed every live bundle.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from scrub import DRIVE_LETTER_RE  # noqa: E402
 APPROVAL_VERB_RE = re.compile(r"\b(approved|chose|decided|declined|said yes)\b", re.I)
 OWNER_RE = re.compile(r"\bowner\b", re.I)
 BACKTICK_RE = re.compile(r"`[^`]+`")

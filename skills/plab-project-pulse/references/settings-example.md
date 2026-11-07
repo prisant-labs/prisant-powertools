@@ -20,7 +20,7 @@ heavy_rule:
   top_by_commits: 6
 unprotected_globs: ["_working/**", "_history/**"]
 credential_files: [~/.npmrc, ~/.codex/config.toml]
-usage_projects_json: null     # optional: plab-usage-audit's projects.json, for spend per repository
+usage_projects_json: null     # optional: plab-usage-audit's projects.json for the same week, for spend per repository
 ---
 ```
 

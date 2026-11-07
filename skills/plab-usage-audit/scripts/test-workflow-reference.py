@@ -64,6 +64,8 @@ def check(text):
     for name in prompts:
         if name.startswith("MISSING:"):
             failures.append(f"prompts: '{name[8:]}' does not open with the rules block")
+    if "prior_same_cutoff" not in text:
+        failures.append("usage brief: the prompt does not compare against the like-for-like prior figure")
     return failures
 
 
@@ -71,6 +73,7 @@ def canaries(text):
     """Each mutation must make check() fail."""
     mutations = {
         "model removed": re.sub(r"(\| Usage brief \| 1 \| )sonnet", r"\1", text),
+        "like-for-like figure removed": text.replace("prior_same_cutoff", "prior_figure"),
         "credential rule removed": text.replace("CREDENTIAL FILES ARE OFF LIMITS", "FILES"),
         "rules block dropped from a prompt": text.replace("**Prompt:** the rules block, then:", "**Prompt:**", 1),
     }

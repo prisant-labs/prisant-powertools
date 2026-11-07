@@ -50,13 +50,13 @@ LOGS:
 
 ```text
 Write the usage brief for the week <focus start> to <audit day>, against the prior week <prior start> to <prior end>, in Markdown with these sections:
-## Totals by lane (main, subagent, workflow, advisor; both weeks; change in dollars and per day)
-## Reconciliation (from audit-facts.json reconciliation: does last week's published total reproduce, and what explains the rest)
+## Totals by lane (main, subagent, workflow, advisor; both weeks; change in dollars and per day). The focus week stops at the cutoff, so compare it with global.json prior_same_cutoff, which stops the prior week at the same local time. Give the whole prior week from global.json halves.prior on its own line, labelled as the whole week, and compute no change from it.
+## Reconciliation (from audit-facts.json reconciliation: does the figure the earlier audit wrote reproduce at its own cutoff, named in row_cutoff; what explains the gap to the whole prior week; and, when found is false, that nothing could be tested)
 ## Routing (frontier_share_delegated_executor against the 25% target; advisor_share_total on its own line)
 ## The model that ran (responses_dedup and cost by model id; every model_drift entry, and what it means)
 ## Workflows (count, agents, models, and any per-workflow cost gap from audit-facts.json)
 ## Context depth (the share of main-loop responses and cost at or above 400K tokens; compactions)
-## Spend by project (top ten, both weeks)
+## Spend by project (top ten, both weeks). projects.json holds the whole prior week, so say so, and do not call a change in one project's spend like-for-like.
 ## Friction (tool errors, permission denials, interrupts)
 ## Five headline findings (each one sentence, each with its file and a confidence of high, medium or low)
 Do not restate what /usage, /insights or session-report already show live; report the weekly history and the changes.

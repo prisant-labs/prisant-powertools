@@ -2,8 +2,20 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.1.1 | 2026-11-06 | unreleased | fixed | The first live run found four defects. The reconciliation now tests the row an earlier audit wrote, at that row's own cutoff, and no longer the row this run just appended. `prior_same_cutoff` records the prior week stopped at the focus week's local cutoff, and the usage brief compares against it. `pre-merge/*` tags no longer count as releases. R8 no longer flags a URL, and `scrub.py` removes every drive letter R8 would flag. |
 | 1.1.0 | 2026-11-03 | v0.12.0 | changed | Recommendation ids are date-scoped, such as `2026-11-03 R2`, in place of a rotating letter. `bundle-check.py` rule R3 requires the new form and one date per bundle. Older letter ids map to their bundle's date plus the letter. UA-01 D1. |
 | 1.0.0 | 2026-10-30 | v0.11.0 | added | First version, specified by UA-01 (usage audit skill). Runs the owner's weekly audit of their own Claude Code usage and writes a scrubbed, verified bundle. Manual invocation only. Built on six working-default decisions, D1 to D6 in the UA-01 spec, all still `Open` pending the maintainer's ratification. |
+
+## 1.1.1 - 2026-11-06
+
+**Fixed: four defects the first live weekly run found.** Each has a fixture that fails on 1.1.0. The live check against the owner's own ledger reproduced the earlier audit's figure to the cent, and the new like-for-like figure equals it.
+
+- **The reconciliation could not fail.** `compute_reconciliation` called `ledger.latest_measurement`, which returns the newest row, and the skill runs the collector first, so that row was always this run's own. `ledger.earlier_measurement` now skips any row at or after this run's cutoff, which `global.json` now records, and prefers a row measured while that week was the focus. With no earlier row, `found` is `false`. A row from before schema 2 reads through the mapping file as a schema 2 view with a synthetic `row_id`, and `collect.py --reproduce` takes the mapping from `--config` or `--mapping`.
+- **The two ledger rows were unequal windows.** The focus half stops at the cutoff and the prior half ran through its whole last day. `collect.py` now tallies the prior half up to the same local wall-clock time, with daylight saving applied per timestamp, into `prior_same_cutoff` in `global.json` and `same_cutoff` on the prior ledger row. The usage brief's prompt compares against it, and it labels the whole prior week as such.
+- **Backup tags counted as releases.** The sweep now puts `pre-merge/*` in `pre_merge_tags_in_window`, and `shipped.py` totals both counts. A repository with only a backup tag no longer reads as having shipped.
+- **R8 flagged every URL, so no live bundle could pass.** The pattern matched the last letter, colon and slash of `https://`. It now needs no letter or digit before the drive letter. `scrub.py` owns it and `bundle-check.py` imports it. `scrub.py` replaces the drive prefix of every path R8 would flag with `<drive>/`, so that half of R8 needs no hand edit. The sample bundle gains `data/sweep.json` with a URL, so the self-test covers one.
+
+The `recommendation_series` settings key the run reported was already gone from `references/settings-example.md`, removed by 1.1.0. A new check in `scripts/test-collect.py` keeps it out.
 
 ## 1.1.0 - 2026-11-03
 

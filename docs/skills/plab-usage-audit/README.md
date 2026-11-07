@@ -1,6 +1,6 @@
 # plab-usage-audit
 
-**Version:** 1.1.0
+**Version:** 1.1.1
 **Source:** [`skills/plab-usage-audit/`](../../../skills/plab-usage-audit/)
 
 Audit one week of your own Claude Code usage against the week before: what it cost by lane and by the model that actually ran, whether routing met your rules, whether last week's recommendations happened, what changed in your configuration, and the few changes worth making next. Every number comes from a script, and a verifier checks the bundle before you read it. Manual invocation only.
@@ -55,12 +55,12 @@ Copy the example in [`references/settings-example.md`](../../../skills/plab-usag
 
 1. Resolves the two weeks in your time zone and refuses to write into a folder git would track, unless you allowed it.
 2. Asks once for the two plan-limit percentages `/usage` shows.
-3. `collect.py` measures the transcripts; `derive-audit-facts.py` reconciles last week, checks workflow costs, versions, settings drift and credential presence; the sweep lists what shipped.
+3. `collect.py` measures the transcripts, and records last week stopped at the same local time as this week, because a comparison needs equal windows. `derive-audit-facts.py` re-runs the row last week's audit wrote at that row's own cutoff, and checks workflow costs, versions, settings drift and credential presence; the sweep lists what shipped.
 4. Reads the week's session logs for lessons, or takes a supplied digest.
 5. Three brief workers write the usage, scorecard and config briefs.
 6. The main loop writes the bundle, removing any claimed approval that no record supports.
 7. A verifier checks every number and claim; each correction is listed under Verification.
-8. `scrub.py` removes private paths; `bundle-check.py` checks the bundle.
+8. `scrub.py` removes private paths, the home path and every drive letter; `bundle-check.py` checks the bundle.
 9. The run records its own cost in the ledger.
 
 ## Safety

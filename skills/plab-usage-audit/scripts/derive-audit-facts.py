@@ -3,8 +3,8 @@
 derive-audit-facts.py - the audit facts in one call (Requirement 18, AC-15, AC-16).
 
 Gathers, in one invocation, every fact SKILL.md step 3 needs that the collector does
-not already produce on its own: the reconciliation of the prior week against its
-earlier ledger row, the week's workflow count/agent count/per-model split and whether
+not already produce on its own: the reconciliation of the prior week against the row
+an earlier audit wrote, re-run at that row's own cutoff, the week's workflow count/agent count/per-model split and whether
 per-workflow costs sum to the workflow lane total, compactions, the installed Claude
 Code version against the state file's last version, settings drift against the
 owner's change register, which keys are model pins (and only those get their value
@@ -299,11 +299,13 @@ def prior_period(global_json):
     return win_start, prior_end
 
 
-def run_reproduce(row_id, ledger_path, config_path):
+def run_reproduce(row_id, ledger_path, config_path, mapping_path=None):
     collect_py = os.path.join(HERE, "collect.py")
     cmd = [sys.executable, "-I", collect_py, "--reproduce", row_id, "--ledger", ledger_path]
     if config_path:
         cmd += ["--config", config_path]
+    if mapping_path:
+        cmd += ["--mapping", mapping_path]
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=REPRODUCE_TIMEOUT_S)
     except subprocess.TimeoutExpired:
@@ -327,23 +329,33 @@ def run_reproduce(row_id, ledger_path, config_path):
 
 
 def compute_reconciliation(global_json, ledger_path, mapping_path, config_path, gaps):
+    """Reproduce what an earlier audit wrote for the prior week, at that row's own cutoff. The
+    collector has already appended this run's own row for the same week, so that row is skipped:
+    a run that re-measures itself and agrees has tested nothing."""
     period = prior_period(global_json)
     if period is None:
         return {"found": False, "note": "no prior half in this run's window"}
     prior_start, prior_end = period
+    this_cutoff = global_json.get("cutoff")
+    if not this_cutoff:
+        gaps.append("reconciliation: global.json names no cutoff, so this run's own rows could not be "
+                    "told from an earlier audit's")
     rows = []
     for population in ("interactive", "automated"):
-        row = ledger_mod.latest_measurement(ledger_path, prior_start, prior_end, population, mapping_path)
+        row = ledger_mod.earlier_measurement(ledger_path, prior_start, prior_end, population, this_cutoff,
+                                             mapping_path, global_json.get("day_zone"))
         if row:
             rows.append((population, row))
     if not rows:
         return {"found": False, "prior_period": [prior_start, prior_end],
-                "note": "no ledger row exists for the prior week"}
+                "note": "no earlier audit wrote a row for the prior week; this run's own row is not a reconciliation"}
 
     results = []
     for population, row in rows:
-        entry = run_reproduce(row["row_id"], ledger_path, config_path)
+        entry = run_reproduce(row["row_id"], ledger_path, config_path, mapping_path)
         entry["population"] = population
+        entry["row_cutoff"] = ledger_mod.cutoff_of(row)
+        entry["published_as_focus"] = row["published_as_focus"]
         results.append(entry)
     return {"found": True, "prior_period": [prior_start, prior_end], "rows": results}
 

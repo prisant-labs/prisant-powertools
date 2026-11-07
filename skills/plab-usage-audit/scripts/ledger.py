@@ -29,8 +29,12 @@ CLI:
       --population <p> [--mapping <path>]
       prints the newest matching measurement row as JSON; exits 0 if found,
       1 if no row matches, 2 broken.
-  ledger.py show --ledger <path> --row-id <id>
+  ledger.py show --ledger <path> --row-id <id> [--mapping <path>]
       prints the row with that row_id; exits 0 if found, 1 if not, 2 broken.
+
+A pre-schema-2 row has no row_id, method or cost block. Through the mapping file it reads as
+a schema 2 row with a synthetic row_id, so every reader above handles both. The stored row is
+never rewritten.
 """
 import argparse
 import hashlib
@@ -38,6 +42,7 @@ import json
 import os
 import sys
 import datetime
+from zoneinfo import ZoneInfo
 
 SCHEMA_VERSION = 2
 ROW_KINDS = ("measurement", "audit_run")
@@ -148,9 +153,11 @@ def legacy_key(row):
 
 
 def with_mapping(row, mapping):
-    """Return a copy of `row` with period_start/period_end filled in from the
-    mapping when the row is missing them and the mapping names them. The
-    stored row on disk is never touched."""
+    """Return a schema 2 view of a pre-schema-2 row the mapping names: the period
+    from the mapping, a method built from the row's own top-level fields, a cost
+    block summed from its lanes, and a deterministic row_id. A row that already
+    carries its period, or that the mapping does not name, comes back as it is.
+    The stored row on disk is never touched."""
     if row.get("period_start") and row.get("period_end"):
         return row
     entry = mapping.get(legacy_key(row))
@@ -159,6 +166,15 @@ def with_mapping(row, mapping):
     out = dict(row)
     out["period_start"] = entry.get("period_start")
     out["period_end"] = entry.get("period_end")
+    method = out.setdefault("method", {
+        "cutoff": row.get("cutoff"), "excluded_sessions": sorted(row.get("excluded_sessions") or []),
+        "price_file_as_of": row.get("price_file_as_of"), "collector_version": row.get("collector_version")})
+    lanes = row.get("executor_cost_per_lane") or {}
+    out.setdefault("cost", {"executor_cost_total": round(sum(lanes.values()), 2),
+                            "advisor_cost_total": row.get("cost_advisor") or 0.0,
+                            "cost_by_lane": dict(lanes)})
+    out.setdefault("row_id", compute_row_id(out["period_start"], out["period_end"], row.get("population"),
+                                            method, "measurement"))
     return out
 
 
@@ -176,10 +192,73 @@ def latest_measurement(path, period_start, period_end, population, mapping_path=
     return best
 
 
-def find_row(path, row_id):
+def cutoff_of(row):
+    """The instant a measurement row stopped reading at, from either schema."""
+    return (row.get("method") or {}).get("cutoff") or row.get("cutoff")
+
+
+def _instant(timestamp):
+    """A stored cutoff as an aware datetime, or None when it does not parse."""
+    try:
+        parsed = datetime.datetime.fromisoformat(str(timestamp).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=datetime.timezone.utc)
+
+
+def _local_date(instant, zone):
+    """The instant's calendar date in `zone`, as the collector attributes days. A zone that does
+    not name an IANA zone (the collector's `machine (...)` label) means the machine's own."""
+    try:
+        tz = ZoneInfo(zone) if zone else None
+    except Exception:
+        tz = None
+    try:
+        return instant.astimezone(tz).date().isoformat()
+    except (OverflowError, ValueError, OSError):
+        return None
+
+
+def earlier_measurement(path, period_start, period_end, population, this_cutoff=None, mapping_path=None, zone=None):
+    """The row an earlier audit wrote for this period, for this run to reproduce.
+
+    The skill runs the collector before the facts script, so the newest row for the prior
+    period is always this run's own, and reproducing it proves nothing. A row at or after
+    `this_cutoff` is therefore never a candidate. Among the rest, a row whose cutoff falls on
+    or before the period's last local day was measured while the period was that audit's focus
+    week, so it holds the figure that audit published, and it wins. Without one, the newest
+    earlier restatement stands in. The returned copy says which it is, in `published_as_focus`.
+    With no `this_cutoff`, this run's own rows cannot be told apart, so the caller must report that.
+    """
+    mapping = load_mapping(mapping_path)
+    limit = _instant(this_cutoff) if this_cutoff else None
+    published, restated = [], []
     for row in read_rows(path):
-        if row.get("row_id") == row_id:
-            return row
+        if _row_kind(row) != "measurement":
+            continue
+        filled = with_mapping(row, mapping)
+        if filled.get("period_start") != period_start or filled.get("period_end") != period_end \
+                or filled.get("population") != population:
+            continue
+        instant = _instant(cutoff_of(filled))
+        if limit and instant and instant >= limit:
+            continue
+        local_day = _local_date(instant, zone) if instant else None
+        (published if local_day and local_day <= period_end else restated).append((instant, filled))
+    pool = published or restated
+    if not pool:
+        return None
+    floor = datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
+    best = max(pool, key=lambda pair: (pair[0] or floor, pair[1].get("measured_at") or ""))[1]
+    return dict(best, published_as_focus=bool(published))
+
+
+def find_row(path, row_id, mapping_path=None):
+    mapping = load_mapping(mapping_path)
+    for row in read_rows(path):
+        filled = with_mapping(row, mapping)
+        if filled.get("row_id") == row_id:
+            return filled
     return None
 
 
@@ -241,6 +320,7 @@ def main():
     p_show = sub.add_parser("show")
     p_show.add_argument("--ledger", required=True)
     p_show.add_argument("--row-id", required=True)
+    p_show.add_argument("--mapping", default=None)
 
     args = ap.parse_args()
 
@@ -289,7 +369,7 @@ def main():
         return 0
 
     if args.cmd == "show":
-        row = find_row(args.ledger, args.row_id)
+        row = find_row(args.ledger, args.row_id, args.mapping)
         if row is None:
             print("no such row_id")
             return 1

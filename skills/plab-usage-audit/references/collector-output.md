@@ -16,6 +16,7 @@ Every field whose value is a count of responses or records ends `_dedup` (counte
 |---|---|
 | `window` | `[start, end]` as given |
 | `focus_start` | the start of the focus half |
+| `cutoff` | the UTC instant this run stopped reading at; `derive-audit-facts.py` uses it to tell this run's own ledger rows from an earlier audit's |
 | `collector_version` | `COLLECTOR_VERSION` |
 | `price_file_as_of` | the price file's `as_of` date |
 | `day_zone` | the IANA zone timestamps were attributed in |
@@ -29,8 +30,11 @@ Every field whose value is a count of responses or records ends `_dedup` (counte
 | `model_drift` | `"<family>": {"newest", "responses_newest_dedup", "older_with_responses_dedup"}`, accounting rule 9 |
 | `unpriced_models` | model id to `{"responses_dedup", "input", "output", "cache_read", "cache_creation"}` |
 | `depth.<prior\|focus>` | the depth block below, interactive population only, or `null` if that half has no data |
+| `prior_same_cutoff` | the prior half stopped at the focus half's local cutoff, the figure a week-on-week change must use; `null` with no prior half. See below |
 
 **The aggregate block** (`halves.<half>.<population>`): `sessions_dedup`, `projects_dedup`, `user_prompts_dedup`, `task_notifications_dedup`, `lanes` (per lane and model bucket, `{"raw": {...}, "dedup": {...}}` cells with `msgs`, `cost`, `input`, `output`, `cache_read`, `cache_creation`), `advisor_by_lane` (`{"cost_dedup", "calls_dedup"}` per lane), `cost_advisor`, `advisor_calls_dedup`, `skills`, `commands`, `tools`, `mcp`, `modes`, `main_models` (all tallies), `agent_calls_dedup`, `agent_req_model`, `agent_types`, `agent_inherit_on_frontier_dedup`, `agent_background_dedup`, `workflow_calls_dedup`, `workflow_agents_dedup`, `workflow_agent_req_models`, `child_files_dedup`, `waste` (`tool_errors_dedup`, `perm_denials_dedup`, `hook_blocks_dedup`, `user_negations_dedup`, `compactions_dedup`, `interrupts_dedup`), `sessions_compacting_dedup`, `errors_by_tool`, `sessionKinds`, `entrypoints`, `versions`.
+
+**`prior_same_cutoff`.** The focus half stops at the cutoff while `halves.prior` runs through its whole last day, so those two are unequal windows. This block holds the prior half cut at the same local wall-clock time, one focus half earlier, with daylight saving applied: `cutoff` (UTC, or `null` when the focus half's last day is whole, so the prior half's is too), `cutoff_local`, and per population `executor_cost_total`, `advisor_cost_total`, `total` and `cost_by_lane`. It has dollars only; it does not restate counts.
 
 **The depth block**: `bins` (one of the seven `DEPTH_BIN_ORDER` width buckets to `{"responses_dedup", "cost"}`), `n_responses_dedup`, `total_cost`, `share_responses_ge_400k`, `share_cost_ge_400k`, `share_responses_ge_500k`.
 
@@ -73,7 +77,7 @@ None of these four keys has a built-in value in the shipped code: a run with no 
 
 | Field | Meaning |
 |---|---|
-| `reconciliation` | the prior week's ledger row(s), re-run with `collect.py --reproduce`, and whether the totals agreed; `{"found": false, ...}` when no row exists for that period |
+| `reconciliation` | the row an earlier audit wrote for the prior week, re-run with `collect.py --reproduce` at that row's own cutoff, and whether the totals agreed. Each entry in `rows` names its `row_id`, `row_cutoff`, `recorded_total_usd`, `rerun_total_usd`, `delta_usd` and `reproduced`, and `published_as_focus` says whether the row was measured while that week was the focus. This run's own row is never tested. `{"found": false, ...}` when no earlier row exists for that period |
 | `workflows` | `workflow_count`, `agent_count` and `model_split` for the focus half from `workflow_calls.json`, plus `cost_gap`: the per-workflow costs summed against the workflow lane total from `global.json`, and `over_tolerance` against `workflow_tolerance_usd` (Requirement 18, AC-16) |
 | `compactions` | `compactions_dedup` and `sessions_compacting_dedup` per half and population, read straight from `global.json`'s `waste` block |
 | `claude_version` | the installed `claude --version` against the state file's `last_claude_version` |

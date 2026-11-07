@@ -10,7 +10,8 @@ and runs no git command at all.
   shipped.py --pulse-facts <pulse-facts.json> [--out FILE]
 
 Output: {"schema_version": 1, "source": "sweep" | "pulse-facts", "window": {...}, "repos": [C2 records with
-commits or tags in the window], "totals": {...}, "gaps": [...]}. Exit 0 clean, 1 when any repository could
+commits or release tags in the window], "totals": {...}, "gaps": [...]}. `tags_in_window` counts releases;
+`pre_merge_tags_in_window` counts the merge check's backup tags, which alone do not make a repository active. Exit 0 clean, 1 when any repository could
 not be swept (each named in gaps), 2 when no root is readable or the input file is missing.
 """
 import argparse
@@ -41,6 +42,7 @@ def totals(records):
         "commits_focus": sum(r.get("commits_focus") or 0 for r in records),
         "commits_prior": sum(r.get("commits_prior") or 0 for r in records),
         "tags_in_window": sum(len(r.get("tags_in_window") or []) for r in records),
+        "pre_merge_tags_in_window": sum(len(r.get("pre_merge_tags_in_window") or []) for r in records),
     }
 
 
