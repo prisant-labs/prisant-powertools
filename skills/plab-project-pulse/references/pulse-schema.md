@@ -94,7 +94,7 @@ A list of scout records, one per scouted repository:
   "generated_at": "2026-10-30T16:20:00Z",
   "mode": "week",
   "window": {"start": "2026-10-24", "end": "2026-10-30", "prior_start": "2026-10-17", "timezone": "America/Los_Angeles"},
-  "totals": {"repos": 70, "active": 15, "dormant": 55, "aliases": 1, "commits_focus": 211, "tags_in_window": 16, "pre_merge_tags_in_window": 57, "waiting_on_you": 23, "snapshots_fresh": 4},
+  "totals": {"repos": 70, "active": 15, "dormant": 55, "aliases": 1, "commits_focus": 211, "tags_in_window": 16, "pre_merge_tags_in_window": 40, "waiting_on_you": 23, "snapshots_fresh": 4},
   "repos": [
     {
       "repo": "group/name", "path": "/abs/...", "folder": "label", "alias_of": null,
