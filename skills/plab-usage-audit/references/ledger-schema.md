@@ -25,6 +25,7 @@ Written by `scripts/collect.py --ledger <path>`, one row per period and populati
 | `friction` | `{"compactions_dedup", "sessions_compacting_dedup", "interrupts_dedup", "tool_errors_dedup", "perm_denials_dedup", "hook_blocks_dedup", "user_negations_dedup"}` |
 | `output` | `{"agent_calls_no_model_dedup", "workflow_agents_no_model_dedup"}` |
 | `plan_limit` | optional; `null` unless the owner supplied it (Requirement 16): `{"session_pct", "weekly_pct", "read_at"}` |
+| `same_cutoff` | on a run's prior-half row only: `{"cutoff", "cutoff_local", "executor_cost_total", "advisor_cost_total", "total", "cost_by_lane"}`, that week stopped at the focus half's local cutoff. `cost` on the same row holds the whole week. Not part of `method`, so it does not affect the duplicate check |
 
 **The routing fields (Requirement 15).** `frontier_share_delegated_executor` is the frontier (opus or fable bucket) share of delegated (subagent plus workflow) EXECUTOR spend; the advisor is excluded from both the numerator and the denominator. `advisor_share_total` is the advisor's own share of all spend: advisor cost divided by (every lane's executor cost, plus the advisor's cost). These replace the hand-run collector's single `frontier_share_delegated_incl_advisor`, which mixed the two: Requirement 15 asks for the advisor's share on its own line instead of folded into the frontier ratio.
 
