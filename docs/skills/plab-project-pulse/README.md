@@ -1,6 +1,6 @@
 # plab-project-pulse
 
-**Version:** 1.1.0
+**Version:** 1.1.1
 **Source:** [`skills/plab-project-pulse/`](../../../skills/plab-project-pulse/)
 
 Roll every repository you keep into one private weekly pulse: what shipped, what each project says is next, and what waits on you, ranked across projects with the age of each waiting item. It reuses fresh `plab-current-status` snapshots instead of re-reading those repositories, and writes a self-contained dashboard. Manual invocation only.

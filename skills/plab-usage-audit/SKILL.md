@@ -5,8 +5,8 @@ argument-hint: "[--date YYYY-MM-DD] [--config <path>] [--digest <digest.jsonl>] 
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.1.0"
-  updated: 2026-11-03
+  version: "1.1.1"
+  updated: 2026-11-06
 ---
 
 # Usage Audit

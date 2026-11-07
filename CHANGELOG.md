@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`plab-usage-audit` 1.1.1: the reconciliation can now fail.** It re-ran the row the same run had just appended, so it always agreed. It now tests the row an earlier audit wrote, at that row's own cutoff, including a row from before schema 2 read through the mapping file.
+- **`plab-usage-audit` 1.1.1: a like-for-like prior figure.** The focus week stops at the cutoff and the prior week ran through its whole last day, which read as a false fall. `prior_same_cutoff` holds the prior week stopped at the same local time, and the usage brief compares against it.
+- **`plab-usage-audit` 1.1.1: no live bundle could pass rule R8.** Its pattern matched the end of every `https://`. A URL now passes, and `scrub.py` removes every plain drive letter R8 would flag, with one shared pattern.
+- **`plab-usage-audit` and `plab-project-pulse` 1.1.1: `pre-merge/*` backup tags no longer count as releases.** They are counted apart in `pre_merge_tags_in_window`.
+- **`plab-project-pulse` 1.1.1: `--spend` now works.** It joins `plab-usage-audit`'s `projects.json` onto the repositories by path, and names spend that matches no repository in `gaps`.
+
 ## [0.13.0] - 2026-11-06
 
 A minor release that adds one skill, `plab-ship`, and changes no existing skill. It replaces the close-out prompt with a manual-only command that documents, verifies, screens and merges finished branches in one pass. Until your merge rule says `--release` answers the merge check's `release` ask, `--release` stops at that ask and names it, so nothing publishes by accident.
