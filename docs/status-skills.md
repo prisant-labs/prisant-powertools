@@ -26,8 +26,9 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 | `plab-strategy-brief` | 1.1.1 | Auto + explicit | `[paste raw thinking]` | `_output/plab-strategy-brief/` |
 | `plab-wrap-session` | 1.9.0 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
 | `plab-ship` | 1.0.0 | **Explicit only** | `[<branch\|PR> ...] [--release] [--no-fetch]` | `_local/_shipped/YYYY-MM-DD_<byline>.md` (gitignored), plus merges and any release |
+| `plab-org-profile-readme` | 1.0.0 | **Explicit only** | `<org> [--setup] ["<instructions>"]` | A branch and one pull request in `<org>/.github`; nothing local |
 
-**Explicit only** means the skill carries `disable-model-invocation: true` for Claude Code and `policy.allow_implicit_invocation: false` in `agents/openai.yaml` for Codex. It never fires on its own and is absent from the auto-loaded skill listing. It runs when you type its name and only then. **`plab-init-project`, `plab-audit`, `plab-release-plan`, `plab-current-status`, `plab-usage-audit` and `plab-project-pulse` carry it now.** `plab-release-plan` carried it through 1.3.0, was auto-discoverable from 1.4.0 to 1.5.1, and carries it again from 1.6.0, provisionally. `plab-spec` carried it through 1.2.1 and is now auto-discoverable, using an explicit do-NOT-fire clause in its description instead of the binary flag.
+**Explicit only** means the skill carries `disable-model-invocation: true` for Claude Code and `policy.allow_implicit_invocation: false` in `agents/openai.yaml` for Codex. It never fires on its own and is absent from the auto-loaded skill listing. It runs when you type its name and only then. **`plab-init-project`, `plab-audit`, `plab-release-plan`, `plab-current-status`, `plab-usage-audit`, `plab-project-pulse`, `plab-ship` and `plab-org-profile-readme` carry it now.** `plab-release-plan` carried it through 1.3.0, was auto-discoverable from 1.4.0 to 1.5.1, and carries it again from 1.6.0, provisionally. `plab-spec` carried it through 1.2.1 and is now auto-discoverable, using an explicit do-NOT-fire clause in its description instead of the binary flag.
 
 ---
 
@@ -263,6 +264,22 @@ Documents, verifies, screens and merges finished branches in one pass, with an o
 | References | 2 files |
 
 **It decides the version, not the merge.** The merge check decides each merge. With `--release`, the model decides patch, minor or major from what the changes do, and only a repository with no version tag stops to ask.
+
+---
+
+### `plab-org-profile-readme` 1.0.0, explicit only
+
+Keeps a GitHub organization's profile README to a standard and true to its public repositories, through one pull request it never merges.
+
+| Property | Value |
+|---|---|
+| Invocation | `disable-model-invocation: true`, from 1.0.0 |
+| Output | A branch named `plab-org-profile-readme/<YYYY-MM-DD>` and one pull request in `<org>/.github`, carrying `profile/README.md` and, after `--setup`, `profile/standard.json`. Nothing when the page is current |
+| Scripts | `derive-profile-facts.py`; `write-standard.py`; `scaffold-page.py`; `profile-check.py`, its own output gate, which proves fourteen rules against the committed sample on every run; `test-profile-scripts.py` |
+| Setup required | Python 3 and `gh`, signed in with access to the organization. `--setup` once per organization |
+| References | 7 files |
+
+**Private repositories stay out of the facts.** Each private name is carried only as a digest, so neither the page nor the pull request body can name one, and rule R7 rejects either if it does.
 
 ---
 

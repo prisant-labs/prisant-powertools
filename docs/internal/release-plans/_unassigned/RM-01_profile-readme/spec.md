@@ -4,12 +4,12 @@ title: "plab-org-profile-readme: set a standard for a GitHub organization's prof
 type: spec
 status: committed
 created: 2026-11-07
-updated: 2026-11-07
+updated: 2026-11-08
 linked-effort: "the maintainer's request of 2026-11-06 in session for a skill that keeps an organization's README current, made general on 2026-11-07, narrowed to organization pages, and given standards, options and --setup the same day"
 linked-plan: implementation-plan.md
 linked-release: null
 ac-count: 20
-source-count: 11
+source-count: 13
 requires-human-review: true
 target-release: null
 priority: P2
@@ -19,38 +19,38 @@ priority: P2
 
 ## Task Summary
 
-**Status:** committed. The contract is agreed and the implementation plan is written. Nothing is built
-**Last updated:** 2026-11-07 by claude (Opus 5.5), recording the maintainer's answer to D3 and linking the implementation plan
+**Status:** committed. Phases 1 to 5 of the implementation plan are built on branch `feat/rm-01-org-profile-readme`; the live run (AC-13) and the release are not done
+**Last updated:** 2026-11-08 by claude (Opus 5.5), recording the build, D7 and the criteria the tests fulfil
 **Linked plan:** [implementation-plan.md](implementation-plan.md), seven phases
-**Open questions:** D2 (see Open Questions / Decisions), which does not block the build. D1 and D3 to D6 are decided
-**Revisions:** 5
+**Open questions:** D2, which does not block the build, and D7, decided provisionally by the agent (see Open Questions / Decisions). D1 and D3 to D6 are decided
+**Revisions:** 6
 
 ### Acceptance Criteria Fulfillment
 
 - [ ] AC-1: The skill is manual-only in both harnesses and does not fire on a request to edit an ordinary README
 - [ ] AC-2: ~~The facts resolve a user or an organization to the right profile page, and name a missing one as broken~~ (SUPERSEDED 2026-11-07 by AC-14; see Revisions)
-- [ ] AC-3: The facts cover public, non-fork, non-archived repositories, and never output a private one
-- [ ] AC-4: The skill, its references and its scripts name no particular owner or repository, and work without a settings file
-- [ ] AC-5: The checker accounts for every covered repository, as listed or as excluded with a reason
-- [ ] AC-6: The checker rejects a version claim, a release link or a badge that does not match the repository
-- [ ] AC-7: The checker rejects a private repository's name on the page or in the pull request body
-- [ ] AC-8: The checker rejects a lost heading or altered shared text, unless the change is accounted for
+- [x] AC-3: The facts cover public, non-fork, non-archived repositories, and never output a private one · fulfilled 2026-11-08 by `test-profile-scripts.py`
+- [x] AC-4: The skill, its references and its scripts name no particular owner or repository, and work without a settings file · fulfilled 2026-11-08 by `test-profile-scripts.py`
+- [x] AC-5: The checker accounts for every covered repository, as listed or as excluded with a reason · fulfilled 2026-11-08 by `test-profile-scripts.py`
+- [x] AC-6: The checker rejects a version claim, a release link or a badge that does not match the repository · fulfilled 2026-11-08 by `profile-check.py --self-test`
+- [x] AC-7: The checker rejects a private repository's name on the page or in the pull request body · fulfilled 2026-11-08 by `test-profile-scripts.py`
+- [x] AC-8: The checker rejects a lost heading or altered shared text, unless the change is accounted for · fulfilled 2026-11-08 by `profile-check.py --self-test`
 - [ ] AC-9: ~~`--init` writes a page in the default layout that the checker passes~~ (SUPERSEDED 2026-11-07 by AC-18; see Revisions)
-- [ ] AC-10: A freeform page gets the factual checks, and the skipped layout checks are reported as skipped
-- [ ] AC-11: The skill never writes to the default branch, updates an open refresh pull request in place, and opens nothing when the page is current
+- [x] AC-10: A freeform page gets the factual checks, and the skipped layout checks are reported as skipped · fulfilled 2026-11-08 by `test-profile-scripts.py`
+- [x] AC-11: The skill never writes to the default branch, updates an open refresh pull request in place, and opens nothing when the page is current · fulfilled 2026-11-08 by `test-profile-scripts.py`
 - [ ] AC-12: The checker proves every rule can fail against a committed sample, and CI runs it
 - [ ] AC-13: A live run on one of the maintainer's organizations opens a pull request the checker passes
 - [ ] AC-14: ~~The facts resolve an organization to its profile page, refuse a user account, and name a missing page as broken~~ (SUPERSEDED 2026-11-07 by AC-15; see Revisions)
-- [ ] AC-15: The facts resolve an organization to its profile page, refuse a user account, and report a missing page without failing
-- [ ] AC-16: Three built-in standards each ship with a reference document and a sample page the checker passes
-- [ ] AC-17: `--setup` writes a standard on each of its three paths, and a run against that standard passes the checker
-- [ ] AC-18: A run against a standard with no page writes the page, and the checker passes it
-- [ ] AC-19: The checker rejects a page that breaks its standard's sections or options
+- [x] AC-15: The facts resolve an organization to its profile page, refuse a user account, and report a missing page without failing · fulfilled 2026-11-08 by `test-profile-scripts.py`
+- [x] AC-16: Three built-in standards each ship with a reference document and a sample page the checker passes · fulfilled 2026-11-08 by `test-profile-scripts.py`
+- [x] AC-17: `--setup` writes a standard on each of its three paths, and a run against that standard passes the checker · fulfilled 2026-11-08 by `test-profile-scripts.py`
+- [x] AC-18: A run against a standard with no page writes the page, and the checker passes it · fulfilled 2026-11-08 by `test-profile-scripts.py`
+- [x] AC-19: The checker rejects a page that breaks its standard's sections or options · fulfilled 2026-11-08 by `profile-check.py --self-test` and `test-profile-scripts.py`
 - [ ] AC-20: An instruction run applies the instruction, passes the checker, and lists instruction-driven changes apart from fact-driven ones
 
 ### Currently In Progress
 
-None. The spec was written and revised on 2026-11-07, and the implementation plan was written the same day. The next step is the plan's Phase 1.
+Phases 1 to 5 are built on branch `feat/rm-01-org-profile-readme`. AC-1 waits for its eval case to run, AC-12 for CI on the pull request, AC-20 for an instruction run, and AC-13 for the live run in Phase 6.
 
 ---
 
@@ -205,6 +205,7 @@ The maintainer types `/plab-org-profile-readme example-org "mark the new reposit
 | 2026-11-07 | claude | changed | Standards, options, `--setup` and instruction runs added at the maintainer's direction [S9]. The skill is renamed `plab-org-profile-readme` (D5), and AC-13 and the examples use the new name. `--init` is dropped: AC-9 superseded by AC-18, and AC-14 superseded by AC-15, which reports a missing page instead of failing. AC-16 to AC-20 added. The standard file replaces the settings file, so "settings" in AC-4, AC-5 and AC-8 means the standard. D1's exception widened, and D6 (the option set and built-in standards) added. |
 | 2026-11-07 | claude | changed | D6 decided: option A, requirements 7 and 8 adopted as written, by the maintainer's answer [S10]. No criterion changes. |
 | 2026-11-07 | claude | changed | D3 decided: option B, retire the two routines, by the maintainer's answer [S11]. Status set to committed and the implementation plan linked, at the maintainer's request to prepare the build. D2 noted as not blocking. No criterion changes. |
+| 2026-11-08 | claude | changed | Built Phases 1 to 5 at the maintainer's instruction to build the skill [S12]. D7 added and decided provisionally by the agent, from checking a real organization page with live facts before any pull request [S13]: the standard gains `include` for public forks a page shows, which amends requirement 3, and `skip_releases` for releases a page leaves out with a reason, which narrows requirement 12's version rule; rule R6 reports a positional badge as a note, not a failure. No criterion is rewritten. Fourteen criteria ticked with the tests that show them. |
 
 ## Sources & Evidence
 
@@ -221,6 +222,10 @@ The maintainer types `/plab-org-profile-readme example-org "mark the new reposit
 - **[S10]** The maintainer's answer in session on 2026-11-07, after the third revision merged: "D6 yes adopt the options and standards". Class A.
 
 - **[S11]** The maintainer's answer in session on 2026-11-07, after D3 was explained: "B . Polish anything needed so the next session can create and release the skill". Class A.
+
+- **[S12]** The maintainer's instruction in session on 2026-11-08: "Build org profile readme skill". Class A.
+
+- **[S13]** A read-only check on 2026-11-08 of one of the maintainer's organization pages against live facts, with the new scripts. Without a standard, the checker named a fork the page lists on purpose, an excluded placeholder repository, and a release the page leaves off; under a standard adopted from the page, two releases the page leaves off, each of whose notes says it changes nothing a user will see, and two badges that read a list by position. Class A.
 
 ### Unverified Claims
 
@@ -239,6 +244,7 @@ The maintainer types `/plab-org-profile-readme example-org "mark the new reposit
 | D4 | Whether the account page ships in 1.0 | Organization pages only, by ruling | Decided | 2026-11-07 |
 | D5 | Whether the skill keeps the name `plab-profile-readme` | `plab-org-profile-readme`, by ruling | Decided | 2026-11-07 |
 | D6 | The option set and the built-in standards | A: requirements 7 and 8 as written | Decided | 2026-11-07 |
+| D7 | What a real page needs that the criteria did not foresee | `include`, `skip_releases`, and R6 as a note, decided provisionally by the agent | Decided | 2026-11-08 |
 
 ### D1: General or built for the maintainer's pages (Decided)
 
@@ -299,3 +305,13 @@ The maintainer types `/plab-org-profile-readme example-org "mark the new reposit
 **Resolution.** A, by the maintainer's answer [S10]: the three built-in standards of requirement 7 and the seven options of requirement 8, as written.
 
 **Follow-up.** None before the build. The implementation plan builds all three standards and all seven options, and AC-16 and AC-19 test them.
+
+### D7: What a real page needs that the criteria did not foresee (Decided, provisionally)
+
+**Summary.** Before any pull request, the new scripts checked one of the maintainer's real organization pages against live facts [S13]. Three things the criteria did not foresee would have made a correct page fail, so AC-13's live run could not pass. First, the page lists a public fork that publishes its own releases, and requirement 3 leaves forks out. Second, the page leaves off releases whose notes say they change nothing a user will see, as its routine's rules required, and a strict newest-release rule rejects that. Third, two badges read a marketplace list by position, which requirement 12 calls a flag, and failing the page for it would block a deliberate, correct badge.
+
+**Options.** A: amend the standard and the rules. B: change the real page to fit the rules. C: stop and ask before building further.
+
+**Resolution.** A, by the agent, provisionally, because the maintainer had asked for the skill to be built and B would have rewritten deliberate choices on the maintainer's page. The standard gains `include`, public forks the page shows, each with a reason; and `skip_releases`, releases the page leaves out, each with a reason, which R3 does not count. R6 is a NOTE line that leaves the exit code clean. Each entry carries a reason, so nothing is skipped silently.
+
+**Follow-up.** The maintainer confirms or overrules D7 when reviewing the pull request. Overruling it means removing the two fields and making R6 a finding, and the live run would then need the page changed first.

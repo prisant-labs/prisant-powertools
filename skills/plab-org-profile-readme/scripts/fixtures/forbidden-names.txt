@@ -1,0 +1,28 @@
+# Real owner and repository names that must never appear in the skill's files (RM-01 AC-4).
+# test-profile-scripts.py reads this list; files inside fixtures/ are not scanned, so the list is not itself built into the skill.
+prisant-labs
+product-on-purpose
+jprisant
+lso2
+Prisant Labs
+Product on Purpose
+prisant-powertools
+agent-plugins
+agent-sandbox
+agent-workspace-tools
+nonfiction-studio
+obsidian-tag-visibility
+obsidian-vault-collection
+typora-plugin-outline-view
+typora-plugin-favorite-folders-files
+typora-community-plugin
+typora-plugin-releases
+repo-sync-tool
+windows-explorer-quickpane
+audiobook-organizer
+starlight-visual-customizer
+repo-pages
+3d-cable-box-parametric-openscad
+3d-yard-spike-parametric-openscad
+QuickPane
+pm-skills
