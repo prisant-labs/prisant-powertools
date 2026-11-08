@@ -4,9 +4,9 @@ Agent navigation entrypoint for the `prisant-powertools` plugin.
 
 ## What this is
 
-Fourteen general-purpose agent skills for the work around the work: scaffolding a repository for agent-assisted development, closing and resuming coding sessions, turning raw thinking into a decision-ready brief, producing guide bundles, getting a second model to review a document, auditing a repository and reordering its backlog on evidence, carrying a feature from written specification through to a taggable release plan, walking the maintainer through the questions and decisions a session leaves open, writing a dated, ranked status snapshot of a repository, auditing a week of the owner's own Claude Code usage, rolling every repository the owner keeps into one weekly pulse, and shipping finished branches: documented, verified, merged and reported.
+Fifteen general-purpose agent skills for the work around the work: scaffolding a repository for agent-assisted development, closing and resuming coding sessions, turning raw thinking into a decision-ready brief, producing guide bundles, getting a second model to review a document, auditing a repository and reordering its backlog on evidence, carrying a feature from written specification through to a taggable release plan, walking the maintainer through the questions and decisions a session leaves open, writing a dated, ranked status snapshot of a repository, auditing a week of the owner's own Claude Code usage, rolling every repository the owner keeps into one weekly pulse, shipping finished branches: documented, verified, merged and reported, and keeping a GitHub organization's profile README to a standard.
 
-Seven of the fourteen ship with `disable-model-invocation: true` and run only when invoked by name. Codex does not read that field, so the same seven also carry `agents/openai.yaml` with `policy.allow_implicit_invocation: false`, which Codex reads instead; `scripts/codex-invocation-check.py` fails CI when a skill carries one flag without the other.
+Eight of the fifteen ship with `disable-model-invocation: true` and run only when invoked by name. Codex does not read that field, so the same eight also carry `agents/openai.yaml` with `policy.allow_implicit_invocation: false`, which Codex reads instead; `scripts/codex-invocation-check.py` fails CI when a skill carries one flag without the other.
 
 `plab-init-project` scaffolds files into a repository root, its trigger phrases ("init", "initialize", "set up") are among the most common words in ordinary conversation, and it is run once per repository rather than routinely.
 
@@ -21,6 +21,8 @@ Seven of the fourteen ship with `disable-model-invocation: true` and run only wh
 `plab-project-pulse` ships gated from its first version, 1.0.0 (v0.11.0), under PP-01 (project pulse skill). "What's next?" is an ordinary status question that `plab-continue-session` and `plab-resolve-open-items` answer directly, and a `--week` run launches up to ten agents across every repository.
 
 `plab-ship` ships gated from its first version, 1.0.0, under SH-01 (the ship skill). It merges pull requests and, with `--release`, publishes versions, so an accidental run has effects outside the session; and "ship" and "merge" are ordinary words in a conversation about work. Its no-fire eval uses the maintainer's own close-out prompt as its input, because that prompt is the closest thing to a request that is not an invocation.
+
+`plab-org-profile-readme` ships gated from its first version, 1.0.0, under RM-01 (the org profile README skill). It writes to an organization's public `.github` repository and opens pull requests there, and "update the README" is an ordinary request about any repository's own README, which a skill that fired on it would hijack.
 
 `plab-spec` carried the same flag through v0.4.3 and no longer does. Its description now carries an explicit do-NOT-fire clause instead, which is the mechanism that took `plab-continue-session` from over-triggering to correct: a narrowed description is a better instrument than a binary gate, because it can distinguish a request from a mention.
 
@@ -167,6 +169,14 @@ Roll up every repository under the owner's configured roots into one private wee
 Carry finished branches over the line in one pass, then stop. For each branch: document it on the branch against `references/documentation-standard.md` (twelve cells, three layers by four depths, each naming the file updated, the file already correct, or why it does not apply, plus a Sonnet cold reader for a feature or behaviour change), verify it, screen it with `scripts/screen-branch.py` for tracked `_local/` files and credential shapes, then merge only on `VERDICT: merge` from the maintainer's merge check. The skill names the solo-repo merge rule rather than a path to the check, and it does not merge when the rule or the check is missing. Facts come from one call to `scripts/derive-ship-facts.py`, which reads the latest version by listing and sorting version-shaped tags, because `git describe` returns the merge check's backup tags. `--release` is this run's approval to publish, takes no number and no size, and the model decides patch, minor or major from what the changes do; only a repository with no version tag stops to ask. Each run writes a record to gitignored `_local/_shipped/`, appended as each merge lands, and `scripts/ship-check.py`, whose self-test CI runs against the committed sample under `skills/plab-ship/examples/sample-run/`, compares the record's documents list with the real commits. The closing report opens in plain English, split into end-user value and technical value, and the checker rejects a record without both.
 
 **Invocation:** manual only (`disable-model-invocation: true`). `/plab-ship`.
+
+---
+
+### plab-org-profile-readme
+
+Keep a GitHub organization's profile README, `<org>/.github/profile/README.md`, to a standard and true to the organization's public repositories. `--setup` establishes the standard, `profile/standard.json` beside the page: one of three built-in standards (Catalog, Compact, Showcase) with seven options, the existing page adopted, or a custom one. Every later run reads the organization in one call to `skills/plab-org-profile-readme/scripts/derive-profile-facts.py`, which carries each private repository only as a SHA-256 digest of its name, updates the page from those facts or from a quoted instruction, and opens or updates one pull request whose branch starts `plab-org-profile-readme/`. It never merges. The page and the pull request body are gated by `skills/plab-org-profile-readme/scripts/profile-check.py`, fourteen rules whose self-test CI runs against the committed sample under `skills/plab-org-profile-readme/examples/sample-run/`. A user account is refused: user pages are out of scope.
+
+**Invocation:** manual only (`disable-model-invocation: true`). `/plab-org-profile-readme`.
 
 ---
 

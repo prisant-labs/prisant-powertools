@@ -124,6 +124,13 @@
         "version": "1.0.0",
         "tier": "universal",
         "status": "active"
+      },
+      {
+        "name": "plab-org-profile-readme",
+        "path": "skills/plab-org-profile-readme/SKILL.md",
+        "version": "1.0.0",
+        "tier": "universal",
+        "status": "active"
       }
     ]
   }

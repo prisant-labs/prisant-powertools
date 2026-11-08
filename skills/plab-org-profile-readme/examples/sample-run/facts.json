@@ -1,0 +1,117 @@
+{
+  "format": 1,
+  "org": "example-org",
+  "owner_type": "Organization",
+  "generated_at": "2026-11-08T12:00:00Z",
+  "profile": {
+    "repo": ".github",
+    "repo_state": "present",
+    "default_branch": "main",
+    "page_path": "profile/README.md",
+    "page": "present",
+    "standard_path": "profile/standard.json",
+    "standard": "present",
+    "other_open_prs": []
+  },
+  "open_pr": null,
+  "covered": [
+    {
+      "name": "alpha-tool",
+      "description": "A command-line tool that tidies project folders",
+      "topics": ["cli"],
+      "default_branch": "main",
+      "created_at": "2026-03-01T10:00:00Z",
+      "pushed_at": "2026-10-20T10:00:00Z",
+      "html_url": "https://github.com/example-org/alpha-tool",
+      "license": "MIT",
+      "newest_release": {"tag": "v1.2.0", "published_at": "2026-10-20T10:00:00Z", "prerelease": false},
+      "latest_stable": {"tag": "v1.2.0", "published_at": "2026-10-20T10:00:00Z", "prerelease": false},
+      "releases": [
+        {"tag": "v1.2.0", "published_at": "2026-10-20T10:00:00Z", "prerelease": false},
+        {"tag": "v1.1.0", "published_at": "2026-08-14T10:00:00Z", "prerelease": false},
+        {"tag": "v1.0.0", "published_at": "2026-06-02T10:00:00Z", "prerelease": false}
+      ],
+      "tags": ["v1.2.0", "v1.1.0", "v1.0.0"]
+    },
+    {
+      "name": "beta-kit",
+      "description": "Building blocks for small editor plugins",
+      "topics": [],
+      "default_branch": "main",
+      "created_at": "2026-05-11T10:00:00Z",
+      "pushed_at": "2026-09-30T10:00:00Z",
+      "html_url": "https://github.com/example-org/beta-kit",
+      "license": "MIT",
+      "newest_release": {"tag": "v0.4.0", "published_at": "2026-09-30T10:00:00Z", "prerelease": false},
+      "latest_stable": {"tag": "v0.4.0", "published_at": "2026-09-30T10:00:00Z", "prerelease": false},
+      "releases": [
+        {"tag": "v0.4.0", "published_at": "2026-09-30T10:00:00Z", "prerelease": false},
+        {"tag": "v0.3.0", "published_at": "2026-07-01T10:00:00Z", "prerelease": false}
+      ],
+      "tags": ["v0.4.0", "v0.3.0"]
+    },
+    {
+      "name": "gamma-notes",
+      "description": "Plain-text notes with dated headings",
+      "topics": [],
+      "default_branch": "main",
+      "created_at": "2026-09-01T10:00:00Z",
+      "pushed_at": "2026-11-01T10:00:00Z",
+      "html_url": "https://github.com/example-org/gamma-notes",
+      "license": "MIT",
+      "newest_release": null,
+      "latest_stable": null,
+      "releases": [],
+      "tags": []
+    },
+    {
+      "name": "sandbox-placeholder",
+      "description": "",
+      "topics": [],
+      "default_branch": "main",
+      "created_at": "2026-02-01T10:00:00Z",
+      "pushed_at": "2026-02-01T10:00:00Z",
+      "html_url": "https://github.com/example-org/sandbox-placeholder",
+      "license": null,
+      "newest_release": null,
+      "latest_stable": null,
+      "releases": [],
+      "tags": []
+    }
+  ],
+  "public_forks": [
+    {
+      "name": "delta-fork",
+      "description": "A maintained fork of an upstream file picker",
+      "topics": [],
+      "default_branch": "main",
+      "created_at": "2026-04-01T10:00:00Z",
+      "pushed_at": "2026-10-01T10:00:00Z",
+      "html_url": "https://github.com/example-org/delta-fork",
+      "license": "MIT",
+      "newest_release": {"tag": "v2.0.0", "published_at": "2026-10-01T10:00:00Z", "prerelease": false},
+      "latest_stable": {"tag": "v2.0.0", "published_at": "2026-10-01T10:00:00Z", "prerelease": false},
+      "releases": [{"tag": "v2.0.0", "published_at": "2026-10-01T10:00:00Z", "prerelease": false}],
+      "tags": ["v2.0.0"],
+      "parent": "upstream-owner/picker"
+    },
+    {
+      "name": "other-fork",
+      "description": "A fork kept for an upstream submission",
+      "topics": [],
+      "default_branch": "main",
+      "created_at": "2026-04-02T10:00:00Z",
+      "pushed_at": "2026-04-02T10:00:00Z",
+      "html_url": "https://github.com/example-org/other-fork",
+      "license": null,
+      "newest_release": null,
+      "latest_stable": null,
+      "releases": [],
+      "tags": [],
+      "parent": "upstream-owner/other"
+    }
+  ],
+  "archived": ["old-thing"],
+  "counts": {"public": 8, "private": 1, "forks": 2, "archived": 1},
+  "private_digests": ["2cdd4451155b4bf8a6714296c371444c43d8447b3efaa3ba6b4799b0d2054f23"]
+}

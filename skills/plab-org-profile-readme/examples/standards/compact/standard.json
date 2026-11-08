@@ -1,0 +1,46 @@
+{
+  "format": 1,
+  "org": "example-org",
+  "display_name": "Example Org",
+  "base": "compact",
+  "sections": [
+    {
+      "id": "header",
+      "kind": "fixed",
+      "heading": "# Example Org"
+    },
+    {
+      "id": "projects",
+      "kind": "fixed",
+      "heading": "## Projects"
+    }
+  ],
+  "options": {
+    "recent_changes": false,
+    "badges": false,
+    "status_labels": [
+      "🟢 Stable",
+      "🟡 Beta",
+      "🟠 Pre-release",
+      "🟤 Maintenance"
+    ],
+    "grouping": "none",
+    "featured": [],
+    "order": "alphabetical",
+    "shared_text": []
+  },
+  "categories": [],
+  "exclude": [
+    {
+      "repo": "sandbox-placeholder",
+      "reason": "a placeholder repository with no project in it"
+    }
+  ],
+  "include": [
+    {
+      "repo": "delta-fork",
+      "reason": "a fork that publishes its own releases"
+    }
+  ],
+  "skip_releases": []
+}

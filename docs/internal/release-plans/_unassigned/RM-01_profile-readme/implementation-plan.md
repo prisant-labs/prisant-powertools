@@ -4,7 +4,7 @@ title: "Implementation plan: plab-org-profile-readme"
 type: implementation-plan
 status: draft
 created: 2026-11-07
-updated: 2026-11-07
+updated: 2026-11-08
 linked-spec: spec.md
 linked-release: null
 ac-coverage: complete
@@ -34,15 +34,17 @@ Steps use checkbox syntax and phases run in order. A phase is done when every st
 
 | Phase | Goal | Fulfills AC | Owner | Status |
 |---|---|---|---|---|
-| P1 | The facts script returns an organization's facts in one call | AC-3, AC-4, AC-15 | agent | Not started |
-| P2 | The standard file, the three built-in standards and the scaffold exist | AC-16, AC-17 (part), AC-18 | agent | Not started |
-| P3 | The checker enforces facts and standards and proves every rule can fail | AC-5 to AC-8, AC-10, AC-12 (part), AC-19, AC-20 (part) | agent | Not started |
-| P4 | The skill, its references, its history and its eval case exist | AC-1, AC-11, AC-17 (part), AC-20 (part) | agent | Not started |
-| P5 | The plugin registers the skill and CI runs its checks | AC-12 (CI) | agent | Not started |
+| P1 | The facts script returns an organization's facts in one call | AC-3, AC-4, AC-15 | agent | Built 2026-11-08 |
+| P2 | The standard file, the three built-in standards and the scaffold exist | AC-16, AC-17 (part), AC-18 | agent | Built 2026-11-08 |
+| P3 | The checker enforces facts and standards and proves every rule can fail | AC-5 to AC-8, AC-10, AC-12 (part), AC-19, AC-20 (part) | agent | Built 2026-11-08 |
+| P4 | The skill, its references, its history and its eval case exist | AC-1, AC-11, AC-17 (part), AC-20 (part) | agent | Built 2026-11-08; the eval case has not run |
+| P5 | The plugin registers the skill and CI runs its checks | AC-12 (CI) | agent | Built 2026-11-08; CI runs on the pull request |
 | P6 | A live run on one of the maintainer's organizations passes the checker | AC-13 | agent, maintainer | Not started |
 | P7 | The release ships, and the two weekly routines are retired | N/A (release, and D3's follow-up) | agent, maintainer | Not started |
 
 AC-2, AC-9 and AC-14 are superseded in the spec and are not built.
+
+**Departures from this plan, 2026-11-08.** The build follows the phases with five departures. The standard gained `include` and `skip_releases`, and R6 became a note, under the spec's D7, after a read-only check of a real page. The facts fixtures are built in a temporary folder by `test-profile-scripts.py` from recorded responses in the test itself, so `scripts/fixtures/` holds only `forbidden-names.txt`. The facts name public forks and archived repositories, because a standard can include a fork by name and both are public. The usage README is `docs/skills/plab-org-profile-readme/README.md`, the plugin's convention for every skill, and the skill folder has no README of its own. The facts reference is `references/facts-format.md`, beside the standard format.
 
 ---
 

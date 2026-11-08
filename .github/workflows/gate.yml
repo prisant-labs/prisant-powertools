@@ -297,6 +297,18 @@ jobs:
         if: always()
         run: python3 skills/plab-ship/scripts/test-ship-scripts.py
 
+      # plab-org-profile-readme (RM-01). The checker's self-test proves each
+      # of its fourteen rules fails on a mutation of the committed sample, so
+      # exit 2 means a rule has gone blind. The script tests build their
+      # GitHub fixtures in a temporary folder and never touch the network.
+      - name: The profile README checker, against its committed sample
+        if: always()
+        run: python3 skills/plab-org-profile-readme/scripts/profile-check.py --self-test
+
+      - name: The profile README facts, standard, scaffold and skill tests
+        if: always()
+        run: python3 skills/plab-org-profile-readme/scripts/test-profile-scripts.py
+
       # The session pair, plab-wrap-session and plab-continue-session. These
       # four suites existed and passed locally but never ran here, so the
       # tag-sort defect fixed in PR #60 shipped past a green CI. Each builds
