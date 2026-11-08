@@ -148,6 +148,49 @@ weakened while the self-test still printed PASS.
      OSError; the top-level `__main__` guard is the backstop for anything
      still unanticipated.
 
+WHY THE MATCHER NEEDED FIVE MORE FIXES (defects G through K, 2026-11-07)
+--------------------------------------------------------------------------
+Session-log self-checks failed on path citations in six sessions between
+2026-10-05 and 2026-11-04, and reading the flags by hand found five shapes
+that make no claim about a file inside the repo:
+
+  G. A backtick span with whitespace is usually a command. The whole span,
+     such as `python tools/run-gate.py`, was joined to the repo root as one
+     filename and flagged even when the script existed. A command with
+     trailing arguments was the opposite blind spot: the last word's text
+     after the final dot ("py --check") failed the extension test, so the
+     path inside was never checked at all. A spaced span is now split, and
+     each plain path-shaped word is checked as a bare token would be. Words
+     carrying braces, quotes, "$", ":" or "=" are code (a brace expansion, a
+     git object path, a variable), and a word with "\\." is an escaped regex,
+     so neither is checked. The span is not split in three cases: it names a
+     real path that contains a space; its first word, or any later word,
+     points outside the repo root (a spaced Windows or home path, quoted or
+     not); or its first word is a path and the whole span still reads as a
+     file claim, which is a filename with spaces in it. A replay over 750
+     real logs showed each of these cases was needed.
+
+  H. A home-relative path (`~/.codex/config.toml`) is outside the repo root,
+     like a drive-letter path, and is now excluded the same way. Only a
+     leading `~/` or `~\\` counts.
+
+  I. A git tag whose basename ends in a version number
+     (`pre-merge/2026-11-04-release-3.12.0.0`) read its last digit as a file
+     extension. VERSION_NUMBER only matched a basename that starts with the
+     version. Two or more dot-separated digit groups at the end of a basename
+     now mark a version tail. One number after a non-digit (`man/page.1`)
+     stays an extension.
+
+  J. Git range syntax (`origin/develop...HEAD`) read "HEAD" as an extension.
+     Two or more dots inside a basename are never a file name.
+
+  K. A leading `/` with more than one segment (`/resources/plugins/`) is an
+     absolute POSIX path or a site route, outside the repo root.
+
+These fixes recognise shapes by text alone and never ask git. A ref lookup
+would make the result depend on what the repo holds at check time, and the
+self-test could no longer prove the matcher without --repo-root.
+
 Each fix, old and new, is mechanical and each has a paired canary and
 anti-canary below: one proving the false positive is gone or never existed,
 one proving the citation shape is still evaluated and would be flagged if it
@@ -166,7 +209,11 @@ dot-segment that looks like a real file extension: one to ten alphanumeric
 characters, no hyphens, no embedded dots.
 
 Out of scope, and therefore never flagged even when nothing resolves: a URI
-with a scheme (`https://...`), a Windows absolute path (`C:\\...`), a glob
+with a scheme (`https://...`), a Windows absolute path (`C:\\...`), a
+home-relative path (`~/...`), an absolute POSIX path or site route with more
+than one segment (`/resources/plugins/`), git range syntax
+(`origin/develop...HEAD`), a basename ending in a version number
+(`pre-merge/2026-11-04-release-3.12.0.0`), a glob
 (`docs/skills/*/README.md`), a template placeholder (`_inbox/<skill>.md`), a
 one-segment slash command (`/plab-wrap-session`), a basename shaped like a
 version number with an optional hyphenated-and-or-dotted or glued-on
@@ -228,10 +275,38 @@ LINE_ANCHOR = re.compile(r":\d+(-\d+)?$")
 # above here"), not a real relative-path prefix. "." and ".." are real
 # prefixes and must never match this.
 ELLIPSIS_PREFIX = re.compile(r"^\.{3,}")
+# A leading "~/" or "~\" names the user's home folder, which is outside the
+# repo root just as a drive-letter path is. A tilde anywhere else is literal.
+HOME_RELATIVE = re.compile(r"^~[\\/]")
+# Two or more dot-separated digit groups at the end of a basename are a
+# version number, as in the tag pre-merge/2026-11-04-release-3.12.0.0. A real
+# file extension is never the last group of a version. One group after a
+# non-digit (man/page.1) does not match, so that stays an extension.
+VERSION_TAIL = re.compile(r"\d+(\.\d+)+$")
+# The words of a backticked command that are checked as paths: letters,
+# digits, underscore, dot, hyphen, tilde and the two separators, nothing else.
+PLAIN_WORD = re.compile(r"^[\w.~/\\-]+$")
 
 
 def has_separator(cite):
     return "/" in cite or "\\" in cite
+
+
+def outside_repo_reason(cite):
+    """Name why a citation points outside the repo root, or return None.
+
+    These citations make a claim about a location, but not one --repo-root
+    can check, so they are out of scope rather than missing.
+    """
+    if URI_SCHEME.match(cite):
+        return "uri scheme"
+    if WINDOWS_ABS.match(cite):
+        return "absolute path outside the repo root"
+    if HOME_RELATIVE.match(cite):
+        return "home-relative path outside the repo root"
+    if cite.startswith("/") and cite.count("/") > 1:
+        return "absolute POSIX path or site route outside the repo root"
+    return None
 
 
 def strip_line_anchor(cite):
@@ -250,10 +325,9 @@ def is_path_claim(cite):
     `cite` is assumed already normalized (line anchor and ellipsis prefix
     stripped). Every branch here is mechanical. Nothing inspects meaning.
     """
-    if URI_SCHEME.match(cite):
-        return False, "uri scheme"
-    if WINDOWS_ABS.match(cite):
-        return False, "absolute path outside the repo root"
+    outside = outside_repo_reason(cite)
+    if outside:
+        return False, outside
     if "*" in cite or "?" in cite:
         return False, "glob"
     if "<" in cite or ">" in cite:
@@ -267,8 +341,12 @@ def is_path_claim(cite):
     base = os.path.basename(cite.rstrip("/\\").replace("\\", "/"))
     if "." not in base:
         return False, "no file extension"
+    if ".." in base:
+        return False, "git revision range, not a file name"
     if VERSION_NUMBER.match(base):
         return False, "version number, not a file extension"
+    if VERSION_TAIL.search(base):
+        return False, "basename ends in a version number, not a file extension"
     ext = base.rsplit(".", 1)[1]
     if not FILE_EXTENSION.match(ext):
         return False, "trailing dot-segment does not look like a file extension"
@@ -332,10 +410,54 @@ def extract_citations(text):
     return cites
 
 
+def spaced_span_findings(cite, root):
+    """Findings for a backtick span that contains whitespace.
+
+    Such a span is usually a command (`python tools/run-gate.py --check`), so
+    the whole span is not a filename and its path words are what get checked.
+    Two cases keep the span whole: it names a real path that contains a
+    space, or its first word points outside the repo root (a spaced Windows
+    or home path), which is out of scope as a whole.
+    """
+    if os.path.exists(os.path.join(root, cite)):
+        return []
+    words = cite.split()
+    if outside_repo_reason(words[0].lstrip(LEADING_STRIP_CHARS)):
+        return []
+    # A quoted Windows path with a space ("C:\Program Files\...") splits into
+    # a drive-letter word and a tail that looks repo-relative. Any
+    # drive-letter word marks the span as outside the repo root.
+    if any(WINDOWS_ABS.match(w.lstrip(LEADING_STRIP_CHARS)) for w in words):
+        return []
+    # A span whose first word is already a path, and which as a whole still
+    # reads as a file claim, is a filename with spaces in it, not a command.
+    if has_separator(words[0]):
+        claim, _reason = is_path_claim(cite)
+        if claim:
+            return [cite]
+    out = []
+    for word in words:
+        c = clean_token(word)
+        if not c or not has_separator(c):
+            continue
+        # Inside a command only a plain path-shaped word is checked. Braces,
+        # quotes, "$", ":" and "=" mark code (a brace expansion, a git object
+        # path, a variable), and "\." marks an escaped regex.
+        if not PLAIN_WORD.match(c) or "\\." in c:
+            continue
+        claim, _reason = is_path_claim(c)
+        if claim and not os.path.exists(os.path.join(root, c)):
+            out.append(c)
+    return out
+
+
 def findings_for(text, root):
     """Return the citations that assert a location and do not resolve."""
     out = []
     for cite, backticked in extract_citations(text):
+        if backticked and len(cite.split()) > 1:
+            out.extend(spaced_span_findings(cite, root))
+            continue
         claim, _reason = is_path_claim(cite)
         if not claim:
             continue
@@ -389,6 +511,21 @@ MUST_MATCH = [
     # Defect E: an ellipsis-elided citation to a target that genuinely does
     # not exist, even after the elision is stripped, must still be flagged.
     "elided path, missing: ...missing/ellipsis-canary.md was never added",
+    # Defect G (commands in backticks): splitting a command span must still
+    # check the path inside it. If the split drops the span instead of
+    # evaluating its words, this missing script stops being flagged.
+    "command on a missing script: `python missing/run-gate.py --check` failed",
+    # Defect G: a filename with spaces whose first word is already a path is
+    # still one path claim. If the span were always split, this missing
+    # file would break into words that each look like prose and drop out.
+    "spaced filename, missing: `notes/B-03. Lock the contract.md` was moved",
+    # Defect H (home-relative paths): the exclusion is anchored to a leading
+    # "~/" or "~\". A tilde anywhere else in a missing path stays in scope.
+    "tilde inside a path, missing: missing/notes~/tilde-canary.md was never written",
+    # Defect I (version tails): the exclusion needs two or more dot-separated
+    # digit groups at the end of the basename. A one-number extension, such
+    # as a man page's, is still a file extension.
+    "one-number extension, missing: man/missing-page.1 was never written",
 ]
 
 MUST_NOT_MATCH = [
@@ -455,6 +592,39 @@ MUST_NOT_MATCH = [
     # citation to a target that genuinely exists once the elision is
     # stripped.
     "elided path, real: ...skills/plab-guide/SKILL.md documents the workflow",
+    # Defect G anti-canaries: a backtick span with whitespace is usually a
+    # command, and its path words are what get checked. The whole span is
+    # not a filename. A span that names a real file whose path contains a
+    # space still resolves as one path, and a spaced absolute path stays
+    # excluded as a whole.
+    "command on a real script: `python real/possessive-target.py` ran clean",
+    "command with arguments on a real script: `python real/possessive-target.py --check` ran clean",
+    "spaced path, real: `real/spaced dir/target.md` holds the notes",
+    r"spaced windows path: `C:\Users\some one\notes\scratch.md` was read",
+    r'quoted spaced windows path: `"C:\Program Files\Git\bin\bash.exe" -lc ls` ran',
+    r'windows path after a command word: `cd "C:\Program Files\Tools\notes.md"` failed',
+    "spaced home path: `~/some one/notes.md` holds the draft",
+    "script path with arguments, real: `./real/possessive-target.py --check` ran",
+    # Defect G anti-canaries: code inside a command is not a path claim. A
+    # git object path, a brace expansion and an escaped regex each carry a
+    # separator and an extension-shaped tail, so each would be flagged if
+    # every word with a separator were checked.
+    "git object path: `git show origin/main:missing/object.md | head` printed it",
+    "brace expansion: `ls missing/public/{catalog.json, llms.txt}` listed them",
+    r"escaped regex: `grep -E v0\.6\.0 notes.txt` matched",
+    # Defect H anti-canaries: a home-relative path is outside the repo root,
+    # like a drive-letter path, backtick-wrapped or bare.
+    "home path in backticks: `~/.codex/config.toml` holds the setting",
+    "bare home path: ~/.claude/skills/ was swept",
+    # Defect I anti-canary: a tag whose basename ends in a version number is
+    # a git ref, not a file with an extension of "0".
+    "tag with a version tail: pre-merge/2026-11-04-release-3.12.0.0 is the undo point",
+    # Defect J anti-canary: two or more dots inside a basename are git range
+    # syntax, never a file name.
+    "git range: `origin/develop...HEAD` counts the commits",
+    # Defect K anti-canary: a leading "/" with more than one segment is an
+    # absolute POSIX path or a site route, outside the repo root.
+    "site route: `/resources/plugins/` is the page",
 ]
 
 
@@ -498,6 +668,11 @@ def self_test():
         write_fixture(
             os.path.join("skills", "plab-guide", "SKILL.md"),
             "fixture ellipsis canary target\n")
+        # Defect G fixture: a real file whose path contains a space, so the
+        # spaced-path anti-canary has something to resolve against.
+        write_fixture(
+            os.path.join("real", "spaced dir", "target.md"),
+            "fixture spaced-path canary target\n")
 
         # Defect E fixture: a target reachable only through a genuine ".."
         # prefix, one level above root.

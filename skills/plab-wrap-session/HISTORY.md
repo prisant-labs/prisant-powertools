@@ -2,6 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.9.1 | 2026-11-07 | unreleased | fixed | Path-citation gate: five false-alarm shapes found in real logs are excluded (home paths, POSIX paths and site routes, git ranges, tags ending in a version number, and commands in backticks), and a command with arguments has its path checked for the first time. The proof corpus grows from 40 entries to 60. |
 | 1.9.0 | 2026-11-03 | v0.12.0 | changed | W-05 (wrap hygiene order): the wrap writes the log first, asks every hygiene proposal in one numbered batch (`H1 y, H2 n`), then amends the log and runs `check-log.py` again. Four actions that change only this checkout run without asking and are recorded as `auto:` lines, including a pruning fetch (W-05 D2). Parked items are carried forward like Waiting on You. |
 | 1.8.2 | 2026-10-31 | v0.11.1 | fixed | The hygiene sweep's Check 1 tag tail lists the five highest versions. `derive-log-facts.py` and the documented `git tag -l | tail -5` sorted tags as text, so from v0.10.0 onward the tail omitted every two-digit minor version. |
 | 1.8.1 | 2026-10-16 | v0.8.1 | fixed | `scripts/check-log.py` collapses the whole Log Self-Check into one post-write call, `derive-log-facts.py`'s default text output becomes a complete wrap digest that stays well under 20,000 characters on every section except an uncapped `files-changed` on a very large session, two Windows-only Unicode crashes and a leading-space porcelain-parsing bug are fixed, `check4_doc_drift` stops flagging a HISTORY.md-only change as drift, `extract_waiting_on_you()` stops counting an indented sub-bullet as its own item, `frontmatter-schema.md` catches up with the two fields 1.8.0 added, and the hygiene sweep's own-validation-scripts step chains into one command. |
@@ -13,6 +14,14 @@
 | 1.5.0 | 2026-08-18 | v0.2.0 | added | `--organize` files old logs into `YYYY-MM/` folders. Hygiene sweep gained Check 5. |
 | 1.4.1 | 2026-08-18 | v0.1.2 | fixed | Dropped the "what did we do" trigger. Added `type:` to the frontmatter block and `machine:` to the Quick and Blocked templates. |
 | 1.4.0 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.4.0; prior history remains there. |
+
+## 1.9.1 - 2026-11-07
+
+**Fixed: the path-citation gate stops flagging citations that make no claim about a file in the repo.** Session-log self-checks failed on path citations in six sessions between 2026-10-05 and 2026-11-04. Each failure sent the wrap back to reword a log, and reading the flags by hand found five false-alarm shapes. The gate now excludes a home-relative path (`~/.codex/config.toml`), an absolute POSIX path or site route (`/resources/plugins/`), git range syntax (`origin/develop...HEAD`), and a basename ending in a version number, such as the merge check's backup tag `pre-merge/2026-11-04-release-3.12.0.0`. A backtick span with whitespace is read as a command, and each plain path-shaped word in it is checked on its own, so `python tools/run-gate.py` resolves when the script exists. Code inside a command, such as a brace expansion, a git object path or an escaped regex, is not checked. A filename that contains spaces is still checked as one path.
+
+**Fixed: a command with arguments now has its path checked.** Before this version, the text after the final dot of `python missing/x.py --check` was "py --check", which failed the extension test, so the citation was never evaluated. A missing script inside such a command is now flagged.
+
+Every rule has a canary pair, and removing any one of the eleven new code paths fails the self-test. The rules recognise shapes by text alone and never ask git, so the self-test still proves the matcher without `--repo-root`. A replay over 750 real session logs removed 692 flags: 264 commands, 187 home paths, 184 POSIX paths or site routes, 35 version tails, and 22 git ranges or elisions. It added 110, mostly script paths inside commands that do not resolve from the log's repo root, which the gate never checked before. About six of the added flags are the tails of Windows paths with spaces in shapes the canaries do not cover, and they are left as known noise.
 
 ## 1.9.0 - 2026-11-03
 
