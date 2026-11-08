@@ -58,7 +58,7 @@ Specs written before being assigned to a release: the documented default home `/
 | [H-05](_unassigned/H-05_retire-dash-enforcement/spec.md) | retire dash enforcement | H (hygiene and repo-wide) | draft | (no implementation plan yet) | P3 | Yes |
 | [H-06](_unassigned/H-06_optional-release-plan-version/spec.md) | optional release plan version | H (hygiene and repo-wide) | draft | (no implementation plan yet) | P3 | Yes |
 | [PP-01](_unassigned/PP-01_project-pulse/spec.md) | project pulse | PP (project-pulse roadmap item) | committed | in-progress | P2 | Yes |
-| [RM-01](_unassigned/RM-01_profile-readme/spec.md) | profile readme | RM (profile-readme roadmap item) | draft | (no implementation plan yet) | P2 | Yes |
+| [RM-01](_unassigned/RM-01_profile-readme/spec.md) | profile readme | RM (profile-readme roadmap item) | committed | draft | P2 | Yes |
 | [SH-01](_unassigned/SH-01_ship-skill/spec.md) | ship skill | SH (ship-skill roadmap item) | committed | (no implementation plan yet) | P2 | Yes |
 | [UA-01](_unassigned/UA-01_usage-audit/spec.md) | usage audit | UA (usage-audit roadmap item) | committed | in-progress | P2 | Yes |
 | [W-02](_unassigned/W-02_derived-log-facts/spec.md) | derived log facts | W (wrap-session roadmap item) | committed | in-progress | P1 | No |
@@ -95,7 +95,7 @@ One row per effort, grouped by release in sequence order (see the Release column
 | [H-05](_unassigned/H-05_retire-dash-enforcement/spec.md) | retire dash enforcement | H (hygiene and repo-wide) | draft | (no implementation plan yet) | `_unassigned/` | - | P3 | Yes |
 | [H-06](_unassigned/H-06_optional-release-plan-version/spec.md) | optional release plan version | H (hygiene and repo-wide) | draft | (no implementation plan yet) | `_unassigned/` | - | P3 | Yes |
 | [PP-01](_unassigned/PP-01_project-pulse/spec.md) | project pulse | PP (project-pulse roadmap item) | committed | in-progress | `_unassigned/` | - | P2 | Yes |
-| [RM-01](_unassigned/RM-01_profile-readme/spec.md) | profile readme | RM (profile-readme roadmap item) | draft | (no implementation plan yet) | `_unassigned/` | - | P2 | Yes |
+| [RM-01](_unassigned/RM-01_profile-readme/spec.md) | profile readme | RM (profile-readme roadmap item) | committed | draft | `_unassigned/` | - | P2 | Yes |
 | [SH-01](_unassigned/SH-01_ship-skill/spec.md) | ship skill | SH (ship-skill roadmap item) | committed | (no implementation plan yet) | `_unassigned/` | - | P2 | Yes |
 | [UA-01](_unassigned/UA-01_usage-audit/spec.md) | usage audit | UA (usage-audit roadmap item) | committed | in-progress | `_unassigned/` | - | P2 | Yes |
 | [W-02](_unassigned/W-02_derived-log-facts/spec.md) | derived log facts | W (wrap-session roadmap item) | committed | in-progress | `_unassigned/` | - | P1 | No |

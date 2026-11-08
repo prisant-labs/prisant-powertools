@@ -2,14 +2,14 @@
 id: RM-01
 title: "plab-org-profile-readme: set a standard for a GitHub organization's profile README and keep the page true to it and to the public repositories"
 type: spec
-status: draft
+status: committed
 created: 2026-11-07
 updated: 2026-11-07
 linked-effort: "the maintainer's request of 2026-11-06 in session for a skill that keeps an organization's README current, made general on 2026-11-07, narrowed to organization pages, and given standards, options and --setup the same day"
-linked-plan: null
+linked-plan: implementation-plan.md
 linked-release: null
 ac-count: 20
-source-count: 10
+source-count: 11
 requires-human-review: true
 target-release: null
 priority: P2
@@ -19,11 +19,11 @@ priority: P2
 
 ## Task Summary
 
-**Status:** draft. Nothing is built
-**Last updated:** 2026-11-07 by claude (Opus 5.5), recording the maintainer's answer to D6
-**Linked plan:** none yet
-**Open questions:** D2 and D3 (see Open Questions / Decisions). D1, D4, D5 and D6 are decided
-**Revisions:** 4
+**Status:** committed. The contract is agreed and the implementation plan is written. Nothing is built
+**Last updated:** 2026-11-07 by claude (Opus 5.5), recording the maintainer's answer to D3 and linking the implementation plan
+**Linked plan:** [implementation-plan.md](implementation-plan.md), seven phases
+**Open questions:** D2 (see Open Questions / Decisions), which does not block the build. D1 and D3 to D6 are decided
+**Revisions:** 5
 
 ### Acceptance Criteria Fulfillment
 
@@ -50,7 +50,7 @@ priority: P2
 
 ### Currently In Progress
 
-None. The spec was written on 2026-11-07 and revised twice the same day. It waits for the maintainer's review and the two open decisions.
+None. The spec was written and revised on 2026-11-07, and the implementation plan was written the same day. The next step is the plan's Phase 1.
 
 ---
 
@@ -204,6 +204,7 @@ The maintainer types `/plab-org-profile-readme example-org "mark the new reposit
 | 2026-11-07 | claude | changed | Narrowed to organization profile pages by the maintainer's ruling [S8]. AC-2 superseded by AC-14, which refuses a user account. Requirements 2, 3 and 5, Scope, Users, Purpose and Example 3 follow. User pages become non-goal 7. D4 decided, and D5 (the skill's name) added. |
 | 2026-11-07 | claude | changed | Standards, options, `--setup` and instruction runs added at the maintainer's direction [S9]. The skill is renamed `plab-org-profile-readme` (D5), and AC-13 and the examples use the new name. `--init` is dropped: AC-9 superseded by AC-18, and AC-14 superseded by AC-15, which reports a missing page instead of failing. AC-16 to AC-20 added. The standard file replaces the settings file, so "settings" in AC-4, AC-5 and AC-8 means the standard. D1's exception widened, and D6 (the option set and built-in standards) added. |
 | 2026-11-07 | claude | changed | D6 decided: option A, requirements 7 and 8 adopted as written, by the maintainer's answer [S10]. No criterion changes. |
+| 2026-11-07 | claude | changed | D3 decided: option B, retire the two routines, by the maintainer's answer [S11]. Status set to committed and the implementation plan linked, at the maintainer's request to prepare the build. D2 noted as not blocking. No criterion changes. |
 
 ## Sources & Evidence
 
@@ -219,12 +220,14 @@ The maintainer types `/plab-org-profile-readme example-org "mark the new reposit
 
 - **[S10]** The maintainer's answer in session on 2026-11-07, after the third revision merged: "D6 yes adopt the options and standards". Class A.
 
+- **[S11]** The maintainer's answer in session on 2026-11-07, after D3 was explained: "B . Polish anything needed so the next session can create and release the skill". Class A.
+
 ### Unverified Claims
 
 - Requirement 7: the Compact and Showcase standards are proposals, not observed formats.
 - Requirement 9: that a standard can be derived from an arbitrary existing page. It is proven only for the maintainer's two consistent organization pages.
 - Requirement 11 and AC-10: the handling of a page with no standard is a design choice, not observed behaviour.
-- Requirement 15: whether a cloud routine can load a plugin skill. The routine prompts also record that organization-level API paths can return 403 in that environment [S2].
+- Requirement 15: whether a cloud routine can load a plugin skill. The routine prompts also record that organization-level API paths can return 403 in that environment [S2]. D3's answer, retiring the routines, means the build does not depend on it.
 
 ## Open Questions / Decisions
 
@@ -232,7 +235,7 @@ The maintainer types `/plab-org-profile-readme example-org "mark the new reposit
 |----|-------|------------|--------|---------|
 | D1 | Whether the skill is general or built for the maintainer's own pages | General across organizations, with standards and setup, by ruling | Decided | 2026-11-07 |
 | D2 | Whether a purely factual update may merge without review | Pending | Open | 2026-11-07 |
-| D3 | What happens to the two weekly routines | Pending | Open | 2026-11-07 |
+| D3 | What happens to the two weekly routines | B: retire them, by ruling | Decided | 2026-11-07 |
 | D4 | Whether the account page ships in 1.0 | Organization pages only, by ruling | Decided | 2026-11-07 |
 | D5 | Whether the skill keeps the name `plab-profile-readme` | `plab-org-profile-readme`, by ruling | Decided | 2026-11-07 |
 | D6 | The option set and the built-in standards | A: requirements 7 and 8 as written | Decided | 2026-11-07 |
@@ -251,13 +254,19 @@ The maintainer types `/plab-org-profile-readme example-org "mark the new reposit
 
 **Recommendation.** A for 1.0, then B once a few reviewed runs show the factual updates are reliable. Both profile repositories are on the maintainer's solo list, so B is possible under the merge rule.
 
-### D3: The two weekly routines (Open)
+**Note, 2026-11-07.** D2 does not block the build. Non-goal 4 and the Safety requirement already build option A, because the skill never merges. D2 matters only when a later version considers automatic merges.
+
+### D3: The two weekly routines (Decided)
 
 **Summary.** Two routines refresh the organization pages today [S2].
 
 **Options.** A: convert them to call the skill, if a routine can load it. B: retire them and run the skill by hand. C: keep them as they are.
 
-**Recommendation.** A if the plugin loads in a routine, otherwise B. C keeps two copies of the format rules that will drift from the skill.
+**Recommendation (not taken).** A if the plugin loads in a routine, otherwise B. C keeps two copies of the format rules that will drift from the skill.
+
+**Resolution.** B, by the maintainer's answer [S11]: retire both routines, and run the skill by hand.
+
+**Follow-up.** The implementation plan's Phase 7 disables both routines once the skill's first live pull request has merged, so the pages are never left with neither mechanism. Disabling rather than deleting leaves the maintainer to delete them later.
 
 ### D4: The account page in 1.0 (Decided)
 
