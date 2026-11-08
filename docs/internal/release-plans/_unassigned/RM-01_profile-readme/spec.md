@@ -9,7 +9,7 @@ linked-effort: "the maintainer's request of 2026-11-06 in session for a skill th
 linked-plan: null
 linked-release: null
 ac-count: 20
-source-count: 9
+source-count: 10
 requires-human-review: true
 target-release: null
 priority: P2
@@ -20,10 +20,10 @@ priority: P2
 ## Task Summary
 
 **Status:** draft. Nothing is built
-**Last updated:** 2026-11-07 by claude (Opus 5.5), adding standards, options, `--setup` and instruction runs at the maintainer's direction, and renaming the skill
+**Last updated:** 2026-11-07 by claude (Opus 5.5), recording the maintainer's answer to D6
 **Linked plan:** none yet
-**Open questions:** D2, D3 and D6 (see Open Questions / Decisions). D1, D4 and D5 are decided
-**Revisions:** 3
+**Open questions:** D2 and D3 (see Open Questions / Decisions). D1, D4, D5 and D6 are decided
+**Revisions:** 4
 
 ### Acceptance Criteria Fulfillment
 
@@ -50,7 +50,7 @@ priority: P2
 
 ### Currently In Progress
 
-None. The spec was written on 2026-11-07 and revised twice the same day. It waits for the maintainer's review and the three open decisions.
+None. The spec was written on 2026-11-07 and revised twice the same day. It waits for the maintainer's review and the two open decisions.
 
 ---
 
@@ -101,8 +101,8 @@ The skill does two jobs [S9]. It first establishes a standard: the structure the
 4. A private repository is never named on the page or in the pull request body, even when the credentials can see it and even when an instruction asks for it [S2].
 5. Nothing in the skill, its references or its scripts names a particular owner or repository. An organization's specifics live in one standard file in its `.github` repository, which replaces the settings file of earlier revisions. The facts work without it [S1].
 6. The standard is the page's format. It records a base, which is one of the built-in standards, a standard adopted from the existing page, or a custom one. It also records the sections in order, the option values, the categories, the exclusions with reasons, the featured repositories and any shared text. The skill keeps the page to its standard and changes what the facts contradict or an instruction asks [S9, S2].
-7. Three built-in standards ship with the skill, each with a reference document that describes its sections and options and a sample page [S9]. **Catalog** is the maintainer's current format: a header, a status and tag legend, an index by category, and a section per project with its version line and recent changes [S2]. **Compact** is a header and one table of projects, with name, one-line description, status and latest release. **Showcase** is a header, a few featured projects with longer descriptions, and a short list of the rest. [model-inference: Compact and Showcase are proposed here, and D6 confirms them]
-8. A standard sets these options, which D6 confirms [S9]:
+7. Three built-in standards ship with the skill, each with a reference document that describes its sections and options and a sample page [S9]. **Catalog** is the maintainer's current format: a header, a status and tag legend, an index by category, and a section per project with its version line and recent changes [S2]. **Compact** is a header and one table of projects, with name, one-line description, status and latest release. **Showcase** is a header, a few featured projects with longer descriptions, and a short list of the rest. [model-inference: Compact and Showcase were proposed here, and the maintainer adopted them in D6 without an observed example]
+8. A standard sets these options, which the maintainer adopted in D6 [S9, S10]:
    - **Recent changes:** off, or on with the number of entries shown per project.
    - **Badges:** off, or on with the kinds allowed, such as release, license and CI status.
    - **Status labels:** off, or on with the label vocabulary.
@@ -203,6 +203,7 @@ The maintainer types `/plab-org-profile-readme example-org "mark the new reposit
 | 2026-11-07 | claude | added | Initial draft, written at the maintainer's instruction after an advisor review. D1 records the maintainer's ruling that the skill be generally useful. |
 | 2026-11-07 | claude | changed | Narrowed to organization profile pages by the maintainer's ruling [S8]. AC-2 superseded by AC-14, which refuses a user account. Requirements 2, 3 and 5, Scope, Users, Purpose and Example 3 follow. User pages become non-goal 7. D4 decided, and D5 (the skill's name) added. |
 | 2026-11-07 | claude | changed | Standards, options, `--setup` and instruction runs added at the maintainer's direction [S9]. The skill is renamed `plab-org-profile-readme` (D5), and AC-13 and the examples use the new name. `--init` is dropped: AC-9 superseded by AC-18, and AC-14 superseded by AC-15, which reports a missing page instead of failing. AC-16 to AC-20 added. The standard file replaces the settings file, so "settings" in AC-4, AC-5 and AC-8 means the standard. D1's exception widened, and D6 (the option set and built-in standards) added. |
+| 2026-11-07 | claude | changed | D6 decided: option A, requirements 7 and 8 adopted as written, by the maintainer's answer [S10]. No criterion changes. |
 
 ## Sources & Evidence
 
@@ -215,6 +216,8 @@ The maintainer types `/plab-org-profile-readme example-org "mark the new reposit
 - **[S7]** A comparison on 2026-11-06 of the Prisant Labs page with the organization's public repositories: a stale skill count and version, an unlisted public repository, and a marketplace badge that reads `plugins[1]` by position. Class A.
 - **[S8]** The maintainer's ruling in session on 2026-11-07, after the first draft merged: "the org profile should be the focus of the skill because that is a particular kind of profile". Class A.
 - **[S9]** The maintainer's direction in session on 2026-11-07, after the second revision merged: the name "Org-profile-readme"; the skill should "focus on establishing the standard structure for the readme" and update it from public repository changes "or based on the user's instructions"; a few standard examples "with documentation and samples" that can be adopted, or a standard the user defines; options such as showing a change log or not and using badges or not; and "--setup that questions the user to establish the template". Class A.
+
+- **[S10]** The maintainer's answer in session on 2026-11-07, after the third revision merged: "D6 yes adopt the options and standards". Class A.
 
 ### Unverified Claims
 
@@ -232,7 +235,7 @@ The maintainer types `/plab-org-profile-readme example-org "mark the new reposit
 | D3 | What happens to the two weekly routines | Pending | Open | 2026-11-07 |
 | D4 | Whether the account page ships in 1.0 | Organization pages only, by ruling | Decided | 2026-11-07 |
 | D5 | Whether the skill keeps the name `plab-profile-readme` | `plab-org-profile-readme`, by ruling | Decided | 2026-11-07 |
-| D6 | The option set and the built-in standards | Pending | Open | 2026-11-07 |
+| D6 | The option set and the built-in standards | A: requirements 7 and 8 as written | Decided | 2026-11-07 |
 
 ### D1: General or built for the maintainer's pages (Decided)
 
@@ -276,10 +279,14 @@ The maintainer types `/plab-org-profile-readme example-org "mark the new reposit
 
 **Resolution.** `plab-org-profile-readme`, the maintainer's own choice [S9], which keeps both the scope and the word README. The spec's id and folder, `RM-01_profile-readme`, stay as they are.
 
-### D6: The option set and the built-in standards (Open)
+### D6: The option set and the built-in standards (Decided)
 
 **Summary.** The maintainer named two options, a change log and badges, and asked for "a few others" [S9]. Requirement 8 proposes seven, and requirement 7 proposes Compact and Showcase beside the maintainer's own Catalog format.
 
 **Options.** A: adopt requirements 7 and 8 as written. B: adopt them with the maintainer's edits. C: ship Catalog alone in 1.0, with the options, and add the other two standards later.
 
 **Recommendation.** A. Three standards give a real choice in `--setup` without a large surface, and each option maps to one checker rule in AC-19, so the set stays testable. An option that a real run never changes should be removed in a later version.
+
+**Resolution.** A, by the maintainer's answer [S10]: the three built-in standards of requirement 7 and the seven options of requirement 8, as written.
+
+**Follow-up.** None before the build. The implementation plan builds all three standards and all seven options, and AC-16 and AC-19 test them.
