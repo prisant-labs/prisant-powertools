@@ -2,7 +2,7 @@
 
 Generated file. Regenerate with `python scripts/gen-release-index.py` from the repository root. Hand edits will be overwritten on the next regeneration.
 
-**Releases:** 5 **Efforts:** 28 (20 unassigned) **Source:** every `plan.md` and `spec.md` under `docs/internal/release-plans/`, including `_unassigned/`, plus each effort's `implementation-plan.md` where present
+**Releases:** 5 **Efforts:** 29 (21 unassigned) **Source:** every `plan.md` and `spec.md` under `docs/internal/release-plans/`, including `_unassigned/`, plus each effort's `implementation-plan.md` where present
 
 ---
 
@@ -25,6 +25,7 @@ Every effort id's letter prefix names which series it belongs to. An id whose le
 | PP | project-pulse roadmap item |
 | SH | ship-skill roadmap item |
 | RM | profile-readme roadmap item |
+| PH | pages-hub roadmap item |
 
 ---
 
@@ -57,6 +58,7 @@ Specs written before being assigned to a release: the documented default home `/
 | [D-10](_unassigned/D-10_log-format-contract/spec.md) | log format contract | D (defect in the wrap and continue pair) | draft | draft | P2 | No |
 | [H-05](_unassigned/H-05_retire-dash-enforcement/spec.md) | retire dash enforcement | H (hygiene and repo-wide) | draft | (no implementation plan yet) | P3 | Yes |
 | [H-06](_unassigned/H-06_optional-release-plan-version/spec.md) | optional release plan version | H (hygiene and repo-wide) | draft | (no implementation plan yet) | P3 | Yes |
+| [PH-01](_unassigned/PH-01_pages-hub/spec.md) | pages hub | PH (pages-hub roadmap item) | draft | (no implementation plan yet) | P3 | Yes |
 | [PP-01](_unassigned/PP-01_project-pulse/spec.md) | project pulse | PP (project-pulse roadmap item) | committed | in-progress | P2 | Yes |
 | [RM-01](_unassigned/RM-01_profile-readme/spec.md) | profile readme | RM (profile-readme roadmap item) | committed | draft | P2 | Yes |
 | [SH-01](_unassigned/SH-01_ship-skill/spec.md) | ship skill | SH (ship-skill roadmap item) | committed | (no implementation plan yet) | P2 | Yes |
@@ -94,6 +96,7 @@ One row per effort, grouped by release in sequence order (see the Release column
 | [D-10](_unassigned/D-10_log-format-contract/spec.md) | log format contract | D (defect in the wrap and continue pair) | draft | draft | `_unassigned/` | - | P2 | No |
 | [H-05](_unassigned/H-05_retire-dash-enforcement/spec.md) | retire dash enforcement | H (hygiene and repo-wide) | draft | (no implementation plan yet) | `_unassigned/` | - | P3 | Yes |
 | [H-06](_unassigned/H-06_optional-release-plan-version/spec.md) | optional release plan version | H (hygiene and repo-wide) | draft | (no implementation plan yet) | `_unassigned/` | - | P3 | Yes |
+| [PH-01](_unassigned/PH-01_pages-hub/spec.md) | pages hub | PH (pages-hub roadmap item) | draft | (no implementation plan yet) | `_unassigned/` | - | P3 | Yes |
 | [PP-01](_unassigned/PP-01_project-pulse/spec.md) | project pulse | PP (project-pulse roadmap item) | committed | in-progress | `_unassigned/` | - | P2 | Yes |
 | [RM-01](_unassigned/RM-01_profile-readme/spec.md) | profile readme | RM (profile-readme roadmap item) | committed | draft | `_unassigned/` | - | P2 | Yes |
 | [SH-01](_unassigned/SH-01_ship-skill/spec.md) | ship skill | SH (ship-skill roadmap item) | committed | (no implementation plan yet) | `_unassigned/` | - | P2 | Yes |
