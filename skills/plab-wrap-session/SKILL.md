@@ -13,7 +13,7 @@ description: "Document and close agentic coding sessions with structured session
 argument-hint: "[mode: quick|final|deep|blocked] [--organize]"
 license: MIT
 metadata:
-  version: "1.9.0"
+  version: "1.9.1"
   updated: 2026-11-03
 ---
 
@@ -242,7 +242,7 @@ It runs every mechanical gate this section used to list as separate steps, in on
 
 The two detector scripts it calls:
 
-- Path citations resolve, detector-backed, three-state: `python scripts/path-citation-check.py <log-path> --repo-root <project-root>`. Checks only citations that assert a location: one containing a path separator must exist as written, and a backtick-wrapped citation with no separator is resolved against the repo root and passes silently if it does not resolve. A bare word with a file extension and neither signal is prose, not a path claim, and is not checked. Separator-bearing tokens that are URIs, drive-letter absolute paths, globs, template placeholders, single-segment slash commands, or extensionless are excluded too; see the script docstring for the canary corpus. Exit 0 clean, 1 findings, 2 broken; broken blocks exactly like findings
+- Path citations resolve, detector-backed, three-state: `python scripts/path-citation-check.py <log-path> --repo-root <project-root>`. Checks only citations that assert a location: one containing a path separator must exist as written, and a backtick-wrapped citation with no separator is resolved against the repo root and passes silently if it does not resolve. A bare word with a file extension and neither signal is prose, not a path claim, and is not checked. Separator-bearing tokens that are URIs, drive-letter, home-relative (`~/`) or POSIX absolute paths, globs, template placeholders, single-segment slash commands, git ranges, names ending in a version number, or extensionless are excluded too. A backtick span with whitespace is read as a command, and each of its words is checked on its own; see the script docstring for the canary corpus. Exit 0 clean, 1 findings, 2 broken; broken blocks exactly like findings
 - No em-dash or en-dash characters anywhere in the log, detector-backed, three-state: `python scripts/dash-check.py <log-path>`. Exit 0 clean, 1 findings, 2 broken; broken blocks exactly like findings
 
 The following gates are judgment calls no script can make and stay the agent's own check:
