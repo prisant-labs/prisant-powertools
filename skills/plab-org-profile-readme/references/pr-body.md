@@ -8,6 +8,7 @@ The body tells the maintainer what changed and why, so they can review it withou
 ## From the repositories
 
 - New projects: each one added, with its category, listed first.
+- Ignored: each repository added to `exclude`, with its reason.
 - <repository>: <what changed>, with the fact behind it, such as the release it now names.
 - Releases skipped: each release added to `skip_releases`, with its reason.
 

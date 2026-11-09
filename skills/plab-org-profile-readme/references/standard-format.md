@@ -14,7 +14,7 @@ An organization's standard is one JSON file, `profile/standard.json`, beside the
 | `sections` | The page's headings, in order. Each is `{id, kind, heading}` with kind `fixed`, a heading the page must carry such as `"## Projects"`, or `{id, kind: "categories", level}`, which stands for one heading per category at that level |
 | `options` | The seven options below |
 | `categories` | Ordered `{name, repos}`. Each repository sits under its category's heading |
-| `exclude` | `{repo, reason}` for a covered repository the page leaves out. The reason is at least three words |
+| `exclude` | `{repo, reason}` for a covered repository the page leaves out, which is how a repository is ignored. The reason is at least three words. R1 fails a page that still lists an excluded repository, and notes an exclusion the facts no longer cover |
 | `include` | `{repo, reason}` for a public fork the page shows. Forks are left out unless included |
 | `skip_releases` | `{repo, tag, reason}` for a release the page leaves out because it changed nothing a user would notice |
 
