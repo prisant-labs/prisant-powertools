@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`plab-usage-audit` 1.1.1: a like-for-like prior figure.** The focus week stops at the cutoff and the prior week ran through its whole last day, which read as a false fall. `prior_same_cutoff` holds the prior week stopped at the same local time, and the usage brief compares against it.
 - **`plab-usage-audit` 1.1.1: no live bundle could pass rule R8.** Its pattern matched the end of every `https://`. A URL now passes, and `scrub.py` removes every plain drive letter R8 would flag, with one shared pattern.
 - **`plab-usage-audit` and `plab-project-pulse` 1.1.1: `pre-merge/*` backup tags no longer count as releases.** They are counted apart in `pre_merge_tags_in_window`.
+- **The skill drift gate diffs against the last release again.** `scripts/skill-drift-check.py` took the nearest tag, which is almost always one of the merge check's `pre-merge/*` backup tags, so it compared HEAD with itself and passed without checking anything. It now takes the nearest tag shaped like `v1.2.3`, which also skips a floating `v1`, and a repository whose only tag is a backup is reported as broken.
 - **`plab-project-pulse` 1.1.1: `--spend` now works.** It joins `plab-usage-audit`'s `projects.json` onto the repositories by path, and names spend that matches no repository in `gaps`.
 
 ## [0.13.0] - 2026-11-06
