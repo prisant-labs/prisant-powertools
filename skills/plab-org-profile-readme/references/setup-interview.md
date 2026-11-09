@@ -11,7 +11,7 @@
 2. **The title.** The organization's display name, for the page's level-1 heading.
 3. **Each option** of `references/standard-format.md`: recent changes and their count, badges and their kinds, status labels and their vocabulary, grouping, featured repositories, order, and any shared text.
 4. **The categories**, when grouping by category: their names, in order, and which covered repositories each holds. Every covered repository that is not excluded needs a category.
-5. **The exclusions**, each with a reason of at least three words, for covered repositories the page leaves out.
+5. **The exclusions**, each with a reason of at least three words, for covered repositories the page leaves out. These are the repositories the maintainer wants ignored, such as a scratch or placeholder repository. List every covered repository the page does not show and ask which to ignore.
 6. **The inclusions**, each with a reason, for public forks the page shows.
 
 ## How it ends

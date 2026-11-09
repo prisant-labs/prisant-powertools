@@ -2,7 +2,16 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.1.0 | 2026-11-08 | Unreleased | changed | Ignoring a repository is reachable from any run: the skill asks add or ignore for each repository new to the page, takes an instruction such as "ignore scratch-repo", and the checker enforces it. A run with no organization asks for one, and a run with no `.github` repository or nothing to check stops cleanly. |
 | 1.0.0 | 2026-11-08 | Unreleased | added | First version, specified by RM-01 (the org profile README skill). Sets a standard for a GitHub organization's profile README and keeps the page true to it and to the public repositories, through one pull request it never merges. Manual invocation only. |
+
+## 1.1.0 - 2026-11-08
+
+**Changed: ignoring a repository.** The standard's `exclude` list could leave a repository off the page, but only the `--setup` interview reached it, and a refresh added every repository new to the page without asking. A public scratch repository would land on the organization's front page in the next pull request. Now each run asks, once for all of them, whether to add or ignore every repository the page does not list. An instruction such as "ignore scratch-repo: it holds experiments, not a project" records the exclusion with its reason, on the same branch as the page.
+
+**The checker enforces it.** Rule R1 now fails a page that still lists a repository the standard excludes, because an exclusion that the page ignores means nothing. It notes an exclusion for a repository the facts no longer cover. Rule R7 now scans the standard as well as the page and the pull request body, because the standard is committed to the same public repository and an ignore instruction is how a private name could reach it.
+
+**Fixed: three runs the instructions did not cover.** With no organization given, the skill asks for one and never infers it from the working directory, where a git remote would name the wrong thing. With no `.github` repository, it stops and asks the maintainer to create it, because the skill never creates a repository. With no page and no standard, it says there is nothing to check, because the checker needs a page.
 
 ## 1.0.0 - 2026-11-08
 

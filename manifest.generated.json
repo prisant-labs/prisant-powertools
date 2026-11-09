@@ -37,7 +37,7 @@
     {
       "name": "plab-org-profile-readme",
       "path": "skills/plab-org-profile-readme/SKILL.md",
-      "description": "Keep a GitHub organization's profile README, <org>/.github/profile/README.md, to a standard and true to its public repositories. --setup picks one of three built-in standards (Catalog, Compact, Showcase), adopts the existing page, or defines a custom one. Each later run updates the page from repository facts or a quoted instruction, checks it, and opens or updates one pull request. Never merges. Explicit invocation only: run /plab-org-profile-readme; it does not fire on its own."
+      "description": "Keep a GitHub organization's profile README, <org>/.github/profile/README.md, to a standard and true to its public repositories. Use when an organization page has drifted from its repositories, needs a standard format, or has a stale refresh pull request. --setup picks Catalog, Compact or Showcase, adopts the existing page, or defines a custom standard. Each run updates the page from repository facts or a quoted instruction, checks it, and opens or updates one pull request. Never merges. Explicit invocation only: run /plab-org-profile-readme."
     },
     {
       "name": "plab-project-pulse",
