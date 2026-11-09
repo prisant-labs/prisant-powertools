@@ -35,6 +35,16 @@ BRANCH_SENTENCES = [
     "When the checked page is identical to the current one, make no branch and say the page is current.",
 ]
 
+# 1.1.0: the input and mode rules SKILL.md must state, so a run never guesses an
+# organization, never improvises when there is nothing to check, and never adds a
+# new repository the maintainer meant to ignore.
+RULE_SENTENCES = [
+    "When no organization is given, ask for one, and never infer it from the working directory.",
+    "When the facts report no `.github` repository, stop and ask the maintainer to create it, because this skill never creates a repository.",
+    "When the facts report no page and no standard, say there is nothing to check, suggest `--setup`, and open nothing.",
+    "When the facts cover a repository the page does not list, ask the maintainer whether to add it or ignore it before writing the page.",
+]
+
 failures: list[str] = []
 passed = 0
 
@@ -207,6 +217,31 @@ def test_checker(tmp: Path) -> None:
     case("checker: a recent-changes block when recent changes are off is an R11 finding (AC-19)",
          p.returncode == 1 and "turns them off" in p.stdout, p.stdout)
 
+    # Ignoring a repository: an exclusion means the page does not list it.
+    listed_anyway = tmp / "excluded-listed.md"
+    listed_anyway.write_text(base_page.replace(
+        "### 🔀 [delta-fork]",
+        "### 🧪 [sandbox-placeholder](https://github.com/example-org/sandbox-placeholder)\n\nA placeholder.\n\n### 🔀 [delta-fork]", 1), encoding="utf-8")
+    p = check(listed_anyway, SAMPLE / "facts.json", SAMPLE / "standard.json")
+    case("checker: an excluded repository that the page still lists is an R1 finding",
+         p.returncode == 1 and any(l.startswith("FINDING R1:") and "sandbox-placeholder" in l and "excluded" in l for l in p.stdout.splitlines()), p.stdout)
+
+    # The standard is committed to a public repository, so R7 covers it too.
+    priv_std = tmp / "private-exclude.json"
+    priv_std.write_text(json.dumps(dict(std, skip_releases=[], exclude=std["exclude"] + [
+        {"repo": "secret-project", "reason": "not ready to show anyone"}]), ensure_ascii=False), encoding="utf-8")
+    p = check(SAMPLE / "README.md", SAMPLE / "facts.json", priv_std)
+    case("checker: an exclusion that names a private repository is an R7 finding, name withheld",
+         p.returncode == 1 and any(l.startswith("FINDING R7:") and "the standard" in l for l in p.stdout.splitlines())
+         and "secret-project" not in p.stdout, p.stdout)
+
+    stale_std = tmp / "stale-exclude.json"
+    stale_std.write_text(json.dumps(dict(std, skip_releases=[], exclude=std["exclude"] + [
+        {"repo": "long-gone", "reason": "an old experiment, since deleted"}]), ensure_ascii=False), encoding="utf-8")
+    p = check(SAMPLE / "README.md", SAMPLE / "facts.json", stale_std)
+    case("checker: an exclusion for a repository the facts do not cover is a note, not a finding",
+         p.returncode == 0 and any(l.startswith("NOTE R1:") and "long-gone" in l for l in p.stdout.splitlines()), p.stdout)
+
     bad = tmp / "bad-standard.json"
     bad.write_text(json.dumps(dict(std, options=dict(std["options"], order="random"))), encoding="utf-8")
     p = check(SAMPLE / "README.md", SAMPLE / "facts.json", bad)
@@ -320,6 +355,10 @@ def test_names_and_sentences(tmp: Path) -> None:
     case("skill: the description is at most 600 characters", bool(desc) and len(desc.group(1)) <= 600)
     cut = text.replace(BRANCH_SENTENCES[1], "", 1)
     case("skill: canary proved, removing a branch rule is caught", any(s not in cut for s in BRANCH_SENTENCES))
+    missing = [s for s in RULE_SENTENCES if s not in text]
+    case("skill: SKILL.md states the organization, nothing-to-check and add-or-ignore rules", not missing, "; ".join(missing))
+    cut = text.replace(RULE_SENTENCES[0], "", 1)
+    case("skill: canary proved, removing an input rule is caught", any(s not in cut for s in RULE_SENTENCES))
 
 
 def main() -> int:

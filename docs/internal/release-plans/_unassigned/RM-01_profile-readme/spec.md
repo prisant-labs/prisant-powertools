@@ -9,7 +9,7 @@ linked-effort: "the maintainer's request of 2026-11-06 in session for a skill th
 linked-plan: implementation-plan.md
 linked-release: null
 ac-count: 20
-source-count: 13
+source-count: 14
 requires-human-review: true
 target-release: null
 priority: P2
@@ -20,7 +20,7 @@ priority: P2
 ## Task Summary
 
 **Status:** committed. Phases 1 to 5 of the implementation plan are built on branch `feat/rm-01-org-profile-readme`; the live run (AC-13) and the release are not done
-**Last updated:** 2026-11-08 by claude (Opus 5.5), recording the build, D7 and the criteria the tests fulfil
+**Last updated:** 2026-11-08 by claude (Opus 5.5), recording the build, D7, the criteria the tests fulfil, and skill 1.1.0 (ignoring a repository)
 **Linked plan:** [implementation-plan.md](implementation-plan.md), seven phases
 **Open questions:** D2, which does not block the build, and D7, decided provisionally by the agent (see Open Questions / Decisions). D1 and D3 to D6 are decided
 **Revisions:** 6
@@ -206,6 +206,7 @@ The maintainer types `/plab-org-profile-readme example-org "mark the new reposit
 | 2026-11-07 | claude | changed | D6 decided: option A, requirements 7 and 8 adopted as written, by the maintainer's answer [S10]. No criterion changes. |
 | 2026-11-07 | claude | changed | D3 decided: option B, retire the two routines, by the maintainer's answer [S11]. Status set to committed and the implementation plan linked, at the maintainer's request to prepare the build. D2 noted as not blocking. No criterion changes. |
 | 2026-11-08 | claude | changed | Built Phases 1 to 5 at the maintainer's instruction to build the skill [S12]. D7 added and decided provisionally by the agent, from checking a real organization page with live facts before any pull request [S13]: the standard gains `include` for public forks a page shows, which amends requirement 3, and `skip_releases` for releases a page leaves out with a reason, which narrows requirement 12's version rule; rule R6 reports a positional badge as a note, not a failure. No criterion is rewritten. Thirteen criteria ticked with the tests that show them. |
+| 2026-11-08 | claude | changed | Skill 1.1.0, at the maintainer's instruction that the skill allow ignoring certain repositories, and to patch two gaps found by reading the skill [S14]. Ignoring uses requirement 3's exclusions: each run asks whether to add or ignore a repository new to the page, and an instruction can ignore one. AC-5 is held more strictly: the checker also rejects a page that lists a repository the standard excludes, and notes an exclusion the facts no longer cover. AC-7 is held more strictly: the checker also scans the standard, which is committed to the same public repository. A run with no organization asks for one, a run with no `.github` repository stops and asks the maintainer to create it, and a run with no page and no standard reports that there is nothing to check. No criterion is rewritten. |
 
 ## Sources & Evidence
 
@@ -226,6 +227,7 @@ The maintainer types `/plab-org-profile-readme example-org "mark the new reposit
 - **[S12]** The maintainer's instruction in session on 2026-11-08: "Build org profile readme skill". Class A.
 
 - **[S13]** A read-only check on 2026-11-08 of one of the maintainer's organization pages against live facts, with the new scripts. Without a standard, the checker named a fork the page lists on purpose, an excluded placeholder repository, and a release the page leaves off; under a standard adopted from the page, two releases the page leaves off, each of whose notes says it changes nothing a user will see, and two badges that read a list by position. Class A.
+- **[S14]** The maintainer's instruction in session on 2026-11-08, "Patch the gaps. Also the skill should allow for ignoring certain repos (like agent sandbox)", given after a check-only run of the Prisant Labs page without a standard named a public scratch repository the page does not list. Class A.
 
 ### Unverified Claims
 

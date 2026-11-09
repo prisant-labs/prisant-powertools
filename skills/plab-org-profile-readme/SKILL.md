@@ -5,7 +5,7 @@ argument-hint: "<org> [--setup] [\"<instructions>\"]"
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   updated: 2026-11-08
 ---
 
@@ -19,7 +19,9 @@ Keep one GitHub organization's profile page to its standard and true to its publ
 |-------|---------|-------|
 | `<org>` | Required | A GitHub organization. A user account is refused: this skill covers organization pages |
 | `--setup` | Off | Establish or revise the organization's standard, then write the page to it |
-| `"<instructions>"` | None | Free text, such as "add a Start here section". Applied on top of what the facts require |
+| `"<instructions>"` | None | Free text, such as "add a Start here section" or "ignore scratch-repo: it holds experiments, not a project". Applied on top of what the facts require |
+
+When no organization is given, ask for one, and never infer it from the working directory. A git remote names the repository you happen to be in, not the organization whose public page you were asked to change.
 
 ## Output
 
@@ -45,12 +47,20 @@ Read `profile.other_open_prs`. When it holds a pull request that edits the page,
 
 ### 2. Choose the mode
 
+Read the rows in order and take the first that matches.
+
 | State in the facts | Mode |
 |---|---|
+| `profile.repo_state` is `missing` | Stop, as the first rule below says |
 | `--setup` was passed | Set up (step 3), then write the page (step 4) |
+| `profile.page` and `profile.standard` are both `missing` | Nothing to check, as the second rule below says |
 | `profile.standard` is `missing` | Check only: run the checker without a standard, report its findings and the rules it skipped, and suggest `--setup`. Open nothing |
 | `profile.standard` is `present` and `profile.page` is `missing` | Scaffold the page (step 4) |
 | Both are `present` | Refresh the page (step 4) |
+
+When the facts report no `.github` repository, stop and ask the maintainer to create it, because this skill never creates a repository. Creating the public repository that GitHub reads the profile page from is the maintainer's decision.
+
+When the facts report no page and no standard, say there is nothing to check, suggest `--setup`, and open nothing. The checker needs a page, so this mode has no check to run.
 
 ### 3. Set up the standard, only with `--setup`
 
@@ -75,7 +85,7 @@ For every repository the page covers:
 
 - Base every claim on the repository's README, its release notes or its changelog. Write for a person using the tool, and drop internal reference ids.
 - Never name a private repository, on the page or in the pull request body, even when an instruction asks for it.
-- Add a repository the facts cover and the page lacks, in the place its standard gives it. List it first in the pull request body.
+- When the facts cover a repository the page does not list, ask the maintainer whether to add it or ignore it before writing the page. Ask once for all of them, and skip the question for a repository an instruction already settles. An added repository goes in the place its standard gives it. An ignored one goes into the standard's `exclude` with the maintainer's reason, on the same branch. List both first in the pull request body.
 - When a newer release changed nothing a user would notice, you may leave it off the page. Add it to the standard's `skip_releases` with that reason, and list it in the pull request body.
 
 ### 5. Check the page
@@ -100,7 +110,9 @@ Report the pull request link, or that the page is current. Then list what change
 
 ## Instructions
 
-A quoted instruction changes the page beyond what the facts require, for example "mark the new repository as experimental". Apply it within the standard. When the instruction needs the standard itself to change, such as a new section, change the standard on the same branch and say so. List the instruction's changes under "From your instructions" in the body, apart from the fact-driven changes. Refuse an instruction that would name a private repository, commit to the default branch or merge, and say why.
+A quoted instruction changes the page beyond what the facts require, for example "mark the new repository as experimental". Apply it within the standard. When the instruction needs the standard itself to change, such as a new section, change the standard on the same branch and say so. List the instruction's changes under "From your instructions" in the body, apart from the fact-driven changes.
+
+An instruction to ignore a repository, such as "ignore scratch-repo: it holds experiments, not a project", adds it to the standard's `exclude` with that reason and removes its entry from the page. Ask for the reason when the instruction gives none, because every exclusion carries one of at least three words. Ignoring needs a standard to record it in: with none, say so and suggest `--setup`, where the exclusion can be set. To stop ignoring a repository, remove its exclusion, and the next run adds it. Refuse an instruction that would name a private repository, commit to the default branch or merge, and say why.
 
 ## Constraints
 

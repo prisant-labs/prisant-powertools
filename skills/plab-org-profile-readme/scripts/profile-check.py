@@ -24,7 +24,8 @@ THE RULES (RM-01, plab-org-profile-readme)
 ------------------------------------------
 Factual rules, run with or without a standard:
   R1  every covered repository, and every fork the standard includes, has an
-      entry on the page or is excluded by the standard with a reason (AC-5)
+      entry on the page or is excluded by the standard with a reason, and not
+      both; an exclusion the facts do not cover is a NOTE (AC-5)
   R2  every repository the page links to is covered or an included fork; an
       archived, a not-included fork, a private or a missing one is named (AC-5)
   R3  the first release link for a repository names its newest release, not
@@ -35,8 +36,8 @@ Factual rules, run with or without a standard:
       lists, or the standard covers (AC-6)
   R6  a badge that reads a list by position, such as `$.plugins[1]`, is a NOTE,
       because adding an entry to that list changes what it shows (AC-6)
-  R7  no word on the page or in the pull request body is a private
-      repository's name, matched by digest (AC-7)
+  R7  no word on the page, in the pull request body or in the standard is a
+      private repository's name, matched by digest (AC-7)
 Standard rules, run only with a standard; skipped by name without one (AC-10):
   R8  every section of the standard is present and in order, every repository
       in a category sits under that category, and no scaffold marker is left
@@ -315,6 +316,12 @@ def check(page_text: str, facts: dict, standard: dict | None, pr_body: str | Non
     for name in sorted(universe):
         if name not in listed and name not in excluded:
             findings.append("R1: %s is covered but has no entry on the page and is not excluded" % universe[name]["name"])
+        elif name in listed and name in excluded:
+            findings.append("R1: %s is excluded by the standard but the page still lists it; remove it from the page or the exclusion" % universe[name]["name"])
+    for e in (standard or {}).get("exclude", []):
+        name = e["repo"].lower()
+        if name not in covered and hashlib.sha256(name.encode("utf-8")).hexdigest() not in digests:
+            notes.append("R1: the standard excludes %s, which the facts do not cover; the exclusion can be removed" % e["repo"])
 
     # R2
     seen = set()
@@ -378,7 +385,9 @@ def check(page_text: str, facts: dict, standard: dict | None, pr_body: str | Non
                     findings.append("R5: %s has a badge that reads from %s, which is not covered" % (where(i), tsegs[1]))
 
     # R7
-    for label, text in (("the page", page_text), ("the pull request body", pr_body or "")):
+    # The standard is committed beside the page in a public repository, so it is scanned too.
+    std_text = json.dumps(standard, indent=1, ensure_ascii=False) if standard is not None else ""
+    for label, text in (("the page", page_text), ("the pull request body", pr_body or ""), ("the standard", std_text)):
         hits = set()
         for n, line in enumerate(text.split("\n")):
             for variant in (line, unquote(line)):
