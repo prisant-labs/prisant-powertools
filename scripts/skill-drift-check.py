@@ -6,7 +6,7 @@ EXIT-CODE CONTRACT
 ------------------
   0  CLEAN      self-test passed AND no skill changed without a matching bump, OR self-test passed AND every finding is ADVISORY (see MODE below)
   1  FINDINGS   self-test passed AND at least one finding exists AND the mode is ENFORCED
-  2  BROKEN     the detector could not prove itself, `git describe --tags --abbrev=0` found no tag at all, a skill directory has no SKILL.md or no HISTORY.md, a version string could not be parsed, or any other exception reached the top level
+  2  BROKEN     the detector could not prove itself, `git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*'` found no release tag, a skill directory has no SKILL.md or no HISTORY.md, a version string could not be parsed, or any other exception reached the top level
 
 NEVER INTERPRET 2 AS CLEAN. Same contract as `scripts/version-parity-check.py` and `scripts/doc-lifecycle-check.py`: an empty or unparseable input is BROKEN, never read as a clean tree.
 
@@ -29,7 +29,13 @@ A skill that did not exist at the latest tag has no prior `metadata.version` to 
 
 WHY `git describe --tags --abbrev=0` AND NOT `git tag -l`
 --------------------------------------------------------------
-`scripts/doc-lifecycle-check.py`'s invariants 4 and 10 only need to know WHICH tags exist, so a set from `git tag -l` is enough. This script needs the ONE tag to diff against, the same tag the hygiene-sweep recipe names `LAST_TAG`, so it uses the same command the recipe uses: `git describe --tags --abbrev=0`. An empty result (no tag reachable from HEAD at all) is BROKEN, for the same reason `doc-lifecycle-check.py` treats an empty `git tag -l` as BROKEN: a shallow or tag-less checkout produces the same empty result as a repository that has genuinely never tagged a release, and this gate cannot tell the two apart, so it refuses to report CLEAN by construction.
+`scripts/doc-lifecycle-check.py`'s invariants 4 and 10 only need to know WHICH tags exist, so a set from `git tag -l` is enough. This script needs the ONE tag to diff against, the tag the hygiene-sweep recipe names `LAST_TAG`, so it asks `git describe --tags --abbrev=0` for the nearest one. An empty result (no release tag reachable from HEAD at all) is BROKEN, for the same reason `doc-lifecycle-check.py` treats an empty `git tag -l` as BROKEN: a shallow or tag-less checkout produces the same empty result as a repository that has genuinely never tagged a release, and this gate cannot tell the two apart, so it refuses to report CLEAN by construction.
+
+WHY ONLY RELEASE TAGS COUNT (`--match 'v[0-9]*.[0-9]*'`, 2026-11-08)
+-----------------------------------------------------------------------
+The merge check tags main as `pre-merge/<date>-<branch>` before every merge, so a backup tag almost always sits nearer HEAD than the last release. A bare `git describe --tags` returned that backup tag, the diff since it was empty, and the gate reported CLEAN while checking nothing. On 2026-11-08 it diffed 0 skill files against `pre-merge/2026-11-08-fix-citation-check-home-and-tags` where the true baseline, v0.13.0, has 57. The SH-01 spec measured the same failure in another repository on 2026-11-05 (its source S5). The glob accepts only a `v` followed by a dotted number, which also drops a floating major tag such as `v1`, the kind an action repository moves on each release. The self-test proves both exclusions and a repository whose only tag is a backup (BROKEN). The SH-01 spec's decision D2 would move the backups out of `refs/tags/` altogether; this filter is correct either way.
+
+The hygiene-sweep recipe in `skills/plab-wrap-session/references/hygiene-sweep.md` and `derive-log-facts.py` (its `latest-tag` and Check 4 fields) still call a bare `git describe --tags --abbrev=0` and carry the same defect. They live inside a skill and need that skill's own version bump, so they are left to a separate change.
 
 WHY EVERY SUBPROCESS BOUNDARY PINS encoding="utf-8"
 -----------------------------------------------------
@@ -123,17 +129,22 @@ def _run_git(repo_root, *args):
         raise Broken("could not invoke git: %s" % exc)
 
 
+RELEASE_TAG_GLOB = "v[0-9]*.[0-9]*"
+
+
 def get_latest_tag(repo_root):
-    """The one tag this gate diffs against, read the same way the hygiene-sweep Check 4 recipe
-    reads it (`LAST_TAG=$(git describe --tags --abbrev=0 ...)`), not the unordered set
-    `scripts/doc-lifecycle-check.py` reads via `git tag -l` for existence checks."""
-    proc = _run_git(repo_root, "describe", "--tags", "--abbrev=0")
+    """The one release tag this gate diffs against: the nearest tag reachable from HEAD whose
+    name matches RELEASE_TAG_GLOB, not the unordered set `scripts/doc-lifecycle-check.py` reads
+    via `git tag -l` for existence checks. The glob drops the merge check's `pre-merge/*` backup
+    tags and a floating major tag such as `v1`; see the docstring section on release tags."""
+    proc = _run_git(repo_root, "describe", "--tags", "--abbrev=0", "--match", RELEASE_TAG_GLOB)
     if proc.returncode != 0 or not proc.stdout.strip():
         raise Broken(
-            "git describe --tags --abbrev=0 found no tag reachable from HEAD. Likely cause: a "
-            "shallow or tag-less checkout (this job needs fetch-depth: 0), or a repository that "
-            "has genuinely never tagged a release. Either way this gate has nothing to diff "
-            "against and cannot run, so it refuses to report CLEAN.")
+            "git describe --tags --abbrev=0 --match '%s' found no release tag reachable from HEAD. "
+            "Likely cause: a shallow or tag-less checkout (this job needs fetch-depth: 0), or a "
+            "repository whose only tags are pre-merge/* backups or floating major tags. Either "
+            "way this gate has nothing to diff against and cannot run, so it refuses to report "
+            "CLEAN." % RELEASE_TAG_GLOB)
     return proc.stdout.strip()
 
 
@@ -435,6 +446,56 @@ def _self_test_no_tags_is_broken(failures):
             failures.append("a repository with no tag reachable from HEAD must raise Broken, not pass silently")
 
 
+def _self_test_backup_and_floating_tags_are_not_the_baseline(failures):
+    """The merge check tags `pre-merge/<date>-<branch>` on main before each merge, and an action
+    repository may carry a floating major tag such as `v1`. Both sit nearer HEAD than the last
+    release. If either becomes the baseline, the diff since it is empty and an unbumped skill
+    reads CLEAN. Canary: the unbumped change must still be found, against v1.0.0."""
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+        try:
+            _write_skill(tmp, "plab-a", "1.0.0"); _write_history(tmp, "plab-a", ["1.0.0"])
+            _write_library(tmp, "1.0.0")
+            _init_and_tag(tmp, "v1.0.0")
+
+            _write(os.path.join(tmp, "skills", "plab-a", "references", "new.md"), "note\n")
+            _git_ok(tmp, "add", "-A")
+            _git_ok(tmp, "commit", "-q", "-m", "change plab-a without a bump")
+            _git_ok(tmp, "tag", "pre-merge/2026-11-08-fix-demo")
+            _git_ok(tmp, "tag", "v1")
+        except AssertionError as exc:
+            failures.append("backup-tag fixture setup failed: %s" % exc)
+            return
+        try:
+            result = run_check(tmp, strict=False)
+        except Broken as exc:
+            failures.append("a release tag behind a backup tag must not be BROKEN, got %r" % exc)
+            return
+        if result.tag != "v1.0.0":
+            failures.append("the baseline must be the release tag v1.0.0, not a pre-merge/* backup "
+                            "tag or the floating v1 tag; got %r" % result.tag)
+        if not [f for f in result.findings if "plab-a" in f]:
+            failures.append("plab-a changed since v1.0.0 without a bump; a backup tag on HEAD must "
+                            "not hide it (canary), got no finding")
+
+
+def _self_test_only_backup_tag_is_broken(failures):
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+        try:
+            _write_skill(tmp, "plab-a", "1.0.0"); _write_history(tmp, "plab-a", ["1.0.0"])
+            _write_library(tmp, "1.0.0")
+            _init_and_tag(tmp, "pre-merge/2026-11-08-fix-demo")
+        except AssertionError as exc:
+            failures.append("only-backup-tag fixture setup failed: %s" % exc)
+            return
+        try:
+            run_check(tmp, strict=False)
+        except Broken:
+            pass
+        else:
+            failures.append("a repository whose only tag is a pre-merge/* backup has no release to "
+                            "diff against and must raise Broken, not pass silently")
+
+
 def _self_test_missing_skill_md_is_broken(failures):
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
         try:
@@ -499,6 +560,8 @@ def self_test():
     _self_test_real_repo_scenarios(failures)
     _self_test_new_skill_since_tag_is_skipped(failures)
     _self_test_no_tags_is_broken(failures)
+    _self_test_backup_and_floating_tags_are_not_the_baseline(failures)
+    _self_test_only_backup_tag_is_broken(failures)
     _self_test_missing_skill_md_is_broken(failures)
     _self_test_missing_history_md_is_broken(failures)
     _self_test_unparseable_version_is_broken(failures)
@@ -511,7 +574,8 @@ def self_test():
     print("gate self-test: PASS (the advisory/enforced mode switch proved on all four branches, one "
           "real-git fixture proving an unbumped version, a bumped version with a missing HISTORY.md "
           "row, a correctly bumped skill, an untouched skill and a HISTORY.md-only change as "
-          "anti-canaries, a new-skill-since-the-tag skip, and four BROKEN cases: no tag at all, no "
+          "anti-canaries, a new-skill-since-the-tag skip, a release tag found behind a pre-merge/* backup "
+          "tag and a floating v1 tag, and five BROKEN cases: no tag at all, only a backup tag, no "
           "SKILL.md, no HISTORY.md, and an unparseable version)")
     return True
 
