@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`plab-org-profile-readme` 1.0.0, a new manual-only skill.** `/plab-org-profile-readme <org>` keeps a GitHub organization's profile page to a standard and true to its public repositories. `--setup` picks one of three built-in standards, Catalog, Compact or Showcase, with seven options such as badges and recent releases, or adopts the page you already have as the standard. Each later run updates the page from what changed in the repositories, or from an instruction you quote, checks it with a fourteen-rule checker, and opens or updates one pull request. A pull request still waiting from an earlier run is updated in place, so the page never stalls behind it. Private repositories never appear: the facts carry only a digest of each private name, and the checker rejects any page or pull request body that names one. The skill never merges.
+
 ### Fixed
 
 - **`plab-usage-audit` 1.1.1: the reconciliation can now fail.** It re-ran the row the same run had just appended, so it always agreed. It now tests the row an earlier audit wrote, at that row's own cutoff, including a row from before schema 2 read through the mapping file.

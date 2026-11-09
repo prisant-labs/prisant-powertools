@@ -1,0 +1,77 @@
+{
+  "format": 1,
+  "org": "example-org",
+  "display_name": "Example Org",
+  "base": "catalog",
+  "sections": [
+    {
+      "id": "header",
+      "kind": "fixed",
+      "heading": "# Example Org"
+    },
+    {
+      "id": "glance",
+      "kind": "fixed",
+      "heading": "## At a glance"
+    },
+    {
+      "id": "categories",
+      "kind": "categories",
+      "level": 2
+    }
+  ],
+  "options": {
+    "recent_changes": 3,
+    "badges": [
+      "release",
+      "license"
+    ],
+    "status_labels": [
+      "🟢 Stable",
+      "🟡 Beta",
+      "🟠 Pre-release",
+      "🟤 Maintenance",
+      "🚀 Start here",
+      "🆕 New",
+      "🧪 Experimental"
+    ],
+    "grouping": "category",
+    "featured": [],
+    "order": "category",
+    "shared_text": [
+      {
+        "id": "reading-guide",
+        "text": "Version badges update themselves, and everything else is written by hand."
+      }
+    ]
+  },
+  "categories": [
+    {
+      "name": "Tools",
+      "repos": [
+        "alpha-tool",
+        "beta-kit"
+      ]
+    },
+    {
+      "name": "Utilities",
+      "repos": [
+        "gamma-notes",
+        "delta-fork"
+      ]
+    }
+  ],
+  "exclude": [
+    {
+      "repo": "sandbox-placeholder",
+      "reason": "a placeholder repository with no project in it"
+    }
+  ],
+  "include": [
+    {
+      "repo": "delta-fork",
+      "reason": "a fork that publishes its own releases"
+    }
+  ],
+  "skip_releases": []
+}

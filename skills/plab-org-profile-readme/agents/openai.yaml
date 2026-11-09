@@ -1,0 +1,5 @@
+# Codex reads this file; Claude Code reads the disable-model-invocation flag in
+# SKILL.md. Both say the same thing: run only when invoked by name.
+# scripts/codex-invocation-check.py fails CI if the two ever disagree.
+policy:
+  allow_implicit_invocation: false

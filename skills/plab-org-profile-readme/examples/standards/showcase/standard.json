@@ -1,0 +1,56 @@
+{
+  "format": 1,
+  "org": "example-org",
+  "display_name": "Example Org",
+  "base": "showcase",
+  "sections": [
+    {
+      "id": "header",
+      "kind": "fixed",
+      "heading": "# Example Org"
+    },
+    {
+      "id": "featured",
+      "kind": "fixed",
+      "heading": "## Featured"
+    },
+    {
+      "id": "more",
+      "kind": "fixed",
+      "heading": "## More projects"
+    }
+  ],
+  "options": {
+    "recent_changes": false,
+    "badges": [
+      "release"
+    ],
+    "status_labels": [
+      "🟢 Stable",
+      "🟡 Beta",
+      "🟠 Pre-release",
+      "🟤 Maintenance"
+    ],
+    "grouping": "none",
+    "featured": [
+      "alpha-tool",
+      "beta-kit"
+    ],
+    "order": "latest_release",
+    "shared_text": []
+  },
+  "categories": [],
+  "exclude": [
+    {
+      "repo": "sandbox-placeholder",
+      "reason": "a placeholder repository with no project in it"
+    }
+  ],
+  "include": [
+    {
+      "repo": "delta-fork",
+      "reason": "a fork that publishes its own releases"
+    }
+  ],
+  "skip_releases": []
+}
