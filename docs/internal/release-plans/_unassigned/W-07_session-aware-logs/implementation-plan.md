@@ -42,7 +42,7 @@ phase-count: 7
 | P1 | Build the shared session-log module and its test suite | AC-4, AC-7, AC-9 (the rules) | agent | Done 2026-11-10 |
 | P2 | Report the session fields, the carry-forward source and the concurrent list from `derive-log-facts.py` | AC-2, AC-4, AC-5 (the script), AC-9 (the wrap's reads) | agent | Done 2026-11-10 |
 | P3 | Add the three fields to the log schema, the template and `check-log.py` | AC-1 (the schema), AC-3 | agent | Done 2026-11-10 |
-| P4 | Rewire the wrap's Evidence Gathering, write location and Summary to the script's output | AC-5 (the skill), AC-6, AC-9 (the wrap's write) | agent | Not started |
+| P4 | Rewire the wrap's Evidence Gathering, write location and Summary to the script's output | AC-5 (the skill), AC-6, AC-9 (the wrap's write) | agent | Done 2026-11-10 |
 | P5 | Give continue a candidate script and a candidate list | AC-1 (discovery), AC-7, AC-8, AC-9 (continue's reads) | agent | Not started |
 | P6 | Documentation, versions and CI | AC-1 (the README) | agent | Not started |
 | P7 | Live runs, then the first real parallel case | AC-7 (the real store), AC-9 (a real worktree), AC-10 | agent, then maintainer | Not started |
@@ -165,24 +165,26 @@ phase-count: 7
 **Fulfills:** AC-5 (the skill's half), AC-6, and AC-9 (the wrap's write).
 
 **Steps:**
-- [ ] Step 1: In Evidence Gathering (line 39), add to the instruction that runs the script: "If this session resumed with `/plab-continue-session`, pass `--resumed-from <that log's file name>`."
-- [ ] Step 2: Replace step 6 (line 55).
+- [x] Step 1: In Evidence Gathering (line 39), add to the instruction that runs the script: "If this session resumed with `/plab-continue-session`, pass `--resumed-from <that log's file name>`."
+- [x] Step 2: Replace step 6 (line 55).
   - Before: `6. In deep and final modes, judges whether the script's reported newest existing log covers the same arc as this session. If it does, prepares one archive proposal for the hygiene batch (see Wrap Order below): propose moving the older file to \`_local/_session-logs/_superseded/\`, execute only when its number is approved, and record the disposition, declared plus archived-or-not, in the new log's Summary.`
   - After: `6. In deep and final modes, judges whether the script's \`carry-forward\` log covers the same arc as this session. That log is the only one the judgment may consider, and only when it is not under \`concurrent-logs\`: a log another session wrote while this one ran was not superseded by this one. If it covers the same arc, prepares one archive proposal for the hygiene batch (see Wrap Order below): propose moving it to \`_superseded/\` inside the store the script reports, execute only when its number is approved, and record the disposition, declared plus archived-or-not, in the new log's Summary. When the rule is \`none\`, or the log is concurrent, there is nothing to judge.`
-- [ ] Step 3: Replace step 7's opening clause (line 56).
+- [x] Step 3: Replace step 7's opening clause (line 56).
   - Before: `7. Carries every still-unresolved Waiting on You item from the script's output forward into this log with its original date, never today's,`
   - After: `7. Carries every still-unresolved Waiting on You item from the script's \`carry-forward\` log forward into this log with its original date, never today's, and copies that log's file name into \`carried-from:\`;`
   Leave the rest of step 7 unchanged, and change its final sentence from "If the script reports no newest log" to "If the script's carry-forward rule is `none`".
-- [ ] Step 4: Add step 8: `8. Names every log the script lists under \`concurrent-logs\` in this log's Summary, by file name, as work another session did while this one ran, and proposes nothing about them. When the \`carry-forward\` log is one of them, says that the carried items came from that parallel session.`
-- [ ] Step 5: In Session Log Output (line 96), replace the location.
+- [x] Step 4: Add step 8: `8. Names every log the script lists under \`concurrent-logs\` in this log's Summary, by file name, as work another session did while this one ran, and proposes nothing about them. When the \`carry-forward\` log is one of them, says that the carried items came from that parallel session.`
+- [x] Step 5: In Session Log Output (line 96), replace the location.
   - Before: `Write to: \`_local/_session-logs/YYYY-MM-DD_HH-MM_<llm>_<brief-kebab-title>.md\``
   - After: `Write to: \`<store>/YYYY-MM-DD_HH-MM_<llm>_<brief-kebab-title>.md\`, where \`<store>\` is the path the script reports. In a normal checkout that is \`_local/_session-logs/\`; in a linked worktree it is the main checkout's \`_local/_session-logs/\`, so every session's log lands in one store that survives the worktree's removal. \`HH-MM\` is the local time of this wrap.`
   Change the example line below it to say it shows a normal checkout.
-- [ ] Step 6: In the Frontmatter section (line 145), add `session-id`, `session-start` and `carried-from` to the list of fields copied from the script, beside the other derived fields.
-- [ ] Step 7: Check every other mention of `_local/_session-logs/` in `SKILL.md` with `grep -n "_session-logs" skills/plab-wrap-session/SKILL.md`. A mention that tells the agent where to write or archive becomes "the store the script reports". A mention that describes the store's layout stays.
-- [ ] Step 8: `organize-logs.py` defaults its store to `_local/_session-logs` relative to the working directory (line 28, `DEFAULT_STORE`), so `--organize` run from a worktree would file the worktree's empty store. `organize-logs.py` already takes the store as an optional positional argument (lines 117 to 120), so no script change is needed. In Organize Mode, tell the agent to pass the store `derive-log-facts.py` reports as that argument.
+- [x] Step 6: In the Frontmatter section (line 145), add `session-id`, `session-start` and `carried-from` to the list of fields copied from the script, beside the other derived fields.
+- [x] Step 7: Check every other mention of `_local/_session-logs/` in `SKILL.md` with `grep -n "_session-logs" skills/plab-wrap-session/SKILL.md`. A mention that tells the agent where to write or archive becomes "the store the script reports". A mention that describes the store's layout stays.
+- [x] Step 8: `organize-logs.py` defaults its store to `_local/_session-logs` relative to the working directory (line 28, `DEFAULT_STORE`), so `--organize` run from a worktree would file the worktree's empty store. `organize-logs.py` already takes the store as an optional positional argument (lines 117 to 120), so no script change is needed. In Organize Mode, tell the agent to pass the store `derive-log-facts.py` reports as that argument.
 
 **Verification:** `git diff -U0 -- skills/plab-wrap-session/SKILL.md | grep '^@@'` shows hunks only in Evidence Gathering, Session Log Output, Frontmatter, and any `_session-logs` mention Step 7 changed. A read of the Hygiene Sweep, Wrap Order and Body Sections shows them unchanged.
+
+**Done 2026-11-10:** `git diff -U0 -- skills/plab-wrap-session/SKILL.md` shows hunks only in Evidence Gathering (the `--resumed-from` instruction and steps 6 to 8), the Hygiene Sweep's Check 5 store wording, Session Log Output, Organize Mode, the Frontmatter paragraph and its example block, the Summary body section, and the Log Self-Check list. No reference file restates the same-arc rule, so none changed. Step 8 needed no script change: `organize-logs.py` already takes the store as a positional argument, and Organize Mode now says how to find the main checkout's store from a worktree. Two edits went beyond the steps as written: the Frontmatter example block gained the three fields, and the Log Self-Check list names the new session-fields check from Phase 3. No behavior is proven by this phase on its own; Phase 7's live wrap is the proof that an agent follows it.
 
 ---
 

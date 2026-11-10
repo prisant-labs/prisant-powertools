@@ -36,7 +36,7 @@ Valid downgrade objections mirror the verbosity rule: "trivial typo fix, clean t
 
 ## Evidence Gathering
 
-Before writing the log, run `derive-log-facts.py` once and read the tool result once. Add `--fetch` in deep and final modes, where the Hygiene Sweep's remote facts need to be current; omit it in quick and blocked modes.
+Before writing the log, run `derive-log-facts.py` once and read the tool result once. Add `--fetch` in deep and final modes, where the Hygiene Sweep's remote facts need to be current; omit it in quick and blocked modes. If this session resumed with `/plab-continue-session`, add `--resumed-from <that log's file name>`, because the script cannot see what continue resumed and that log is the first carry-forward rule.
 
 ```bash
 python <skill-dir>/scripts/derive-log-facts.py <project-root>            # quick, blocked
@@ -52,8 +52,9 @@ From that output, the agent still:
 3. Checks for blockers, outstanding issues, and risks introduced.
 4. Inventories work products in gitignored locations (`_local/` and kin), starting from the script's gitignored-modified list - git-derived file lists cannot otherwise see them.
 5. Lists skills invoked this session and any multi-agent workflow runs (run IDs, agent counts, token totals) for the frontmatter and Evidence Index.
-6. In deep and final modes, judges whether the script's reported newest existing log covers the same arc as this session. If it does, prepares one archive proposal for the hygiene batch (see Wrap Order below): propose moving the older file to `_local/_session-logs/_superseded/`, execute only when its number is approved, and record the disposition, declared plus archived-or-not, in the new log's Summary.
-7. Carries every still-unresolved Waiting on You item from the script's output forward into this log with its original date, never today's, so a blocker's age survives across wraps instead of resetting. Carries every Parked item the script reports into this log's Parked section the same way, verbatim, dropping only items this session resolved or promoted to Waiting on You; before 1.9.0 nothing read Parked, so a parked item lasted one log. If the script reports no newest log, start fresh and say nothing.
+6. In deep and final modes, judges whether the script's `carry-forward` log covers the same arc as this session. That log is the only one the judgment may consider, and only when it is not under `concurrent logs`: a log another session wrote while this one ran was not superseded by this one. If it covers the same arc, prepares one archive proposal for the hygiene batch (see Wrap Order below): propose moving it to `_superseded/` inside the store the script reports, execute only when its number is approved, and record the disposition, declared plus archived-or-not, in the new log's Summary. When the rule is `none`, or the log is concurrent, there is nothing to judge.
+7. Carries every still-unresolved Waiting on You item from the script's `carry-forward` log forward into this log with its original date, never today's, so a blocker's age survives across wraps instead of resetting, and copies that log's file name into `carried-from:`. Carries every Parked item the script reports into this log's Parked section the same way, verbatim, dropping only items this session resolved or promoted to Waiting on You; before 1.9.0 nothing read Parked, so a parked item lasted one log. If the script's carry-forward rule is `none`, start fresh and say nothing.
+8. Names every log the script lists under `concurrent logs` in this log's Summary, by file name, as work another session did while this one ran, and proposes nothing about those logs. When the `carry-forward` log is one of them, says that the carried items came from that parallel session.
 
 If the script reports git as unavailable, note that and proceed with session context only.
 
@@ -65,7 +66,7 @@ Detect and judge before writing the log; resolve after it, in one numbered batch
 2. **Working-tree and worktree state**, from `check2-worktree`: uncommitted changes, untracked files, stashes, worktrees.
 3. **Release and repo hygiene**, from `check3-release`: un-released CHANGELOG content and version fields vs the latest tag. The repo's own validation scripts, when it has them, are still run locally as a separate step, chained into one shell command (for example `python scripts/a.py && python scripts/b.py && ...`) so their combined output is read in one call rather than one call per script, and their results reported (never fixed silently) - the script has no way to know what those scripts are.
 4. **Documentation drift, both directions.** User or technical docs this session made stale: version tables, skill or feature READMEs vs source of truth, missing CHANGELOG entries. And the inverse, which is the direction that actually shipped here: a skill whose content changed since the last tag while its `metadata.version` did not move, or whose `HISTORY.md` has no entry for the version it currently ships, from the script's `check4-doc-drift` field. `references/hygiene-sweep.md` carries the recipe the field mirrors.
-5. **Session-log store**, from `check5-log-store`: logs from closed months sitting unfiled in `_local/_session-logs/`. When the plan has moves and no collisions, file them as an auto action (see below) and record it; silent when there is nothing to file.
+5. **Session-log store**, from `check5-log-store`: logs from closed months sitting unfiled in the store the script reports. When the plan has moves and no collisions, file them as an auto action (see below) and record it; silent when there is nothing to file.
 
 **Resolution: one numbered batch, after the log.** For each finding, draft one concrete proposal (commit these files with this message, push, apply this doc update) and number it `H1`, `H2` and so on. Each proposal runs only when the maintainer approves its number. Unanswered and declined proposals stay recorded in the log and in the continuation prompt.
 
@@ -93,10 +94,10 @@ The log is written before any question is asked, and amended after the answers.
 
 ## Session Log Output
 
-Write to: `_local/_session-logs/YYYY-MM-DD_HH-MM_<llm>_<brief-kebab-title>.md`
+Write to: `<store>/YYYY-MM-DD_HH-MM_<llm>_<brief-kebab-title>.md`, where `<store>` is the path the script reports on its `store:` line. In a normal checkout that is `_local/_session-logs/`; in a linked worktree it is the main checkout's `_local/_session-logs/`, so every session's log lands in one store that survives the worktree's removal. `HH-MM` is the local time of this wrap, not the session's start, which goes in `session-start:`.
 
 - `<llm>` is the short LLM name: `claude`, `codex`, `gpt`, `gemini`, `grok`, `mistral`
-- Example: `_local/_session-logs/2026-05-28_15-30_claude_deploy-ai-review.md`
+- Example, in a normal checkout: `_local/_session-logs/2026-05-28_15-30_claude_deploy-ai-review.md`
 - All agents write to the same directory - chronological project timeline
 - Create the directory if it doesn't exist
 - Session logs are machine-local by design. `_local/` is gitignored, so logs stay out of version control and out of the repo's public surface
@@ -125,7 +126,7 @@ python scripts/organize-logs.py _local/_session-logs
 python scripts/organize-logs.py _local/_session-logs --apply
 ```
 
-`scripts/organize-logs.py` resolves against **this skill's own directory**, wherever the plugin is installed. The store argument is relative to the **project** being wrapped. Do not assume the two share a root: when the installed plugin runs, the skill lives in the plugin cache and the project does not.
+`scripts/organize-logs.py` resolves against **this skill's own directory**, wherever the plugin is installed. The store argument is relative to the **project** being wrapped. In a linked worktree, pass the main checkout's store instead, because that is where every log lives: `<main checkout>/_local/_session-logs`, where the main checkout is the parent of the folder `git rev-parse --path-format=absolute --git-common-dir` prints. Do not assume the two share a root: when the installed plugin runs, the skill lives in the plugin cache and the project does not.
 
 1. Run the script with no flags. It is dry run by default and prints the plan.
 2. If the plan is empty, say so and stop. Nothing else happens.
@@ -144,7 +145,7 @@ Store layout, and why discovery reads both the flat store and month folders, are
 
 ### Frontmatter
 
-Include all Tier 1 fields. Add Tier 2 and Tier 3 when available. See `references/frontmatter-schema.md` for the complete field reference. `date`, `type`, `machine`, `repo`, `branch`, and `files-changed` come from the Evidence Gathering run of `derive-log-facts.py` above, as do the two fields it adds, `commit-range` and `latest-tag`. `decisions-count` is filled in by the agent once the Decisions Made section below is drafted, by counting that section's own entries, and `check-log.py` (see Log Self-Check below) then verifies the count mechanically before the wrap is done - it never ships as an uncorrected estimate. Everything else in this block is agent-filled.
+Include all Tier 1 fields. Add Tier 2 and Tier 3 when available. See `references/frontmatter-schema.md` for the complete field reference. `date`, `type`, `machine`, `repo`, `branch`, and `files-changed` come from the Evidence Gathering run of `derive-log-facts.py` above, as do the two fields it adds, `commit-range` and `latest-tag`, and the three W-07 session fields: `session-id` and `session-start` when the script reports them, and `carried-from`, the file name on its `carry-forward:` line, unless the rule is `none`. Omit a field the script reports as null. `decisions-count` is filled in by the agent once the Decisions Made section below is drafted, by counting that section's own entries, and `check-log.py` (see Log Self-Check below) then verifies the count mechanically before the wrap is done - it never ships as an uncorrected estimate. Everything else in this block is agent-filled.
 
 ```yaml
 ---
@@ -165,12 +166,15 @@ status: # completed|interrupted|blocked
 decisions-count: # integer - agent counts the drafted Decisions Made section's own entries; check-log.py verifies the count mechanically
 skills-used: # skills invoked this session, e.g. [plab-guide, plab-ai-review] - feeds usage telemetry
 resumed-from: # written only by an in-session /plab-continue-session resume; never back-filled from memory. See references/frontmatter-schema.md.
+session-id: # from derive-log-facts.py; omit when it reports null
+session-start: # from derive-log-facts.py, ISO 8601 in UTC; omit when it reports null
+carried-from: # the file name on the script's carry-forward: line; omit when its rule is none
 ---
 ```
 
 ### Body Sections (Final Mode)
 
-**Summary** - 2-4 sentences. What happened and why it matters. When the Evidence Gathering same-arc check above judges the newest existing log to cover the same arc as this session, end Summary with one additional sentence naming that log by filename only (no path) and stating whether it was archived to `_superseded/` or not archived.
+**Summary** - 2-4 sentences. What happened and why it matters. Then name every concurrent log, as Evidence Gathering step 8 says. When the Evidence Gathering same-arc check above judges the carry-forward log to cover the same arc as this session, end Summary with one additional sentence naming that log by filename only (no path) and stating whether it was archived to `_superseded/` or not archived.
 
 **Work Completed** - Bulleted list of what was accomplished.
 
@@ -238,7 +242,7 @@ Write the log, then run one command, and fix every finding before the wrap count
 python <skill-dir>/scripts/check-log.py <log-path> --repo-root <project-root> --mode <quick|final|deep|blocked>
 ```
 
-It runs every mechanical gate this section used to list as separate steps, in one invocation: the two detector-backed gates below exactly as they are, each still proving its own canary corpus before it scans and still reporting clean, findings, or broken, where a broken detector makes this script's own result broken too; `decisions-count` compared against a mechanical count of the Decisions Made section (skipped, not failed, in quick and blocked modes, whose templates carry neither); summary length (120 characters or fewer); Tier 1 frontmatter completeness, including `machine:`; the Waiting on You rules (section present, "Nothing pending." counting, no item beginning "Optional", every item carrying `(blocked since YYYY-MM-DD)`); and, in deep mode only, that the Uncertainty Ledger and What You May Not Realize sections are present ("Nothing material." and "Nothing surfaced." counting; absence does not). Exit 0 clean, 1 findings, 2 broken; `--json` for machine-readable output. Re-run after every fix until clean.
+It runs every mechanical gate this section used to list as separate steps, in one invocation: the two detector-backed gates below exactly as they are, each still proving its own canary corpus before it scans and still reporting clean, findings, or broken, where a broken detector makes this script's own result broken too; `decisions-count` compared against a mechanical count of the Decisions Made section (skipped, not failed, in quick and blocked modes, whose templates carry neither); summary length (120 characters or fewer); Tier 1 frontmatter completeness, including `machine:`; the W-07 session fields, which are optional but must be well formed when present (`session-start` an ISO 8601 timestamp, `carried-from` a bare session-log file name); the Waiting on You rules (section present, "Nothing pending." counting, no item beginning "Optional", every item carrying `(blocked since YYYY-MM-DD)`); and, in deep mode only, that the Uncertainty Ledger and What You May Not Realize sections are present ("Nothing material." and "Nothing surfaced." counting; absence does not). Exit 0 clean, 1 findings, 2 broken; `--json` for machine-readable output. Re-run after every fix until clean.
 
 The two detector scripts it calls:
 
