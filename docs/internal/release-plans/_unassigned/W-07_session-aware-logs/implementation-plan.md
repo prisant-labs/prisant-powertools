@@ -44,7 +44,7 @@ phase-count: 7
 | P3 | Add the three fields to the log schema, the template and `check-log.py` | AC-1 (the schema), AC-3 | agent | Done 2026-11-10 |
 | P4 | Rewire the wrap's Evidence Gathering, write location and Summary to the script's output | AC-5 (the skill), AC-6, AC-9 (the wrap's write) | agent | Done 2026-11-10 |
 | P5 | Give continue a candidate script and a candidate list | AC-1 (discovery), AC-7, AC-8, AC-9 (continue's reads) | agent | Done 2026-11-10 |
-| P6 | Documentation, versions and CI | AC-1 (the README) | agent | Not started |
+| P6 | Documentation, versions and CI | AC-1 (the README) | agent | Done 2026-11-10 |
 | P7 | Live runs, then the first real parallel case | AC-7 (the real store), AC-9 (a real worktree), AC-10 | agent, then maintainer | Not started |
 
 ---
@@ -236,15 +236,17 @@ phase-count: 7
 **Fulfills:** AC-1 for the wrap README. The rest is release hygiene with no criterion of its own.
 
 **Steps:**
-- [ ] Step 1: In `docs/skills/plab-wrap-session/README.md`, beside the file-name pattern at lines 25 and 152, add that `HH-MM` is the wrap time and `session-start` holds the start. Describe the three new fields, the carry-forward rule names, the concurrent-logs line and the worktree store in plain words, in the section that already describes carry-forward.
-- [ ] Step 2: In `docs/skills/plab-continue-session/README.md`, replace the "rare; concurrent sessions" tie note with the candidate list, show Example 1's list, and say that `--log <path>` still overrides.
-- [ ] Step 3: Bump `metadata.version` to `1.10.0` in the wrap's `SKILL.md` and `1.7.0` in continue's, set `updated` to the build date, and match both in `library.json` and in each README's `**Version:**` line. The skill-drift check reads each skill's folder and will not see `lib/`, so these two bumps are named here rather than left to it.
-- [ ] Step 4: Add a `HISTORY.md` row and section for each skill, in the existing style: what a user sees change, then why. The wrap's entry names the three fields, the carry-forward rule, the concurrent list and the worktree store. Continue's entry names the candidate list and the worktree store.
-- [ ] Step 5: Add a `CHANGELOG.md` bullet under `[Unreleased]` for each skill, led by the user-visible change: parallel sessions no longer copy each other's waiting items, and continue asks which session to resume when two left handoffs.
-- [ ] Step 6: Update the two skills' version cells in the root `README.md`, then regenerate the manifests with `node <agent-skills-toolkit>/scripts/generators/gen-manifest.mjs . --write --target=all`.
-- [ ] Step 7: In `gate.yml`, in the session-pair block after line 330, add two steps in the existing form: "The shared session-log rules" running `python3 lib/test-session-logs.py`, and "The continue-session candidate list" running `python3 skills/plab-continue-session/scripts/test-list-candidates.py`. Both use `if: always()`. The workflow globs nothing, so a suite without its own `run:` line never runs.
+- [x] Step 1: In `docs/skills/plab-wrap-session/README.md`, beside the file-name pattern at lines 25 and 152, add that `HH-MM` is the wrap time and `session-start` holds the start. Describe the three new fields, the carry-forward rule names, the concurrent-logs line and the worktree store in plain words, in the section that already describes carry-forward.
+- [x] Step 2: In `docs/skills/plab-continue-session/README.md`, replace the "rare; concurrent sessions" tie note with the candidate list, show Example 1's list, and say that `--log <path>` still overrides.
+- [x] Step 3: Bump `metadata.version` to `1.10.0` in the wrap's `SKILL.md` and `1.7.0` in continue's, set `updated` to the build date, and match both in `library.json` and in each README's `**Version:**` line. The skill-drift check reads each skill's folder and will not see `lib/`, so these two bumps are named here rather than left to it.
+- [x] Step 4: Add a `HISTORY.md` row and section for each skill, in the existing style: what a user sees change, then why. The wrap's entry names the three fields, the carry-forward rule, the concurrent list and the worktree store. Continue's entry names the candidate list and the worktree store.
+- [x] Step 5: Add a `CHANGELOG.md` bullet under `[Unreleased]` for each skill, led by the user-visible change: parallel sessions no longer copy each other's waiting items, and continue asks which session to resume when two left handoffs.
+- [x] Step 6: Update the two skills' version cells in the root `README.md`, then regenerate the manifests with `node <agent-skills-toolkit>/scripts/generators/gen-manifest.mjs . --write --target=all`.
+- [x] Step 7: In `gate.yml`, in the session-pair block after line 330, add two steps in the existing form: "The shared session-log rules" running `python3 lib/test-session-logs.py`, and "The continue-session candidate list" running `python3 skills/plab-continue-session/scripts/test-list-candidates.py`. Both use `if: always()`. The workflow globs nothing, so a suite without its own `run:` line never runs.
 
 **Verification:** Run `python scripts/version-parity-check.py && python scripts/skill-drift-check.py && python scripts/frontmatter-check.py && python scripts/doc-lifecycle-check.py && python scripts/gen-release-index.py --check && python scripts/codex-invocation-check.py && python scripts/check-dashes.py`, and every one exits 0. `git diff` on the three generated manifests shows only the two skills' version and description fields.
+
+**Done 2026-11-10:** `version-parity-check.py`, `skill-drift-check.py`, `frontmatter-check.py`, `doc-lifecycle-check.py`, `gen-release-index.py --check`, `codex-invocation-check.py` and `check-dashes.py` all report clean. The toolkit's `check.mjs` reports 0 errors and one warning, which predates this work: `plab-ship`'s description score. `gate.yml` parses, and it carries the two new steps. All six session-pair suites pass: the module 32/32, facts 106/106, check-log 47/47, organize, the candidate list 10/10, and reconcile 38/38. The manifest generator produced no content change, because the native manifests carry no per-skill version. **One file beyond the phase's list:** the parity gate found that `docs/status-skills.md` claims each skill's version, so its table rows, both section headings and both skills' descriptions were updated too.
 
 ---
 

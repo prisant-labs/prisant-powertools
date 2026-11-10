@@ -1,6 +1,6 @@
 # plab-continue-session
 
-**Version:** 1.6.2
+**Version:** 1.7.0
 **Source:** [`skills/plab-continue-session/`](../../../skills/plab-continue-session/)
 
 Resume an interrupted work session by replaying its recorded handoff. Reads the most recent session log, reports what is blocked on you and what the named next action is, then confirms before acting. The read-side companion to `/plab-wrap-session`, which writes the log this reads.
@@ -58,9 +58,11 @@ Install via the prisant-labs marketplace:
 
 ## How It Works
 
-### Phase 1: Locate the latest log
+### Phase 1: Choose the log
 
-Searches three locations and picks the newest log across all of them - not the first one that happens to be non-empty:
+`scripts/list-candidates.py` builds a candidate set, with the rules in the plugin's shared `lib/session-logs.py`. A candidate is a log from the last 7 days whose handoff no newer log took up, counted once per session. With one candidate, the skill resumes from it as it always has. With several, from sessions that ran in parallel, it lists them newest first with each one's branch, session span and Waiting on You count, and asks which to resume. With none in the window, it resumes from the newest log with the age warning. In a linked git worktree it reads the main checkout's store.
+
+The script searches three locations and pools them, so the newest log across all of them counts, not the first one that happens to be non-empty:
 
 | Location | Written by | Status |
 |----------|-----------|--------|
@@ -80,7 +82,7 @@ Filenames follow the pattern `YYYY-MM-DD_HH-MM_<llm>_<title>.md`, so lexical des
 
 If the store's top level is empty but it contains month folders, that is a version-skew symptom rather than an empty store: it was organized by a newer `plab-wrap-session` than the one installed. The skill says so and points at `/plugin update` instead of offering to start fresh.
 
-If two logs share the same timestamp prefix (rare; concurrent sessions), the skill asks which to resume rather than guessing.
+Two sessions that wrapped in parallel both appear in the candidate list, even when their logs share a minute, and the skill asks which to resume rather than guessing. The file name's `HH-MM` is the wrap time; a log from plab-wrap-session 1.10.0 or later records the session's start in `session-start:`.
 
 ### Phase 2: Read and parse
 
@@ -237,7 +239,7 @@ Options:
 
 | File | Purpose |
 |------|---------|
-| [`references/log-discovery.md`](../../../skills/plab-continue-session/references/log-discovery.md) | How to find the latest log, tie-breaking, newest-wins search across current and legacy locations |
+| [`references/log-discovery.md`](../../../skills/plab-continue-session/references/log-discovery.md) | The candidate set, the worktree store, choosing between sessions, newest-wins search across current and legacy locations |
 | [`references/objection-detection.md`](../../../skills/plab-continue-session/references/objection-detection.md) | Detecting and surfacing lighter-than-verbose continuation prompts |
 | [`references/reconciliation.md`](../../../skills/plab-continue-session/references/reconciliation.md) | How to invoke `scripts/reconcile.py`, read its `ok` / `finding` / `broken` output, and what each check covers |
 | [`references/handoff-display.md`](../../../skills/plab-continue-session/references/handoff-display.md) | The standard resumption display format |

@@ -8,8 +8,8 @@ Works with Claude Code and Codex.
 
 | Skill | What it does | Version |
 |---|---|---|
-| [`plab-wrap-session`](docs/skills/plab-wrap-session/README.md) | Close a coding session with a structured log: hygiene sweep, evidence index, an uncertainty ledger, and a copy-paste-ready continuation prompt for next time | 1.9.1 |
-| [`plab-continue-session`](docs/skills/plab-continue-session/README.md) | Resume from the most recent session log and pick up the named next action | 1.6.2 |
+| [`plab-wrap-session`](docs/skills/plab-wrap-session/README.md) | Close a coding session with a structured log: hygiene sweep, evidence index, an uncertainty ledger, and a copy-paste-ready continuation prompt for next time | 1.10.0 |
+| [`plab-continue-session`](docs/skills/plab-continue-session/README.md) | Resume from the most recent session log and pick up the named next action | 1.7.0 |
 | [`plab-strategy-brief`](docs/skills/plab-strategy-brief/README.md) | Turn a brain dump into a structured, decision-ready analysis document | 1.1.1 |
 | [`plab-guide`](docs/skills/plab-guide/README.md) | Generate a guide bundle: standard Markdown, an ADHD-formatted variant, a quick-reference HTML page, and a 1-2 page PDF | 2.2.3 |
 | [`plab-ai-review`](docs/skills/plab-ai-review/README.md) | Run a structured peer review of a document with a second model, then synthesise the findings | 1.3.0 |

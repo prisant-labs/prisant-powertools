@@ -2,6 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.10.0 | 2026-11-10 | unreleased | added | Session-aware wrap (W-07): each log records its `session-id`, `session-start` and `carried-from`; the wrap carries items from the resumed log or else the newest; logs another session wrote while this one ran are named, never archived, and stay visible to continue; a linked worktree writes to the main checkout's store. |
 | 1.9.1 | 2026-11-07 | unreleased | fixed | Path-citation gate: five false-alarm shapes found in real logs are excluded (home paths, POSIX paths and site routes, git ranges, tags ending in a version number, and commands in backticks), and a command with arguments has its path checked for the first time. The proof corpus grows from 40 entries to 60. |
 | 1.9.0 | 2026-11-03 | v0.12.0 | changed | W-05 (wrap hygiene order): the wrap writes the log first, asks every hygiene proposal in one numbered batch (`H1 y, H2 n`), then amends the log and runs `check-log.py` again. Four actions that change only this checkout run without asking and are recorded as `auto:` lines, including a pruning fetch (W-05 D2). Parked items are carried forward like Waiting on You. |
 | 1.8.2 | 2026-10-31 | v0.11.1 | fixed | The hygiene sweep's Check 1 tag tail lists the five highest versions. `derive-log-facts.py` and the documented `git tag -l | tail -5` sorted tags as text, so from v0.10.0 onward the tail omitted every two-digit minor version. |
@@ -14,6 +15,18 @@
 | 1.5.0 | 2026-08-18 | v0.2.0 | added | `--organize` files old logs into `YYYY-MM/` folders. Hygiene sweep gained Check 5. |
 | 1.4.1 | 2026-08-18 | v0.1.2 | fixed | Dropped the "what did we do" trigger. Added `type:` to the frontmatter block and `machine:` to the Quick and Blocked templates. |
 | 1.4.0 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.4.0; prior history remains there. |
+
+## 1.10.0 - 2026-11-10
+
+**Added: the wrap knows which session wrote each log.** A log now records `session-id` and `session-start`, both read from the Claude Code transcript by `derive-log-facts.py`. The start is the session's, not the wrap's, so a session left idle for days still shows when it began, while the file name keeps the wrap time and the newest handoff still sorts first.
+
+**Changed: the carry-forward source is named and recorded.** The wrap carries Waiting on You and Parked items from the log this session resumed from, passed as `--resumed-from`, or else from the newest log, and writes its file name into `carried-from:`. Spec W-07's D7 kept the newest log as the fallback after a replay of 44 real logs: a lineage-and-branch rule would have carried from a log 17 days older and dropped newer items.
+
+**Added: parallel sessions stay visible.** The facts script lists every log another session wrote after this session started. The wrap names each one in Summary and never proposes archiving it, and the same-arc archive considers only a carry-forward log that is not concurrent. A carry from a parallel session does not count as taking up that session's handoff, so `/plab-continue-session` 1.7.0 still offers it.
+
+**Fixed: a wrap in a linked worktree writes to the main checkout's store.** A worktree's own `_local/` is lost when the worktree is removed, and continue in the main checkout never read it.
+
+The rules live in the plugin's shared `lib/session-logs.py`, which continue loads too. `check-log.py` gains a session-fields check: the three fields are optional, and well formed when present. `derive-log-facts.py` exits 2 if the shared module is missing.
 
 ## 1.9.1 - 2026-11-07
 

@@ -1,6 +1,6 @@
 # plab-wrap-session
 
-**Version:** 1.9.1
+**Version:** 1.10.0
 **Source:** [`skills/plab-wrap-session/`](../../../skills/plab-wrap-session/)
 
 Document and close agentic coding sessions with structured session logs. Deep mode is the default: a full log with evidence index, a verbose copy-paste-ready continuation prompt, a hygiene sweep (remote divergence, release state, doc drift, working-tree reconciliation) whose numbered proposals are asked in one batch after the log is written, and a mandatory Waiting on You section listing everything blocked on the maintainer, with links.
@@ -27,7 +27,15 @@ _local/_session-logs/YYYY-MM-DD_HH-MM_<llm>_<brief-kebab-title>.md
 
 All agents write to the same centralized directory. The LLM short name in the filename identifies who did the work. The skill creates the directory if it doesn't exist.
 
+`HH-MM` is the local time the wrap ran, not the time the session started. A session left idle for days and wrapped on Monday is named for Monday, so the newest handoff always sorts first; the log records when the session began in `session-start:`.
+
+In a linked git worktree, the log goes to the **main checkout's** `_local/_session-logs/`, so it survives the worktree's removal and the next resume finds it.
+
 Once a month closes, `--organize` files its logs into a `YYYY-MM/` subfolder. New logs are always written flat at the top level, so the path above never changes.
+
+### Parallel and long-idle sessions
+
+Each log records which session wrote it (`session-id:`) and when that session began (`session-start:`), both read from the Claude Code transcript. The wrap carries Waiting on You and Parked items from the log you resumed from, or else from the newest log, and records which in `carried-from:`. When another session wrote a log while this one was running, the wrap names that log in its Summary as parallel work and never proposes archiving it, and `/plab-continue-session` still offers that session's handoff. Codex logs have no transcript lookup, so they omit the session fields and behave as before.
 
 ### Installation
 
@@ -153,7 +161,7 @@ The skill writes one session log to `_local/_session-logs/YYYY-MM-DD_HH-MM_<llm>
 
 | Section / Element | Purpose |
 |-------------------|---------|
-| YAML frontmatter | Machine-readable metadata across 3 tiers (date, machine, repo, branch, summary, files-changed always; session-type, model, status, decisions-count, skills-used, resumed-from when available) for indexing and tooling |
+| YAML frontmatter | Machine-readable metadata across 3 tiers (date, machine, repo, branch, summary, files-changed always; session-type, model, status, decisions-count, skills-used, resumed-from, session-id, session-start, carried-from when available) for indexing and tooling |
 | `## Summary` | 2-4 sentences: what happened and why it matters |
 | `## Work Completed` | Bulleted, specific list of accomplishments |
 | `## Decisions Made` | Each decision with rationale, scaled from one-liner to full alternatives analysis |
@@ -292,12 +300,12 @@ Before writing the log, the skill checks whether changes warrant updates to READ
 
 | File | Purpose | When to Read |
 |------|---------|-------------|
-| `references/frontmatter-schema.md` | Complete 25-field metadata specification (3 tiers) | When customizing frontmatter or building tooling |
+| `references/frontmatter-schema.md` | Complete 28-field metadata specification (3 tiers) | When customizing frontmatter or building tooling |
 | `references/session-log-template.md` | Output skeletons for all 4 modes | When examining exact output structure per mode |
 | `references/hygiene-sweep.md` | The five checks, their commands, the numbered-batch protocol, and the four auto actions | When understanding what the sweep inspects and proposes |
 | `references/doc-update-rules.md` | When/how to update README, CHANGELOG, plans, and ADRs | When understanding the surrounding document update rules |
-| `scripts/derive-log-facts.py` | One call gathers the frontmatter facts, the Waiting on You carry-forward, and the detection results of all five hygiene checks | Run once per wrap, before drafting the log |
-| `scripts/check-log.py` | Log Self-Check: one call runs the decisions-count, summary-length, Tier 1, Waiting on You, and deep-mode-section checks, plus the two detector scripts below | After writing the log |
+| `scripts/derive-log-facts.py` | One call gathers the frontmatter facts, the session id and start, the store, the carry-forward log and any concurrent logs, the Waiting on You carry-forward, and the detection results of all five hygiene checks. The session-log rules come from the plugin's shared `lib/session-logs.py` | Run once per wrap, before drafting the log |
+| `scripts/check-log.py` | Log Self-Check: one call runs the decisions-count, summary-length, Tier 1, session-fields, Waiting on You, and deep-mode-section checks, plus the two detector scripts below | After writing the log |
 | `scripts/dash-check.py` | No em-dash or en-dash in the drafted log, detector-backed and canary-proven; called by `check-log.py` | After writing |
 | `scripts/path-citation-check.py` | Path citations in the drafted log resolve, detector-backed and canary-proven; called by `check-log.py` | After writing |
 | `scripts/organize-logs.py` | Files logs from closed months into `YYYY-MM/` folders; dry run by default | Run by `--organize` and by hygiene Check 5 |
@@ -312,14 +320,14 @@ skills/plab-wrap-session/
 ├── SKILL.md                        # Core instructions
 ├── HISTORY.md                      # Per-version change record
 ├── references/
-│   ├── frontmatter-schema.md       # 25-field metadata reference (3 tiers)
+│   ├── frontmatter-schema.md       # 28-field metadata reference (3 tiers)
 │   ├── session-log-template.md     # Output templates for all 4 modes
 │   ├── hygiene-sweep.md            # The 5 checks, the numbered batch, and the auto actions
 │   └── doc-update-rules.md         # README/CHANGELOG/plan/ADR update rules
 ├── scripts/
 │   ├── check-log.py                # Log Self-Check: one call for every mechanical gate
 │   ├── dash-check.py               # No em-dash or en-dash, canary-proven; called by check-log.py
-│   ├── derive-log-facts.py         # One call: frontmatter facts, Waiting on You, all 5 hygiene checks
+│   ├── derive-log-facts.py         # One call: frontmatter facts, session, carry-forward, all 5 hygiene checks
 │   ├── organize-logs.py            # Files logs into YYYY-MM/ folders (--organize, Check 5)
 │   ├── path-citation-check.py      # Path citations resolve, canary-proven; called by check-log.py
 │   ├── test-check-log.py           # Fixture checks for check-log.py
