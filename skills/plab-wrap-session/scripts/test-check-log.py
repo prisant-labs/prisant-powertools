@@ -480,10 +480,15 @@ def main() -> int:
         # 21. A broken sibling detector makes the whole result broken, and the
         #     other checks still run rather than being short-circuited.
         # ------------------------------------------------------------------
-        scratch = root / "scratch-scripts"
-        scratch.mkdir()
+        # The scratch copy mirrors the plugin's layout, because derive-log-facts.py
+        # loads the shared session-log rules from <plugin>/lib/ (W-07).
+        scratch_plugin = root / "scratch-plugin"
+        scratch = scratch_plugin / "skills" / "plab-wrap-session" / "scripts"
+        scratch.mkdir(parents=True)
         for name in ("check-log.py", "dash-check.py", "path-citation-check.py", "derive-log-facts.py"):
             shutil.copy2(SCRIPT_DIR / name, scratch / name)
+        (scratch_plugin / "lib").mkdir()
+        shutil.copy2(SCRIPT_DIR.parents[2] / "lib" / "session-logs.py", scratch_plugin / "lib" / "session-logs.py")
         (scratch / "dash-check.py").write_text(
             "import sys\nprint('BROKEN: stub detector', file=sys.stderr)\nsys.exit(2)\n",
             encoding="utf-8",

@@ -131,6 +131,146 @@ Intro sentence, not a bullet, should be excluded.
 """
 
 
+def w07_log(store: Path, name: str, *, session_id: str | None = None, waiting: int = 0,
+            branch: str = "main") -> Path:
+    """A W-07 fixture log whose `date:` is the file name's time in UTC."""
+    date = f"{name[0:10]}T{name[11:13]}:{name[14:16]}:00+00:00"
+    head = ["---", f"date: {date}", "type: session-log", f"branch: {branch}"]
+    if session_id:
+        head.append(f"session-id: {session_id}")
+    body = head + ["---", "", "# Log", "", "## Waiting on You", ""]
+    body += [f"- **{name[:10]} item {i}** (blocked since 2026-11-01). Detail." for i in range(waiting)]
+    return make_log(store, name, "\n".join(body) + "\n")
+
+
+def run_in_process(module, argv: list[str]) -> dict:
+    """Run derive-log-facts.py's main() inside this process and parse its JSON,
+    so a canary can swap one of the module's functions first."""
+    import contextlib
+    import io
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        module.main(argv)
+    return json.loads(buf.getvalue())
+
+
+def w07_cases(root: Path) -> None:
+    """W-07 (session-aware wrap and continue), phase 2."""
+    # AC-2: session-id and session-start. Line 1 of the transcript has no
+    # timestamp, as real transcripts' metadata lines do not.
+    repo = init_repo(root / "w07-session")
+    tdir = root / "w07-transcripts" / "proj"
+    tdir.mkdir(parents=True)
+    (tdir / "w07-sess.jsonl").write_text(
+        json.dumps({"type": "custom-title"}) + "\n"
+        + json.dumps({"type": "attachment", "timestamp": "2026-11-01T09:00:00.000Z"}) + "\n",
+        encoding="utf-8",
+    )
+    targs = ["--session-id", "w07-sess", "--transcript-dir", str(tdir.parent)]
+    proc = run_script(str(repo), "--json", *targs)
+    data = json.loads(proc.stdout)
+    check("W-07 AC-2: session-id is reported",
+          data.get("session-id") == "w07-sess", str(data.get("session-id")))
+    check("W-07 AC-2: session-start is the first timestamp, past a line without one",
+          data.get("session-start") == "2026-11-01T09:00:00.000Z", str(data.get("session-start")))
+
+    proc = run_script(str(repo), "--json", no_session_env=True)
+    data = json.loads(proc.stdout)
+    check("W-07 AC-2: with no session id, both fields are null",
+          data.get("session-id") is None and data.get("session-start") is None,
+          f"{data.get('session-id')}, {data.get('session-start')}")
+    proc = run_script(str(repo), no_session_env=True)
+    check("W-07 AC-2: the digest names no-session-id on the session-start line",
+          "session-start: null (no-session-id)" in proc.stdout, proc.stdout[:400])
+
+    # AC-2's canary, in process: a session-start reader that looks at line 1 only.
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("dlf_under_test", SCRIPT)
+    dlf = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(dlf)
+
+    def first_line_only(path):
+        if path is None:
+            return None
+        with path.open(encoding="utf-8") as fh:
+            return json.loads(fh.readline()).get("timestamp")
+
+    original = dlf.get_session_start_ts
+    dlf.get_session_start_ts = first_line_only
+    try:
+        mutated = run_in_process(dlf, [str(repo), "--json", *targs])
+    finally:
+        dlf.get_session_start_ts = original
+    check("W-07 AC-2 canary: a line-1-only session-start reader is caught",
+          mutated.get("session-start") != "2026-11-01T09:00:00.000Z", str(mutated.get("session-start")))
+
+    # AC-4 and AC-5, end to end: C was written before this session started
+    # (2026-11-09 09:00 UTC) and D by another session after it.
+    repo = init_repo(root / "w07-carry")
+    store = repo / "_local" / "_session-logs"
+    c_name, d_name = "2026-11-09_07-00_claude_c.md", "2026-11-09_17-00_claude_d.md"
+    w07_log(store, c_name, session_id="sc", waiting=1)
+    w07_log(store, d_name, session_id="sd", waiting=2)
+    ctdir = root / "w07-carry-transcripts" / "proj"
+    ctdir.mkdir(parents=True)
+    (ctdir / "me.jsonl").write_text(
+        json.dumps({"type": "attachment", "timestamp": "2026-11-09T09:00:00.000Z"}) + "\n", encoding="utf-8")
+    cargs = ["--session-id", "me", "--transcript-dir", str(ctdir.parent)]
+
+    data = json.loads(run_script(str(repo), "--json", *cargs).stdout)
+    eg = data["evidence-gathering"]
+    check("W-07 AC-4: with no resumed-from, the newest log carries, concurrent or not (D7)",
+          eg["carry-forward"]["log"] == d_name and eg["carry-forward"]["rule"] == "newest-overall",
+          str(eg["carry-forward"]))
+    check("W-07 AC-5: a log another session wrote after this session started is listed",
+          eg["concurrent-logs"] == [d_name] and eg["concurrent-logs-reason"] is None, str(eg["concurrent-logs"]))
+    check("W-07: Waiting on You comes from the carry-forward log",
+          len(eg["waiting-on-you"]) == 2, str(eg["waiting-on-you"]))
+
+    data = json.loads(run_script(str(repo), "--json", *cargs, "--resumed-from", c_name).stdout)
+    eg = data["evidence-gathering"]
+    check("W-07 AC-4: --resumed-from wins over a newer log",
+          eg["carry-forward"]["log"] == c_name and eg["carry-forward"]["rule"] == "resumed-from",
+          str(eg["carry-forward"]))
+    check("W-07: with --resumed-from, Waiting on You comes from that older log",
+          len(eg["waiting-on-you"]) == 1 and eg["newest-log"] == d_name,
+          f"{eg['waiting-on-you']}, newest {eg['newest-log']}")
+
+    data = json.loads(run_script(str(repo), "--json", *cargs, "--resumed-from", "2026-01-01_00-00_claude_gone.md").stdout)
+    cf = data["evidence-gathering"]["carry-forward"]
+    check("W-07: a --resumed-from the store lacks falls through and is reported",
+          cf["log"] == d_name and cf["note"] == "resumed-from-not-found", str(cf))
+
+    digest = run_script(str(repo), *cargs).stdout
+    check("W-07 AC-5: the digest prints the carry-forward line and the concurrent log",
+          f"carry-forward: {d_name} (rule newest-overall)" in digest and "concurrent logs (1)" in digest
+          and d_name in digest, digest[:600])
+
+    # AC-9: a linked worktree reads the main checkout's store.
+    main = init_repo(root / "w07-main")
+    w07_log(main / "_local" / "_session-logs", "2026-11-08_10-00_claude_main.md", waiting=1)
+    wt = root / "w07-wt"
+    git(main, "worktree", "add", str(wt), "-b", "feat/w07")
+    data = json.loads(run_script(str(wt), "--json", no_session_env=True).stdout)
+    check("W-07 AC-9: a worktree's store is the main checkout's",
+          data["store"]["how"] == "main-checkout"
+          and Path(data["store"]["path"]).resolve() == (main / "_local" / "_session-logs").resolve(),
+          str(data["store"]))
+    check("W-07 AC-9: a worktree carries from the main checkout's newest log",
+          data["evidence-gathering"]["carry-forward"]["log"] == "2026-11-08_10-00_claude_main.md",
+          str(data["evidence-gathering"]["carry-forward"]))
+
+    # The install guard: a copy of the script without lib/ exits 2 and names the path.
+    lone = root / "w07-lone" / "a" / "b" / "c"
+    lone.mkdir(parents=True)
+    shutil_copy = __import__("shutil").copy2
+    shutil_copy(SCRIPT, lone / "derive-log-facts.py")
+    proc = subprocess.run([sys.executable, str(lone / "derive-log-facts.py"), str(repo)],
+                          capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30)
+    check("W-07: a missing lib/session-logs.py exits 2 and names the path",
+          proc.returncode == 2 and "session-logs.py" in proc.stderr, f"rc {proc.returncode}: {proc.stderr[:200]}")
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
         root = Path(tmp)
@@ -1004,6 +1144,8 @@ def main() -> int:
             tags_tail == ["v0.7.0", "v0.8.0", "v0.9.0", "v0.10.0", "v0.11.0"],
             str(tags_tail),
         )
+
+        w07_cases(root)
 
     failed =[name for name, ok, _ in results if not ok]
     print()

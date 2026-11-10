@@ -31,14 +31,16 @@ script must never assume it shares a root with the project it inspects. The proj
 to inspect is a separate, explicit argument (`project_root`, default `.`), never
 assumed to be the plugin's own install location.
 
-NEWEST-LOG DISCOVERY MIRRORS log-discovery.md, DOES NOT REDEFINE IT
----------------------------------------------------------------------
-`skills/plab-continue-session/references/log-discovery.md` is the one named owner of
-the newest-wins sort across the flat session-log store, its `YYYY-MM/` folders, and
-the two legacy paths. This script needs the same answer to find the newest log for
-Evidence Gathering, so it reimplements the same rule in Python rather than inventing
-a second one; consolidating the two copies into one is a later effort's job (D-10),
-not this one's.
+SESSION-LOG RULES LIVE IN lib/session-logs.py
+---------------------------------------------
+Where the store is (the main checkout's, from a linked worktree), which logs
+exist, which log the wrap carries Waiting on You and Parked items from, and which
+logs another session wrote while this one ran are all answered by the plugin's
+shared `lib/session-logs.py`, which plab-continue-session loads too (W-07). This
+script reports those answers; it does not restate the rules. The carry-forward
+log is the one this session resumed from (`--resumed-from`), or else the newest
+log overall (W-07 D7). The capture and gitignored-file cutoff stays the newest
+log's time, because it asks what happened since anyone last wrapped.
 
 VERIFICATION DERIVATION, AND WHY CAPTURE-LITE NEVER GROUNDS IT
 -----------------------------------------------------------------
@@ -63,6 +65,7 @@ EXIT CODES
    per-finding proposals and the Log Self-Check gates are for).
 2  The given project_root is not a directory, or --count-decisions was given a path
    that does not exist. Both are caller errors, not findings about the project.
+   Also when lib/session-logs.py is missing, which is an install defect.
 """
 
 from __future__ import annotations
@@ -80,9 +83,35 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
-LOG_NAME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}_[^_]+_.+\.md$")
-MONTH_DIR_RE = re.compile(r"^\d{4}-\d{2}$")
-LEGACY_LOG_DIRS = ("_agent-context/session-log", "AGENTS/session-log")
+# W-07: the session-log rules (store location, discovery, carry-forward,
+# concurrent logs) live once, in the plugin's shared lib/, and plab-continue-
+# session loads the same file. It is loaded by path because its name is
+# hyphenated. A missing file is not tolerated: main() exits 2 naming the path,
+# because a wrap without these rules would silently fall back to old behavior.
+SESSION_LOGS_PATH = SCRIPT_DIR.parents[2] / "lib" / "session-logs.py"
+
+
+def _load_session_logs():
+    import importlib.util
+    if not SESSION_LOGS_PATH.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("plab_session_logs", SESSION_LOGS_PATH)
+    if spec is None or spec.loader is None:
+        return None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+SL = _load_session_logs()
+
+
+def _require_session_logs():
+    if SL is None:
+        raise RuntimeError(f"the shared session-log rules are missing: {SESSION_LOGS_PATH}")
+    return SL
+
+
 DECISION_LIST_ITEM_RE = re.compile(r"^(?:\d+\.|[-*])\s")
 DECISION_SUBHEADING_RE = re.compile(r"^### \S")
 VERIFICATION_COMMAND_RE = re.compile(r"\b(test|check|gate|lint|verify)\b", re.IGNORECASE)
@@ -247,25 +276,15 @@ def do_fetch(project_root: Path) -> dict:
 # Newest-log discovery, mirroring log-discovery.md (Requirement 10)
 # ---------------------------------------------------------------------------
 
+def resolve_store(project_root: Path) -> tuple[Path, str]:
+    """The session-log store and how it was found (W-07 Requirement 10). From a
+    linked worktree this is the main checkout's store."""
+    return _require_session_logs().store_root(project_root)
+
+
 def pool_logs(project_root: Path) -> list[Path]:
-    candidates: list[Path] = []
-    store = project_root / "_local" / "_session-logs"
-    if store.is_dir():
-        for entry in store.iterdir():
-            if entry.is_file() and LOG_NAME_RE.match(entry.name):
-                candidates.append(entry)
-            elif entry.is_dir() and MONTH_DIR_RE.match(entry.name):
-                for sub in entry.iterdir():
-                    if sub.is_file() and LOG_NAME_RE.match(sub.name):
-                        candidates.append(sub)
-    for legacy in LEGACY_LOG_DIRS:
-        legacy_dir = project_root / legacy
-        if legacy_dir.is_dir():
-            for entry in legacy_dir.iterdir():
-                if entry.is_file() and LOG_NAME_RE.match(entry.name):
-                    candidates.append(entry)
-    candidates.sort(key=lambda p: p.name, reverse=True)
-    return candidates
+    store, _ = resolve_store(project_root)
+    return _require_session_logs().pool_logs(store, project_root)
 
 
 def newest_log(project_root: Path) -> Path | None:
@@ -274,36 +293,20 @@ def newest_log(project_root: Path) -> Path | None:
 
 
 def extract_section(text: str, heading: str) -> list[str] | None:
-    """Lines between `## {heading}` and the next `## ` heading, exclusive of both."""
-    lines = text.splitlines()
-    target = f"## {heading}"
-    try:
-        start = next(i for i, line in enumerate(lines) if line.strip() == target)
-    except StopIteration:
-        return None
-    body = []
-    for line in lines[start + 1:]:
-        if line.startswith("## "):
-            break
-        body.append(line)
-    return body
+    """Delegates to lib/session-logs.py. Kept by name because check-log.py
+    calls it through this module."""
+    return _require_session_logs().extract_section(text, heading)
 
 
 WAITING_ON_YOU_ITEM_RE = re.compile(r"^[-*]\s")
 
 
 def extract_waiting_on_you(text: str) -> list[str] | None:
-    """Top-level list items only, '-' or '*', with no leading indentation,
-    the same rule DECISION_LIST_ITEM_RE already applies to Decisions Made. A
-    real log ('Approve starting the layout effort', 2026-10-07) carried six
-    indented sub-bullets explaining what one item would do; matching on
-    `line.lstrip().startswith("- ")` counted each of those as its own,
-    undated Waiting on You item, which this script then handed to the next
-    wrap's carry-forward as six separate stale items."""
-    body = extract_section(text, "Waiting on You")
-    if body is None:
-        return None
-    return [line.rstrip() for line in body if WAITING_ON_YOU_ITEM_RE.match(line)]
+    """Top-level Waiting on You items, by lib/session-logs.py's rule: `-` or `*`
+    with no leading indentation, so an indented sub-bullet is never its own
+    item (a real log on 2026-10-07 carried six such sub-bullets under one
+    item). Kept by name because check-log.py calls it through this module."""
+    return _require_session_logs().extract_waiting_on_you(text)
 
 
 def extract_parked(text: str) -> list[str]:
@@ -333,37 +336,20 @@ def count_decisions(text: str) -> int:
 
 def log_cutoff_utc(log_path: Path | None) -> dt.datetime | None:
     """The newest log's moment, in UTC, for comparing against capture-record and
-    gitignored-file timestamps. Prefers the frontmatter `date:` field, which carries
-    an explicit UTC offset; falls back to the filename's date/time, which is naive
-    local time and is converted using this machine's current offset."""
+    gitignored-file timestamps. Delegates to lib/session-logs.py's wrapped_at_utc:
+    the frontmatter `date:` wins, because it carries an explicit offset, and the
+    file name's date and time, read as local time, are the fallback."""
     if log_path is None:
         return None
-    text = log_path.read_text(encoding="utf-8", errors="replace")
-    match = re.search(r"^date:\s*(\S+)", text, re.MULTILINE)
-    if match:
-        try:
-            parsed = dt.datetime.fromisoformat(match.group(1))
-            if parsed.tzinfo is None:
-                parsed = parsed.astimezone()
-            return parsed.astimezone(dt.timezone.utc)
-        except ValueError:
-            pass
-    name_match = re.match(r"^(\d{4}-\d{2}-\d{2})_(\d{2})-(\d{2})_", log_path.name)
-    if name_match:
-        naive = dt.datetime.strptime(
-            f"{name_match.group(1)} {name_match.group(2)}:{name_match.group(3)}",
-            "%Y-%m-%d %H:%M",
-        )
-        return naive.astimezone(dt.timezone.utc)
-    return None
+    return _require_session_logs().wrapped_at_utc(log_path)
 
 
 # ---------------------------------------------------------------------------
 # Evidence Gathering inputs (Requirement 10)
 # ---------------------------------------------------------------------------
 
-def capture_records(project_root: Path, cutoff_utc: dt.datetime | None) -> dict:
-    capture_dir = project_root / "_local" / "_session-logs" / "_capture"
+def capture_records(store: Path, cutoff_utc: dt.datetime | None) -> dict:
+    capture_dir = store / "_capture"
     if not capture_dir.is_dir():
         return {"available": False, "reason": "no-capture-dir"}
     records = []
@@ -566,9 +552,8 @@ def check4_doc_drift(project_root: Path) -> dict:
     return {"available": True, "last-tag": last_tag, "findings": findings}
 
 
-def check5_log_store(project_root: Path) -> dict:
+def check5_log_store(store: Path) -> dict:
     organize_script = SCRIPT_DIR / "organize-logs.py"
-    store = project_root / "_local" / "_session-logs"
     if not organize_script.is_file():
         return {"available": False, "reason": "organize-logs.py not found"}
     try:
@@ -860,6 +845,11 @@ def render(data: dict) -> str:
     lines.append(f"  repo: {data['repo']}")
     lines.append(f"  branch: {data['branch']}")
     lines.append(f"  date: {data['date']}")
+    lines.append(f"  session-id: {data['session-id'] or 'null (no-session-id)'}")
+    if data["session-start"]:
+        lines.append(f"  session-start: {data['session-start']}")
+    else:
+        lines.append(f"  session-start: null ({data['session-reason']})")
     lines.append(f"  commit-range: {data['commit-range']}")
     lines.append(f"  latest-tag: {data['latest-tag']}")
     lines.append(f"  base: {data['base']['ref']} (resolution: {data['base']['resolution']})")
@@ -870,7 +860,19 @@ def render(data: dict) -> str:
     eg = data["evidence-gathering"]
     lines.append("")
     lines.append("Evidence Gathering")
+    lines.append(f"  store: {data['store']['path']} ({data['store']['how']})")
     lines.append(f"  newest-log: {eg['newest-log']}")
+    cf = eg["carry-forward"]
+    note = f", {cf['note']}" if cf.get("note") else ""
+    lines.append(f"  carry-forward: {cf['log'] or 'none'} (rule {cf['rule']}{note}); copy into carried-from:")
+    conc = eg["concurrent-logs"]
+    if eg.get("concurrent-logs-reason"):
+        lines.append(f"  concurrent logs: unknown ({eg['concurrent-logs-reason']})")
+    elif conc:
+        lines.append(f"  concurrent logs ({len(conc)}), written by another session while this one ran; name each in Summary:")
+        lines.extend(render_verbatim(conc))
+    else:
+        lines.append("  concurrent logs: none")
     cap_rec = eg["capture-records"]
     if cap_rec.get("available"):
         lines.append(f"  capture-records: {cap_rec['count']} ({cap_rec['earliest-head']} .. {cap_rec['latest-head']})")
@@ -971,6 +973,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="second, small invocation: count '## Decisions Made' entries in a drafted log (PATH or '-' for stdin)",
     )
     parser.add_argument("--gitignored-limit", type=int, default=200, help="cap on gitignored-modified entries")
+    parser.add_argument(
+        "--resumed-from", metavar="FILENAME",
+        help="the log this session resumed from with plab-continue-session, by file name; "
+        "the same value the wrap writes into resumed-from:, and the first carry-forward rule",
+    )
     parser.add_argument("--session-id", help="override CLAUDE_CODE_SESSION_ID (testing)")
     parser.add_argument("--transcript-dir", help="override ~/.claude/projects (testing)")
     return parser
@@ -1008,23 +1015,43 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {project_root} is not a directory", file=sys.stderr)
         return 2
 
+    if SL is None:
+        print(f"error: the shared session-log rules are missing: {SESSION_LOGS_PATH}", file=sys.stderr)
+        return 2
+
     fetch_info = do_fetch(project_root) if args.fetch else {"ran": False}
 
     transcript_dir = Path(args.transcript_dir) if args.transcript_dir else None
     transcript_path, transcript_unavailable_reason = locate_transcript(args.session_id, transcript_dir)
     session_start_ts = get_session_start_ts(transcript_path)
+    session_id = args.session_id or os.environ.get("CLAUDE_CODE_SESSION_ID") or None
+    session_reason = transcript_unavailable_reason
+    if session_start_ts is None and session_reason is None:
+        session_reason = "no-timestamp-in-transcript"
 
     base, base_resolution = resolve_base(project_root, args.base, session_start_ts)
     files_flat, files_grouped = get_files_changed(project_root, base)
-    log_path = newest_log(project_root)
-    cutoff = log_cutoff_utc(log_path)
-    log_text = log_path.read_text(encoding="utf-8", errors="replace") if log_path else None
+
+    # W-07: one pass over the store answers every session-log question.
+    store, store_how = resolve_store(project_root)
+    infos = [SL.describe(p) for p in SL.pool_logs(store, project_root)]
+    newest_path = infos[0]["path"] if infos else None
+    # The cutoff asks what happened since anyone last wrapped, so it stays the
+    # newest log's time even when the carry-forward source is an older log.
+    cutoff = log_cutoff_utc(newest_path)
+    concurrent, concurrent_reason = SL.concurrent_logs(infos, session_id, SL.parse_utc(session_start_ts))
+    source, carry_rule, carry_note = SL.carry_forward_source(infos, args.resumed_from)
+    log_text = source["path"].read_text(encoding="utf-8", errors="replace") if source else None
 
     data = {
         "machine": get_machine(),
         "repo": get_repo(project_root),
         "branch": get_branch(project_root),
         "date": get_date(),
+        "session-id": session_id,
+        "session-start": session_start_ts,
+        "session-reason": session_reason if session_start_ts is None else None,
+        "store": {"path": str(store), "how": store_how},
         "base": {"ref": base, "resolution": base_resolution},
         "files-changed": files_flat,
         "files-changed-grouped": files_grouped,
@@ -1032,8 +1059,15 @@ def main(argv: list[str] | None = None) -> int:
         "latest-tag": get_latest_tag(project_root),
         "fetch": fetch_info,
         "evidence-gathering": {
-            "capture-records": capture_records(project_root, cutoff),
-            "newest-log": log_path.name if log_path else None,
+            "capture-records": capture_records(store, cutoff),
+            "newest-log": newest_path.name if newest_path else None,
+            "carry-forward": {
+                "log": source["name"] if source else None,
+                "rule": carry_rule,
+                "note": carry_note,
+            },
+            "concurrent-logs": [c["name"] for c in concurrent],
+            "concurrent-logs-reason": concurrent_reason,
             "waiting-on-you": extract_waiting_on_you(log_text) if log_text is not None else None,
             "parked": extract_parked(log_text) if log_text is not None else None,
             "gitignored-modified": gitignored_modified(project_root, cutoff, args.gitignored_limit),
@@ -1043,7 +1077,7 @@ def main(argv: list[str] | None = None) -> int:
             "check2-worktree": check2_worktree(project_root),
             "check3-release": check3_release(project_root),
             "check4-doc-drift": check4_doc_drift(project_root),
-            "check5-log-store": check5_log_store(project_root),
+            "check5-log-store": check5_log_store(store),
         },
         "verification": derive_verification(transcript_path, transcript_unavailable_reason),
     }

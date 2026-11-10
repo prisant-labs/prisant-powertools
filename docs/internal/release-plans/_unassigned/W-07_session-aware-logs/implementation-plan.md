@@ -40,7 +40,7 @@ phase-count: 7
 | Phase | Goal | Fulfills AC | Owner | Status |
 |---|---|---|---|---|
 | P1 | Build the shared session-log module and its test suite | AC-4, AC-7, AC-9 (the rules) | agent | Done 2026-11-10 |
-| P2 | Report the session fields, the carry-forward source and the concurrent list from `derive-log-facts.py` | AC-2, AC-4, AC-5 (the script), AC-9 (the wrap's reads) | agent | Not started |
+| P2 | Report the session fields, the carry-forward source and the concurrent list from `derive-log-facts.py` | AC-2, AC-4, AC-5 (the script), AC-9 (the wrap's reads) | agent | Done 2026-11-10 |
 | P3 | Add the three fields to the log schema, the template and `check-log.py` | AC-1 (the schema), AC-3 | agent | Not started |
 | P4 | Rewire the wrap's Evidence Gathering, write location and Summary to the script's output | AC-5 (the skill), AC-6, AC-9 (the wrap's write) | agent | Not started |
 | P5 | Give continue a candidate script and a candidate list | AC-1 (discovery), AC-7, AC-8, AC-9 (continue's reads) | agent | Not started |
@@ -104,21 +104,23 @@ phase-count: 7
 **Fulfills:** AC-2, AC-4, AC-5 (the script's half) and AC-9 (the wrap's reads).
 
 **Steps:**
-- [ ] Step 1: Write the new test cases first and watch them fail:
+- [x] Step 1: Write the new test cases first and watch them fail:
   - AC-2's fixture: a transcript whose first timestamped line is `2026-11-01T09:00:00.000Z`, run with `--json --session-id <id> --transcript-dir <fixture>`. `session-id` is that id and `session-start` is that timestamp. With no id, both are null and the default digest prints `no-session-id`.
   - AC-2's canary: patch `get_session_start_ts` on the loaded module to read only line 1, against a transcript whose line 1 has no timestamp, and assert the case fails.
   - AC-4 end to end: the C-and-D store from Phase 1, run through the script with `--session-id`, reports `carry-forward: {log: D, rule: newest-overall}` and lists D under `concurrent-logs`. With `--resumed-from C`, it reports C under `resumed-from`. With `--resumed-from` naming a file the store lacks, it reports D under `newest-overall` and names the miss.
   - AC-5: the same run's default digest prints D's file name under a "Concurrent logs" line.
   - AC-9: run from a linked worktree of a fixture repository whose main checkout holds a log. The script reports the main checkout's store, finds that log, and carries from it.
-- [ ] Step 2: Add a `--resumed-from <file name>` option. The wrap passes it when this session ran continue, because the script cannot see what continue resumed. The help text names it as the same file name the wrap writes into `resumed-from:`.
-- [ ] Step 3: Load `lib/session-logs.py` once at import time, by the path `Path(__file__).resolve().parents[3] / "lib" / "session-logs.py"`. If the file is missing, exit 2 with a message naming the path, because a wrap without the rules would silently fall back to newest-overall.
-- [ ] Step 4: In `main()` (lines 979 to 1055), replace `log_path = newest_log(project_root)` with: resolve the store through `store_root`, pool the logs, compute the concurrent list and the carry-forward source, and use that source's path as `log_path`. The cutoff for capture records and gitignored files stays the newest log's time, not the source's, because those two fields ask what happened since anyone last wrapped.
-- [ ] Step 5: Add these keys to the output. In `--json`, `session-id` and `session-start` sit at the top level beside `date`, and `store` holds `{path, how}`. Under `evidence-gathering`, `carry-forward` holds `{log, rule}` and `concurrent-logs` holds a list of file names, with a `reason` when the list could not be computed. Keep `newest-log` as it is, because readers may use it, and make `waiting-on-you` and `parked` come from the carry-forward log.
-- [ ] Step 6: Point `pool_logs`, `capture_records` (line 366) and `check5_log_store` (line 571) at the resolved store instead of `project_root / "_local" / "_session-logs"`. `newest_log` and `pool_logs` become thin wrappers over the module.
-- [ ] Step 7: In `render()` (line 857), add four lines to the digest after `date`: `session-id`, `session-start` (or the reason it is null), `store` with its `how`, and under Evidence Gathering, `carry-forward: <file> (rule <name>)` and `concurrent logs: <names>` or `concurrent logs: none`. Keep the digest under its 20,000-character budget; these lines are short.
-- [ ] Step 8: Re-run the whole existing suite. Every case that passed before still passes, which proves Requirement 3's compatibility half for the script.
+- [x] Step 2: Add a `--resumed-from <file name>` option. The wrap passes it when this session ran continue, because the script cannot see what continue resumed. The help text names it as the same file name the wrap writes into `resumed-from:`.
+- [x] Step 3: Load `lib/session-logs.py` once at import time, by the path `Path(__file__).resolve().parents[3] / "lib" / "session-logs.py"`. If the file is missing, exit 2 with a message naming the path, because a wrap without the rules would silently fall back to newest-overall.
+- [x] Step 4: In `main()` (lines 979 to 1055), replace `log_path = newest_log(project_root)` with: resolve the store through `store_root`, pool the logs, compute the concurrent list and the carry-forward source, and use that source's path as `log_path`. The cutoff for capture records and gitignored files stays the newest log's time, not the source's, because those two fields ask what happened since anyone last wrapped.
+- [x] Step 5: Add these keys to the output. In `--json`, `session-id` and `session-start` sit at the top level beside `date`, and `store` holds `{path, how}`. Under `evidence-gathering`, `carry-forward` holds `{log, rule}` and `concurrent-logs` holds a list of file names, with a `reason` when the list could not be computed. Keep `newest-log` as it is, because readers may use it, and make `waiting-on-you` and `parked` come from the carry-forward log.
+- [x] Step 6: Point `pool_logs`, `capture_records` (line 366) and `check5_log_store` (line 571) at the resolved store instead of `project_root / "_local" / "_session-logs"`. `newest_log` and `pool_logs` become thin wrappers over the module.
+- [x] Step 7: In `render()` (line 857), add four lines to the digest after `date`: `session-id`, `session-start` (or the reason it is null), `store` with its `how`, and under Evidence Gathering, `carry-forward: <file> (rule <name>)` and `concurrent logs: <names>` or `concurrent logs: none`. Keep the digest under its 20,000-character budget; these lines are short.
+- [x] Step 8: Re-run the whole existing suite. Every case that passed before still passes, which proves Requirement 3's compatibility half for the script.
 
 **Verification:** `python skills/plab-wrap-session/scripts/test-derive-log-facts.py` exits 0 with every old and new case passing, and it names the AC-2 canary as proved. Then run `python skills/plab-wrap-session/scripts/derive-log-facts.py . --json` in this repository and confirm that `session-id` equals `CLAUDE_CODE_SESSION_ID` and that `session-start` equals the first timestamp in this session's transcript.
+
+**Done 2026-11-10:** `test-derive-log-facts.py` reports 106/106. Its 15 new W-07 checks failed against the pre-phase script, which stopped on `KeyError: 'carry-forward'`, and pass against the new one. The AC-2 canary, a session-start reader that looks at line 1 only, is caught in process. Under D7 Option C, AC-4's end-to-end store carries from D, the concurrent newest log, and lists D under `concurrent-logs`; `--resumed-from C` carries from C. A copy of the script without `lib/` exits 2 naming the path. On this repository, the digest shows this session's real id and start, the store as `checkout`, and the carry-forward line. **One file beyond the phase's list:** `test-check-log.py` test 21 copied `derive-log-facts.py` alone into a scratch folder, so the script could no longer reach `lib/`. Its scratch folder now mirrors the plugin's layout. `check-log.py` itself already reported the missing module as broken, with exit 2, and needed no change. `test-check-log.py` passes 39/39.
 
 ---
 
