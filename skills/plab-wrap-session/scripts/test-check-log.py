@@ -15,6 +15,7 @@ without ever touching the shipped detectors.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import shutil
@@ -118,6 +119,64 @@ def build_log(frontmatter: str, *sections: str) -> str:
 
 def clean_deep_log() -> str:
     return build_log(make_frontmatter(), DECISIONS_TWO, WAITING_OK, LEDGER_OK, WYMNR_OK)
+
+
+def session_field_cases(root: Path) -> None:
+    """W-07 AC-3: the three optional session fields. A log that carries them
+    and a log that carries none are both clean; a malformed value is a finding."""
+    good = {
+        "session-id": "d7a7141e-930b-4a78-9521-6b03879064a3",
+        "session-start": '"2026-11-10T19:10:29.691Z"',
+        "carried-from": "2026-11-08_21-24_claude_rm-01-built-org-profile-readme-1-1-0.md",
+    }
+    cases = [
+        ("all three W-07 fields, well formed", good, "clean"),
+        ("session-id without session-start, as when no transcript was found",
+         {"session-id": "abc"}, "clean"),
+        ("a session-start that is not ISO 8601", dict(good, **{"session-start": "yesterday"}), "findings"),
+        ("a carried-from with a directory in it",
+         dict(good, **{"carried-from": "_local/_session-logs/2026-11-08_21-24_claude_x.md"}), "findings"),
+        ("a carried-from that is not a session-log file name",
+         dict(good, **{"carried-from": "notes.md"}), "findings"),
+    ]
+    for i, (label, fields, want) in enumerate(cases):
+        repo = root / f"w07-{i}"
+        repo.mkdir()
+        log = write(repo / "log.md", build_log(make_frontmatter(fields), DECISIONS_TWO, WAITING_OK,
+                                               LEDGER_OK, WYMNR_OK))
+        proc = run_check(log, repo, mode="deep")
+        data = json.loads(proc.stdout)
+        got = data["checks"].get("session-fields", {}).get("state")
+        check(f"W-07 AC-3: {label} is {want}", got == want, str(data["checks"].get("session-fields")))
+
+    repo = root / "w07-none"
+    repo.mkdir()
+    log = write(repo / "log.md", clean_deep_log())
+    data = json.loads(run_check(log, repo, mode="deep").stdout)
+    check("W-07 AC-3: a log with none of the fields is clean, and the whole log still is",
+          data["checks"].get("session-fields", {}).get("state") == "clean" and data["overall"] == "clean",
+          str(data["checks"].get("session-fields")))
+
+    # Canary, in process: a session-field check that always passes must be caught
+    # by the malformed session-start case above.
+    spec = importlib.util.spec_from_file_location("check_log_under_test", SCRIPT)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    bad = root / "w07-canary"
+    bad.mkdir()
+    bad_log = write(bad / "log.md", build_log(make_frontmatter(dict(good, **{"session-start": "yesterday"})),
+                                              DECISIONS_TWO, WAITING_OK, LEDGER_OK, WYMNR_OK))
+    original = mod.check_session_fields
+    mod.check_session_fields = lambda frontmatter: {"state": "clean", "detail": "mutant"}
+    try:
+        mutated = mod.run_all_checks(bad_log, str(bad), "deep")
+    finally:
+        mod.check_session_fields = original
+    check("W-07 AC-3 canary: an always-clean session-field check is caught",
+          mutated["session-fields"]["state"] != "findings", str(mutated.get("session-fields")))
+    real = mod.run_all_checks(bad_log, str(bad), "deep")
+    check("W-07 AC-3 canary: the real check flags the same log",
+          real["session-fields"]["state"] == "findings", str(real.get("session-fields")))
 
 
 def main() -> int:
@@ -547,6 +606,8 @@ def main() -> int:
                 CROSS in proc.stdout,
                 proc.stdout,
             )
+
+        session_field_cases(root)
 
     failed = [name for name, ok, _ in results if not ok]
     print()

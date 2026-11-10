@@ -35,6 +35,9 @@ Added in 1.8.0 (W-02, derived log facts). Both come from the same `derive-log-fa
 | `decisions-count` | Integer | Count from decisions section | Auto |
 | `skills-used` | List | Skills invoked during the session (usage telemetry; feeds pruning decisions) | Semi - agent recalls, user corrects |
 | `resumed-from` | Filename | The session log this session resumed from via /plab-continue-session, if any (measures log consumption) | Auto when resumption happened |
+| `session-id` | String | This session's id, from `derive-log-facts.py`, which reads `CLAUDE_CODE_SESSION_ID`. Omitted when the script reports null, as under Codex | Auto |
+| `session-start` | ISO 8601 datetime, UTC | When this session began: the first timestamp in its transcript, from `derive-log-facts.py`. Omitted when the script reports null | Auto |
+| `carried-from` | Filename | The log this wrap carried Waiting on You and Parked items from: the script's `carry-forward` log | Auto when the script names one |
 
 ### `resumed-from` semantics
 
@@ -43,6 +46,14 @@ back-fill this field from narrative memory of a resume that happened in some pri
 resume occurred this session, omit the field entirely rather than guessing. Cross-repo lineage, when
 it matters, belongs in the Summary section's prose, not in this field: continue already refuses
 cross-repo resumption, so a value this field ever holds is always a same-repo filename.
+
+### `carried-from` semantics
+
+Records which log this wrap copied Waiting on You and Parked items from. The value is copied from `derive-log-facts.py`'s `carry-forward` line, never chosen by the agent: it is the log this session resumed from, or else the newest log in the store. Continue treats a log named here as consumed only when this session started after that log was written, so a carry from a session that ran in parallel leaves that session's handoff visible. Cite it by file name only, like `resumed-from`. It differs from `parent-session`, which is a suggested lineage hint: `carried-from` records what was actually carried.
+
+### `session-id` and `session-start` semantics
+
+Both come from `derive-log-facts.py` and are omitted when it reports null. Together they tell continue which logs one session wrote and when that session began, so two wraps of one session collapse to one candidate, and a log another session wrote while this one ran is recognized as parallel work. `session-start` is the session's start, not the wrap's: the wrap's time is in `date:` and in the file name.
 
 ### Session Types
 
@@ -101,11 +112,13 @@ _local/_session-logs/YYYY-MM-DD_HH-MM_<llm>_<brief-kebab-title>.md
 | Component | Format | Example |
 |-----------|--------|---------|
 | Date | `YYYY-MM-DD` | `2026-04-08` |
-| Time | `HH-MM` (24h) | `09-36` |
+| Time | `HH-MM` (24h), the local time the wrap ran, not the time the session started; see `session-start` | `09-36` |
 | LLM | Short name | `claude`, `codex`, `gpt`, `gemini` |
 | Title | kebab-case | `deploy-ai-review` |
 
-All agents write to the same `_local/_session-logs/` directory. The LLM short name in the filename identifies who did the work. Full model details (name, version, settings) go in the frontmatter, not the filename.
+The time is the wrap's, so a log written days after its session began still carries the day it was written, and the newest handoff always sorts first. `session-start` records when the session began.
+
+All agents write to the same `_local/_session-logs/` directory. In a linked git worktree, that is the main checkout's directory, which `derive-log-facts.py` reports as the store. The LLM short name in the filename identifies who did the work. Full model details (name, version, settings) go in the frontmatter, not the filename.
 
 ## Citing another session log
 

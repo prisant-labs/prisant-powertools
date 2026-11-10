@@ -125,6 +125,10 @@ TIER1_REQUIRE_PRESENT_ONLY = ["files-changed", "commit-range", "latest-tag"]
 
 BLOCKED_SINCE_RE = re.compile(r"\(blocked since \d{4}-\d{2}-\d{2}\)")
 
+# A session-log file name with no directory, the only form references/
+# frontmatter-schema.md allows when one log cites another (W-07 carried-from).
+LOG_FILENAME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}_[^_/\\]+_[^/\\]+\.md$")
+
 
 # ---------------------------------------------------------------------------
 # derive-log-facts.py reuse
@@ -264,6 +268,38 @@ def check_tier1_frontmatter(frontmatter: str) -> dict:
     return {"state": "clean", "detail": "all 9 Tier 1 fields present"}
 
 
+def check_session_fields(frontmatter: str) -> dict:
+    """W-07's three optional fields: `session-id`, `session-start` and
+    `carried-from`. All three are optional, because a log written before W-07,
+    or by Codex, carries none of them, and `session-start` is omitted when no
+    transcript was found. A value that is present must be well formed:
+    `session-start` parses as ISO 8601, and `carried-from` is a bare session-log
+    file name, because continue matches it against file names."""
+    import datetime as dt
+
+    session_id = frontmatter_field(frontmatter, "session-id")
+    start = frontmatter_field(frontmatter, "session-start")
+    carried = frontmatter_field(frontmatter, "carried-from")
+    findings = []
+    if start is not None:
+        value = unquote(start)
+        try:
+            dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            findings.append(f"session-start is not an ISO 8601 timestamp: {value}")
+    if carried is not None:
+        value = unquote(carried)
+        if not LOG_FILENAME_RE.match(value):
+            findings.append(f"carried-from must be a session-log file name with no directory: {value}")
+    if findings:
+        return {"state": "findings", "detail": findings}
+    present = [name for name, raw in (("session-id", session_id), ("session-start", start),
+                                      ("carried-from", carried)) if raw is not None]
+    if not present:
+        return {"state": "clean", "detail": "no W-07 session fields (a log from before W-07, or from Codex)"}
+    return {"state": "clean", "detail": f"well formed: {', '.join(present)}"}
+
+
 def normalize_waiting_item(line: str) -> str:
     """Strip the leading bullet ('- ' or '* ') and any markdown emphasis, so
     a bold or italic 'Optional' is caught the same as a plain one."""
@@ -324,6 +360,7 @@ def run_all_checks(log_path: Path, repo_root: str, mode: str) -> dict:
     results["decisions-count"] = check_decisions_count(text, frontmatter, mode, dlf)
     results["summary-length"] = check_summary_length(frontmatter)
     results["tier1-frontmatter"] = check_tier1_frontmatter(frontmatter)
+    results["session-fields"] = check_session_fields(frontmatter)
     results["waiting-on-you"] = check_waiting_on_you(text, dlf)
     if mode == "deep":
         results["uncertainty-ledger"] = check_section_present(

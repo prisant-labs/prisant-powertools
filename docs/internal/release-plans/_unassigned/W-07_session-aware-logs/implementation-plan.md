@@ -41,7 +41,7 @@ phase-count: 7
 |---|---|---|---|---|
 | P1 | Build the shared session-log module and its test suite | AC-4, AC-7, AC-9 (the rules) | agent | Done 2026-11-10 |
 | P2 | Report the session fields, the carry-forward source and the concurrent list from `derive-log-facts.py` | AC-2, AC-4, AC-5 (the script), AC-9 (the wrap's reads) | agent | Done 2026-11-10 |
-| P3 | Add the three fields to the log schema, the template and `check-log.py` | AC-1 (the schema), AC-3 | agent | Not started |
+| P3 | Add the three fields to the log schema, the template and `check-log.py` | AC-1 (the schema), AC-3 | agent | Done 2026-11-10 |
 | P4 | Rewire the wrap's Evidence Gathering, write location and Summary to the script's output | AC-5 (the skill), AC-6, AC-9 (the wrap's write) | agent | Not started |
 | P5 | Give continue a candidate script and a candidate list | AC-1 (discovery), AC-7, AC-8, AC-9 (continue's reads) | agent | Not started |
 | P6 | Documentation, versions and CI | AC-1 (the README) | agent | Not started |
@@ -137,20 +137,22 @@ phase-count: 7
 **Fulfills:** AC-1 for `frontmatter-schema.md`, and AC-3.
 
 **Steps:**
-- [ ] Step 1: Write two `test-check-log.py` fixtures first: a log carrying `session-id`, `session-start` and `carried-from`, and a log carrying none of them. Add a third that carries `session-id` with a malformed `session-start`, which must be flagged. Run the suite and confirm the third fails to be flagged.
-- [ ] Step 2: In `frontmatter-schema.md`'s Tier 2 table, add three rows after `resumed-from`:
+- [x] Step 1: Write two `test-check-log.py` fixtures first: a log carrying `session-id`, `session-start` and `carried-from`, and a log carrying none of them. Add a third that carries `session-id` with a malformed `session-start`, which must be flagged. Run the suite and confirm the third fails to be flagged.
+- [x] Step 2: In `frontmatter-schema.md`'s Tier 2 table, add three rows after `resumed-from`:
   - `session-id`, String, from `derive-log-facts.py`, from `CLAUDE_CODE_SESSION_ID`, omitted when the script reports null. Example `d7a7141e-930b-4a78-9521-6b03879064a3`.
   - `session-start`, ISO 8601 datetime in UTC, from `derive-log-facts.py`, the first timestamp in this session's transcript, omitted when null. Example `2026-11-06T09:00:00.000Z`.
   - `carried-from`, a file name, from `derive-log-facts.py`'s `carry-forward` log, omitted when the rule is `none`. It is cited by file name only, as the "Citing another session log" section already requires.
-- [ ] Step 3: Add a `### carried-from semantics` paragraph after `### resumed-from semantics`. It says that `carried-from` records which log this wrap copied Waiting on You and Parked items from, that continue treats a log named here as consumed only when this session started after that log was written, so a carry from a parallel session leaves its handoff visible, and that the value is copied from the script, never chosen by the agent. Add one sentence distinguishing it from the existing Tier 2 `parent-session` field: `parent-session` is a suggested lineage hint, while `carried-from` records what was actually carried.
-- [ ] Step 4: In the Filename Convention table, change the Time row so that it says what the time is.
+- [x] Step 3: Add a `### carried-from semantics` paragraph after `### resumed-from semantics`. It says that `carried-from` records which log this wrap copied Waiting on You and Parked items from, that continue treats a log named here as consumed only when this session started after that log was written, so a carry from a parallel session leaves its handoff visible, and that the value is copied from the script, never chosen by the agent. Add one sentence distinguishing it from the existing Tier 2 `parent-session` field: `parent-session` is a suggested lineage hint, while `carried-from` records what was actually carried.
+- [x] Step 4: In the Filename Convention table, change the Time row so that it says what the time is.
   - Before: `| Time | \`HH-MM\` (24h) | \`09-36\` |`
   - After: `| Time | \`HH-MM\` (24h), the local time the wrap ran, not the time the session started; see \`session-start\` | \`09-36\` |`
   Add one paragraph under the table: a log written days after its session began still carries the wrap time, so the newest handoff always sorts first; `session-start` records when the session began.
-- [ ] Step 5: In `session-log-template.md`, add the three fields to every mode's frontmatter block, each marked "from the script; omit when null".
-- [ ] Step 6: In `check-log.py`, add `check_session_fields()`. When `session-start` is present, it must parse as ISO 8601. When `session-id` is present, `session-start` should be too; report its absence as a finding, not a failure, because a transcript can be missing. When `carried-from` is present, it must be a bare file name matching the log name pattern, with no directory. When all three are absent, the check passes. Register it in `run_all_checks()` (line 314).
+- [x] Step 5: In `session-log-template.md`, add the three fields to every mode's frontmatter block, each marked "from the script; omit when null".
+- [x] Step 6: In `check-log.py`, add `check_session_fields()`. When `session-start` is present, it must parse as ISO 8601. When `session-id` is present, `session-start` should be too; report its absence as a finding, not a failure, because a transcript can be missing. When `carried-from` is present, it must be a bare file name matching the log name pattern, with no directory. When all three are absent, the check passes. Register it in `run_all_checks()` (line 314).
 
 **Verification:** `python skills/plab-wrap-session/scripts/test-check-log.py` exits 0, with the with-fields and without-fields fixtures both passing and the malformed-start fixture flagged. With `check_session_fields()` patched to always pass, the malformed-start case fails.
+
+**Done 2026-11-10:** `test-check-log.py` reports 47/47. Its eight new checks failed before `check_session_fields()` existed and pass now. They cover a log with all three fields, a log with none (the whole log stays clean), and `session-id` without `session-start`, which is clean because a transcript can be missing. They also cover a malformed `session-start` and two malformed `carried-from` values, each a finding. The in-process canary, an always-clean field check, is caught, and the real check flags the same log. The newest real log, written before W-07, still checks clean. **One deviation:** Step 6 said to report `session-id` without `session-start` as a finding. The wrap omits `session-start` exactly when the script finds no transcript, so that log is correct and the check reports it as clean.
 
 ---
 
