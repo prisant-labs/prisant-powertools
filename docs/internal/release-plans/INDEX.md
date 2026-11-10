@@ -67,7 +67,7 @@ Specs written before being assigned to a release: the documented default home `/
 | [W-03](_unassigned/W-03_waiting-on-escapes-gitignore/spec.md) | waiting on escapes gitignore | W (wrap-session roadmap item) | draft | draft | P2 | Yes |
 | [W-04](_unassigned/W-04_digest-mode/spec.md) | digest mode | W (wrap-session roadmap item) | draft | draft | P2 | Yes |
 | [W-05](_unassigned/W-05_wrap-hygiene-order/spec.md) | wrap hygiene order | W (wrap-session roadmap item) | committed | (no implementation plan yet) | P2 | Yes |
-| [W-07](_unassigned/W-07_session-aware-logs/spec.md) | session aware logs | W (wrap-session roadmap item) | draft | in-progress | P2 | Yes |
+| [W-07](_unassigned/W-07_session-aware-logs/spec.md) | session aware logs | W (wrap-session roadmap item) | committed | in-progress | P2 | Yes |
 | [WD-01](_unassigned/WD-01_resolve-open-items/spec.md) | resolve open items | WD (resolve-open-items roadmap item) | fulfilled | complete | P2 | Yes |
 | [WD-02](_unassigned/WD-02_backlog-sweep/spec.md) | backlog sweep | WD (resolve-open-items roadmap item) | committed | complete | P2 | Yes |
 
@@ -106,7 +106,7 @@ One row per effort, grouped by release in sequence order (see the Release column
 | [W-03](_unassigned/W-03_waiting-on-escapes-gitignore/spec.md) | waiting on escapes gitignore | W (wrap-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | Yes |
 | [W-04](_unassigned/W-04_digest-mode/spec.md) | digest mode | W (wrap-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | Yes |
 | [W-05](_unassigned/W-05_wrap-hygiene-order/spec.md) | wrap hygiene order | W (wrap-session roadmap item) | committed | (no implementation plan yet) | `_unassigned/` | - | P2 | Yes |
-| [W-07](_unassigned/W-07_session-aware-logs/spec.md) | session aware logs | W (wrap-session roadmap item) | draft | in-progress | `_unassigned/` | - | P2 | Yes |
+| [W-07](_unassigned/W-07_session-aware-logs/spec.md) | session aware logs | W (wrap-session roadmap item) | committed | in-progress | `_unassigned/` | - | P2 | Yes |
 | [WD-01](_unassigned/WD-01_resolve-open-items/spec.md) | resolve open items | WD (resolve-open-items roadmap item) | fulfilled | complete | `_unassigned/` | - | P2 | Yes |
 | [WD-02](_unassigned/WD-02_backlog-sweep/spec.md) | backlog sweep | WD (resolve-open-items roadmap item) | committed | complete | `_unassigned/` | - | P2 | Yes |
 

@@ -45,7 +45,7 @@ phase-count: 7
 | P4 | Rewire the wrap's Evidence Gathering, write location and Summary to the script's output | AC-5 (the skill), AC-6, AC-9 (the wrap's write) | agent | Done 2026-11-10 |
 | P5 | Give continue a candidate script and a candidate list | AC-1 (discovery), AC-7, AC-8, AC-9 (continue's reads) | agent | Done 2026-11-10 |
 | P6 | Documentation, versions and CI | AC-1 (the README) | agent | Done 2026-11-10 |
-| P7 | Live runs, then the first real parallel case | AC-7 (the real store), AC-9 (a real worktree), AC-10 | agent, then maintainer | Not started |
+| P7 | Live runs, then the first real parallel case | AC-7 (the real store), AC-9 (a real worktree), AC-10 | agent, then maintainer | Partial 2026-11-10: Steps 1 and 2 done; Steps 3 to 5 wait on a resumed session and the release |
 
 ---
 
@@ -259,13 +259,15 @@ phase-count: 7
 **Fulfills:** AC-7 (the real store), AC-9 (a real worktree), and AC-10.
 
 **Steps:**
-- [ ] Step 1: Run `list-candidates.py .` against this repository's real store, read-only. The store will have moved since 2026-11-10, so check the result against the rule rather than a fixed answer: every log the script lists must be in the window, carry a `session-id` or have no later log on its branch, and be named in no later log's `resumed-from` or `carried-from`. For the snapshot AC-7 names, copy the store as it stood on 2026-11-10 from the maintainer's backup, or reconstruct it from the file list in S13, and confirm mode `one` with the 2026-11-08 log. Record both outputs in the spec's Revisions.
-- [ ] Step 2: Run `derive-log-facts.py . --json` from a real linked worktree of this repository, such as one at `E:/tmp/pt-w07`. It must report `how: main-checkout` and the main checkout's newest log. Then write a throwaway log from that worktree with the wrap, confirm it lands in the main checkout's store, and move it to `_superseded/` by hand afterwards. Run continue from the main checkout and confirm it sees the log before the move.
+- [x] Step 1: Run `list-candidates.py .` against this repository's real store, read-only. The store will have moved since 2026-11-10, so check the result against the rule rather than a fixed answer: every log the script lists must be in the window, carry a `session-id` or have no later log on its branch, and be named in no later log's `resumed-from` or `carried-from`. For the snapshot AC-7 names, copy the store as it stood on 2026-11-10 from the maintainer's backup, or reconstruct it from the file list in S13, and confirm mode `one` with the 2026-11-08 log. Record both outputs in the spec's Revisions.
+- [x] Step 2: Run `derive-log-facts.py . --json` from a real linked worktree of this repository, such as one at `E:/tmp/pt-w07`. It must report `how: main-checkout` and the main checkout's newest log. Then write a throwaway log from that worktree with the wrap, confirm it lands in the main checkout's store, and move it to `_superseded/` by hand afterwards. Run continue from the main checkout and confirm it sees the log before the move.
 - [ ] Step 3: In one session resumed with `claude --resume`, print `CLAUDE_CODE_SESSION_ID` and confirm that it equals the id from before the resume. This settles the one D6 fact the transcript scans could not see. Record the result in the spec's Unverified Claims.
 - [ ] Step 4: After release and after the maintainer updates the install, verify the install by behavior: a wrap's digest shows a `carry-forward:` line, which version 1.9.1 cannot print. Check both harnesses. Both scripts exit 2 when `lib/session-logs.py` is missing, and only the Claude Code cache was confirmed to carry `lib/`, so a Codex install must be checked by running `list-candidates.py` from its installed path.
 - [ ] Step 5: AC-10 waits for the first real case of two overlapping sessions in one repository. When it happens, check that continue lists both and that neither log's Waiting on You carries the other's items. Tick AC-10 only then. Until then the spec stays `committed`, not `fulfilled`.
 
 **Verification:** Steps 1 to 3 each produce a recorded output that matches the expectation stated in the step. AC-10's checkbox is ticked only from a real case, never from a fixture.
+
+**Partial 2026-11-10.** Step 1: `list-candidates.py` on this repository's real store, read-only, reports mode `one` with the 2026-11-08 log. The store has not changed since 2026-11-10, so this is also AC-7's snapshot expectation. Step 2: in a real linked worktree at `E:/tmp/pt-w07`, which has no `_local/` of its own, `list-candidates.py` and `derive-log-facts.py` both report the store as `main-checkout`, find the same 2026-11-08 log, and carry 14 Waiting on You items from it. The worktree and its branch were then removed. Step 2 deliberately wrote no throwaway log, because that log would have become the newest one in the maintainer's real store. A real wrap from a worktree after release proves the write instead. Steps 3 to 5 are open. Step 3 needs a session resumed with `claude --resume`. Steps 4 and 5 need the release and the maintainer's install update.
 
 ---
 

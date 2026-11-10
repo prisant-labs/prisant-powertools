@@ -2,7 +2,7 @@
 id: W-07
 title: "Session-aware wrap and continue: tell parallel and long-idle sessions apart"
 type: spec
-status: draft
+status: committed
 created: 2026-11-10
 updated: 2026-11-10
 linked-effort: "the maintainer's questions of 2026-11-10 about the session-log timestamp and parallel sessions, and the unbuilt parallel-session fixes (a) and (c) proposed in the private threads summary of 2026-10-25"
@@ -19,22 +19,22 @@ priority: P2
 
 ## Task Summary
 
-**Status:** draft. Written 2026-11-10; nothing built.
+**Status:** committed. Written 2026-11-10; D1 to D7 decided the same day. Built on branch `feat/w-07-session-aware-logs` the same day, through phase 6 of the plan; not merged or released.
 **Last updated:** 2026-11-10 by claude (Opus 5.5), under the maintainer's instruction of 2026-11-10 to write the spec
 **Linked plan:** `implementation-plan.md`, seven phases, written 2026-11-10; nothing built
 **Open questions:** 0. D1 to D7 were decided on 2026-11-10, each on its recommended option, and D6's follow-up ran the same day [S12] (see Open Questions / Decisions)
-**Revisions:** 5
+**Revisions:** 6
 
 ### Acceptance Criteria Fulfillment
 
-- [ ] AC-1: The documents say the file name's time is the wrap time
-- [ ] AC-2: `derive-log-facts.py` reports `session-id` and `session-start`
-- [ ] AC-3: The log schema carries the session fields and `carried-from`, and logs without them stay valid
-- [ ] AC-4: The wrap carries items from the resumed-from log, or else the newest log
-- [ ] AC-5: The wrap names every concurrent log
-- [ ] AC-6: The same-arc archive never targets another session's log
-- [ ] AC-7: Continue lists every unconsumed recent session and asks; a sequential carry consumes, a concurrent carry does not
-- [ ] AC-8: Continue behaves as today when one candidate exists
+- [x] AC-1: The documents say the file name's time is the wrap time
+- [x] AC-2: `derive-log-facts.py` reports `session-id` and `session-start`
+- [x] AC-3: The log schema carries the session fields and `carried-from`, and logs without them stay valid
+- [x] AC-4: The wrap carries items from the resumed-from log, or else the newest log
+- [x] AC-5: The wrap names every concurrent log
+- [x] AC-6: The same-arc archive never targets another session's log
+- [x] AC-7: Continue lists every unconsumed recent session and asks; a sequential carry consumes, a concurrent carry does not
+- [x] AC-8: Continue behaves as today when one candidate exists
 - [ ] AC-9: In a linked worktree, both skills read and write the main checkout's store
 - [ ] AC-10: A real parallel case is handled end to end
 
@@ -166,6 +166,7 @@ Session S wraps at 12:00 and again at 18:00. Both logs carry the same `session-i
 | 2026-11-10 | claude | amended | Requirement 4's concurrent exclusion now covers the same-branch rule as well as the newest-overall rule, because on a store where every log is on `main` the same-branch rule alone would carry and consume a parallel session's log. AC-4 gains a same-branch concurrent case, and AC-10 no longer requires the two sessions to be on different branches. Found while planning the build, before anything was built. |
 | 2026-11-10 | claude | opened | D7 opened after a replay of real logs [S13] showed that Requirement 4, with or without the amendment above, can carry from a much older log than today's rule. The amendment above was made without a maintainer ruling and stands only until D7 is decided; Requirement 4 and AC-4 change to match whichever option D7 takes. |
 | 2026-11-10 | claude | amended | D7 decided on Option C. Requirement 4 now carries from the resumed-from log or else the newest log overall, which replaces the same-session and same-branch rules, the earlier amendment, and the concurrent clause of D4's Option A. Requirement 5 names concurrent logs without refusing to carry from them, Requirement 6 keeps the archive off them, and Requirement 7 lets a `carried-from` consume only a log written before the carrying session started. AC-4, AC-5, AC-7, AC-10 and Examples 1, 1b and 3 are rewritten to match. |
+| 2026-11-10 | claude | verified | Status draft to committed, since D1 to D7 are decided. Built through phase 6. AC-1 to AC-8 are met by fixture suites, each with a canary, and by document checks. AC-7's real-store expectation holds: `list-candidates.py` reports one candidate, the 2026-11-08 log. AC-9 is met by fixtures and by a live read-only run in a real linked worktree, which reported the main checkout's store; a real wrap writing from a worktree remains to be seen, so AC-9 stays unticked. AC-10 waits for the first real parallel case after release. |
 
 ## Sources & Evidence
 
