@@ -2,9 +2,14 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.1.1 | 2026-11-11 | unreleased | fixed | `derive-status-facts.py` takes the nearest release tag, so a `pre-merge/*` backup tag or a floating `v1` is never the `latest_tag`, the base for `commits_since_tag`, or the start of the accomplishments window. |
 | 1.1.0 | 2026-11-02 | v0.12.0 | added | Each open pull request in the facts carries its check state, reduced from `gh pr list --json statusCheckRollup` in the same call, so the snapshot can name a failing pull request. Decided as CS-01 D6 (CI status for open pull requests) in the 2026-11-01 walk. |
 | 1.0.1 | 2026-10-30 | v0.11.0 | fixed | Codex now honors manual-only too: `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, which Codex reads in place of `disable-model-invocation`. |
 | 1.0.0 | 2026-10-28 | v0.10.0 | added | First version, specified by CS-01 (current status skill). Writes a dated, ranked status snapshot of any git repository to `_local/_status/YYYY-MM-DD_<model>_<byline>.md`, from one facts-script call, and checks it with a self-testing checker. Manual invocation only. Built on four working-default decisions, D1 to D4 in the CS-01 spec, all still `Open` pending the maintainer's ratification. |
+
+## 1.1.1 - 2026-11-11
+
+**Fixed: the latest tag is the last release, not the merge check's backup tag.** The merge check tags main as `pre-merge/<date>-<branch>` before every merge, and `derive-status-facts.py` took the nearest tag with a bare `git describe --tags --abbrev=0`, so on main at 20e012a its `latest_tag` was `pre-merge/2026-11-10-fix-wrap-session-release-tag` where the last release is v0.13.0. `commits_since_tag` then counted 2 commits where the release is 40 behind, and a snapshot with no previous snapshot started its accomplishments window at the backup's date. The call now passes `--match 'v[0-9]*.[0-9]*'`, the glob `scripts/skill-drift-check.py` adopted in PR #85 and `plab-wrap-session` 1.9.1 adopted in PR #87, which also skips a floating major tag such as `v1`. A repository whose only tags are backups has no `latest_tag`, and the `tags` gap now says that no release tag is reachable. `SKILL.md` and `references/status-format.md` name the field as the nearest release tag. `test-derive-status-facts.py` gains nine checks across two fixtures: a release tag with a backup tag and a `v1` on HEAD, and a repository whose only tag is a backup. Seven fail on the old code, which is the same as removing `--match`; the other two only prove the fixture tags exist. Loosening the glob to `v[0-9]*` fails the four that reach the `v1` tag.
 
 ## 1.1.0 - 2026-11-02
 
