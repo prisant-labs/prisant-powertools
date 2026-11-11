@@ -59,12 +59,15 @@ Unbumped versions, caught by this recipe. For each skill directory with content
 changed since the last tag, its `metadata.version` should have moved; if it did
 not, or if `HISTORY.md` has no entry for the version currently shipping, that is
 a finding. `derive-log-facts.py`'s `check4-doc-drift` field is a direct port of
-the recipe below:
+the recipe below. The last tag is the nearest release tag: `--match` skips the
+merge check's `pre-merge/*` backup tags and a floating major tag such as `v1`,
+because a backup sits nearer HEAD than the release and a diff since it misses
+skills changed since the release without a version bump.
 
 ```bash
-LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null)
+LAST_TAG=$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*' 2>/dev/null)
 if [ -z "$LAST_TAG" ]; then
-  echo "No tags yet; version-drift comparison has nothing to compare against, skipped."
+  echo "No release tags yet; version-drift comparison has nothing to compare against, skipped."
 else
   for dir in skills/*/; do
     skill=$(basename "$dir")
