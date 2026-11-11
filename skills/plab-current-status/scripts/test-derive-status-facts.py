@@ -285,7 +285,51 @@ def main() -> int:
         check("the facts script writes nothing in the working tree", before == after, "changed")
         check("an untracked file counts as a change", f["git"]["dirty_count"] >= 1, str(f["git"]["dirty_sample"]))
 
-    # 9. Each open pull request's checks reduce to one state. Called directly,
+        # 9. Only release tags count as the latest tag. The merge check tags
+        #    main as pre-merge/<date>-<branch> before every merge, and an action
+        #    repository may move a floating major tag such as v1. Both sit
+        #    nearer HEAD than the last release, and a bare `git describe --tags`
+        #    returned the backup: on 20e012a it gave
+        #    pre-merge/2026-11-10-fix-wrap-session-release-tag, not v0.13.0. The
+        #    same glob as scripts/skill-drift-check.py (PR #85) and
+        #    plab-wrap-session's derive-log-facts.py (PR #87). Only fixture (a)
+        #    catches a glob loosened to v[0-9]*, because v1 is nearer HEAD.
+        repo = init_repo(root / "backup-tag")
+        write(repo / "README.md", "# A project\n")
+        commit_all(repo, "release", "2026-01-10T12:00:00")
+        git(repo, "tag", "v1.0.0")
+        write(repo / "src.txt", "after the release\n")
+        commit_all(repo, "after the release", "2026-01-15T12:00:00")
+        git(repo, "tag", "pre-merge/2026-11-09-demo")
+        git(repo, "tag", "v1")
+        tags = set(git(repo, "tag", "-l").stdout.split())
+        check("backup-tag fixture: all three tags exist",
+              tags == {"v1.0.0", "pre-merge/2026-11-09-demo", "v1"}, str(sorted(tags)))
+        f = facts(repo)
+        tag = f["git"]["latest_tag"] or {}
+        check("latest_tag skips a pre-merge/* backup tag and a floating v1 tag", tag.get("name") == "v1.0.0", str(tag))
+        check("latest_tag's date is the release commit's date", tag.get("date") == "2026-01-10", str(tag))
+        check("commits since the tag are counted from the release tag", f["git"]["commits_since_tag_count"] == 1,
+              str(f["git"]["commits_since_tag"]))
+        check("accomplishments run from the release tag, not the backup",
+              f["window"]["accomplished_basis"] == "latest-tag" and f["window"]["accomplished_since"] == "2026-01-10",
+              str(f["window"]))
+
+        repo = init_repo(root / "only-backup-tag")
+        write(repo / "README.md", "# A project\n")
+        commit_all(repo, "first", "2026-01-10T12:00:00")
+        git(repo, "tag", "pre-merge/2026-11-09-demo")
+        tags = set(git(repo, "tag", "-l").stdout.split())
+        check("only-backup fixture: the backup tag exists", tags == {"pre-merge/2026-11-09-demo"}, str(sorted(tags)))
+        f = facts(repo)
+        check("a repository whose only tag is a backup has no latest_tag", f["git"]["latest_tag"] is None,
+              str(f["git"]["latest_tag"]))
+        check("with only a backup tag, the missing release tag is a named gap", "tags" in gap_sources(f),
+              str(gap_sources(f)))
+        check("with only a backup tag, accomplishments have no tag basis", f["window"]["accomplished_basis"] == "none",
+              str(f["window"]))
+
+    # 10. Each open pull request's checks reduce to one state. Called directly,
     # because every case above runs with `gh` absent; the rollups are the two
     # shapes `gh pr list --json statusCheckRollup` returns.
     check_cases()

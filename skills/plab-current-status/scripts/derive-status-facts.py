@@ -54,6 +54,10 @@ run as a subprocess by its path inside the plugin (CS-01's D1, where the
 decisions sweep lives). Its exit 2 is this script's exit 2. Newest-log
 discovery mirrors `skills/plab-continue-session/references/log-discovery.md`,
 as `gather-backlog.py` and `derive-log-facts.py` already do.
+
+WHY ONLY RELEASE TAGS COUNT (`--match 'v[0-9]*.[0-9]*'`, 2026-11-11)
+-----------------------------------------------------------------------
+The merge check tags main as `pre-merge/<date>-<branch>` before every merge, so a backup tag almost always sits nearer HEAD than the last release. A bare `git describe --tags --abbrev=0` returned that backup: on 20e012a it gave `pre-merge/2026-11-10-fix-wrap-session-release-tag` where the last release is v0.13.0. The `latest_tag` fact then named a backup, `commits_since_tag` counted from it, and with no previous snapshot the accomplishments window started at its date. `latest_tag` now passes the same glob as `scripts/skill-drift-check.py` (PR #85) and `plab-wrap-session`'s `derive-log-facts.py` (PR #87), which also drops a floating major tag such as `v1`. A repository whose only tags are backups has no `latest_tag`, and the missing release tag is a named gap.
 """
 
 from __future__ import annotations
@@ -72,6 +76,8 @@ sys.dont_write_bytecode = True
 
 GATHER = Path(__file__).resolve().parents[2] / "plab-resolve-open-items" / "scripts" / "gather-backlog.py"
 
+# The nearest tag shaped like v1.2.3; see the docstring section on release tags.
+RELEASE_TAG_GLOB = "v[0-9]*.[0-9]*"
 TYPED_KINDS = ("spec", "implementation-plan", "release-plan")
 STATUS_DIR = "_local/_status"
 # YYYY-MM-DD_<model>_<byline>.md: model and byline are lowercase kebab-case,
@@ -174,13 +180,13 @@ def git_facts(repo, do_fetch, gaps):
 
     facts["latest_tag"] = None
     if facts["head"]:
-        rc, out, _ = git(repo, "describe", "--tags", "--abbrev=0")
+        rc, out, _ = git(repo, "describe", "--tags", "--abbrev=0", "--match", RELEASE_TAG_GLOB)
         if rc == 0 and out.strip():
             tag = out.strip()
             _, date_out, _ = git(repo, "log", "-1", "--format=%ad", "--date=short", tag)
             facts["latest_tag"] = {"name": tag, "date": date_out.strip() or None}
         else:
-            gaps.append({"source": "tags", "reason": "no tag is reachable from HEAD"})
+            gaps.append({"source": "tags", "reason": "no release tag (matching `%s`) is reachable from HEAD" % RELEASE_TAG_GLOB})
     return facts
 
 

@@ -14,7 +14,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 |---|---|---|---|---|
 | `plab-ai-review` | 1.3.0 | Auto + explicit | `<doc.md> [--reviewer codex\|gpt\|gemini] [--dispatch] [--respond] [--collect] [--close]` | Beside the source doc, plus `_archive/` on `--close` |
 | `plab-audit` | 1.1.1 | **Explicit only** | `<path> [--appraise\|--audit\|--roadmap] [--type ...] [--lens=docs] [--out <path>]` | `_output/plab-audit/<repo>_<YYYY-MM-DD>/` |
-| `plab-current-status` | 1.1.0 | **Explicit only** | `[<byline>] [--no-fetch]` | `_local/_status/YYYY-MM-DD_<model>_<byline>.md` (gitignored) |
+| `plab-current-status` | 1.1.1 | **Explicit only** | `[<byline>] [--no-fetch]` | `_local/_status/YYYY-MM-DD_<model>_<byline>.md` (gitignored) |
 | `plab-project-pulse` | 1.1.1 | **Explicit only** | `[--quick\|--week] [--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD/`, private, outside any repository or ignored by it |
 | `plab-usage-audit` | 1.1.1 | **Explicit only** | `[--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD_claude-usage/`; a tracked folder only when the settings allow it |
 | `plab-continue-session` | 1.6.2 | Auto + explicit | `[--log <path>]` | Nothing. Displays context only |
@@ -199,7 +199,7 @@ Audits a repository into a five-file bundle: what it is worth, what is wrong wit
 
 ---
 
-### `plab-current-status` 1.1.0, explicit only
+### `plab-current-status` 1.1.1, explicit only
 
 Writes a dated, ranked status snapshot of the current repository.
 
