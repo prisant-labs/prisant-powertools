@@ -65,9 +65,11 @@ codex plugin add prisant-powertools@prisant-labs
 
 Both harnesses read the same marketplace, `prisant-labs`, which pins a released tag.
 
-**Your first run.** At the end of a coding session, type `/plab-wrap-session`. It writes a session log with what was done, what waits on you, and a continuation prompt. When you come back, type `/plab-continue-session`. It reads that log, checks it against what has changed in the repository since, and confirms with you before it picks up the named next action.
+**Your first run.** Work in a git repository, and add `_local/` to its `.gitignore` first, because the session skills keep their local notes there. At the end of a coding session, type `/plab-wrap-session`. It writes a session log to `_local/_session-logs/` with what was done, what waits on you, and a continuation prompt, and prints the log's path when it finishes. When you come back, type `/plab-continue-session`. It reads that log, checks it against what has changed in the repository since, and confirms with you before it picks up the named next action.
 
 **To update after a release:** in Claude Code, run `claude plugin marketplace update prisant-labs`, then `claude plugin update prisant-powertools@prisant-labs`, and restart. In Codex, run `codex plugin marketplace upgrade prisant-labs`.
+
+**If a skill does not appear** after an install or an update, restart the harness. A running session keeps the plugin version it started with, and clearing the conversation does not reload it. Each skill's usage guide, linked from its name below, says what the skill is for and, for most skills, when not to use it.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
