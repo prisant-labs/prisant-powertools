@@ -47,7 +47,7 @@ Every other fixture-based gate in this repository builds a plain directory tree,
 
 WHAT THIS SCRIPT DELIBERATELY DOES NOT CHECK
 ------------------------------------------------
-Whether the version written in `README.md`, `docs/status-skills.md`, or a usage README agrees with `skills/<name>/SKILL.md` (`scripts/version-parity-check.py`'s job). Whether a release plan's bookkeeping fields agree with its effort folders (`scripts/doc-lifecycle-check.py`'s job). Whether an unbumped version is semantically the right increment. And any skill whose folder has no diff at all since the latest tag, which is presumed correctly unbumped.
+Whether the version written in `docs/status-skills.md` or a usage README agrees with `skills/<name>/SKILL.md` (`scripts/version-parity-check.py`'s job). Whether a release plan's bookkeeping fields agree with its effort folders (`scripts/doc-lifecycle-check.py`'s job). Whether an unbumped version is semantically the right increment. And any skill whose folder has no diff at all since the latest tag, which is presumed correctly unbumped.
 """
 
 import argparse

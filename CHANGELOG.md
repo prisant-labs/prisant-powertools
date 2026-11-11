@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The README lists skills as "name - what it does", grouped by stage.** The three-column table wrapped every skill name and description into narrow, ragged columns. Each skill is now one line, under six stage headings from Sessions to Weekly review, and a hand marks the eight manual-only skills. The page also gains a table of contents, badges, a quick start with a first run, and a project status section. The README no longer states per-skill versions; [`docs/status-skills.md`](docs/status-skills.md) carries them, so a version-only release no longer touches the README. `scripts/version-parity-check.py` stops reading the README (location L1 is retired), and a new self-test case proves it stays unread.
+
 ### Added
 
 - **`plab-org-profile-readme` 1.1.0, a new manual-only skill.** Its 1.0.0 was never released, so 1.1.0 is the first version you can install. `/plab-org-profile-readme <org>` keeps a GitHub organization's profile page to a standard and true to its public repositories. `--setup` picks one of three built-in standards, Catalog, Compact or Showcase, with seven options such as badges and recent releases, or adopts the page you already have as the standard. Each later run updates the page from what changed in the repositories, or from an instruction you quote, checks it with a fourteen-rule checker, and opens or updates one pull request. A pull request still waiting from an earlier run is updated in place, so the page never stalls behind it. Private repositories never appear: the facts carry only a digest of each private name, and the checker rejects any page, pull request body or standard that names one. A repository you do not want shown, such as a scratch repository, can be ignored: each run asks whether to add or ignore a repository new to the page, and an instruction such as "ignore scratch-repo" records it, with its reason, in the standard. The skill never merges.
