@@ -74,7 +74,10 @@ add:
       all against SKILL.md and library.json, so a heading left behind after a version bump is now
       caught by CI too.
 
-  - doc: "README.md skill table"
+  - doc: "README.md skill list"
     update: >-
-      Bump the Version column for every affected skill in the root README table (starts at line 9).
-      Distinct from the built-in README row, which covers prose version references.
+      The root README lists skills as "name - what it does" under The skills, grouped by stage, and
+      carries no versions; each skill's version lives on docs/status-skills.md only. Add or remove a
+      line when a skill is added or retired, move the hand marker when a skill becomes or stops being
+      manual-only, and reword a line when the skill's purpose changes. A version-only release leaves
+      the README untouched.
