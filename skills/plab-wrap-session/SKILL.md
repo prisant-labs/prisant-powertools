@@ -13,8 +13,8 @@ description: "Document and close agentic coding sessions with structured session
 argument-hint: "[mode: quick|final|deep|blocked] [--organize]"
 license: MIT
 metadata:
-  version: "1.10.0"
-  updated: 2026-11-10
+  version: "1.11.0"
+  updated: 2026-11-12
 ---
 
 # Wrap Session
@@ -83,14 +83,31 @@ The log is written before any question is asked, and amended after the answers.
 3. Run the auto actions the sweep allows, and record each.
 4. Write the log. Its Hygiene Sweep section lists every proposal as `- **H1** <action>. Status: unanswered`, and the continuation prompt mirrors the list as pending hygiene actions.
 5. Run `check-log.py` (Log Self-Check below) and fix every finding.
-6. With no proposals, the wrap is done. Otherwise present every proposal in one message, numbered, and end with the answer line: "Answer in one line, such as `H1 y, H2 n`, or `ok` to approve them all."
+6. Send the Closing Summary (below) in the conversation. With no proposals, that message ends the wrap. Otherwise the same message continues after the summary with every proposal, numbered, and ends with the answer line: "Answer in one line, such as `H1 y, H2 n`, or `ok` to approve them all."
 7. Carry out exactly the approved proposals, nothing adjacent.
 8. Amend the log. In the Hygiene Sweep section and the continuation prompt, change each status word: `done` or `failed` with the result for an approved proposal, `declined` for a declined one, and `unanswered` stays for any number the answer left out. A declined proposal that now needs the maintainer also goes in Waiting on You.
-9. Run `check-log.py` again on the amended file. This second clean run completes the wrap.
+9. Run `check-log.py` again on the amended file. This second clean run completes the wrap. The final message reports each proposal's outcome, and restates Next only when an approved proposal changed it.
 
 **Silence approves nothing.** An item the answer line leaves out stays `unanswered`; only `ok`, `all y` or an equivalent explicit phrase approves every proposal. This is the same rule `plab-resolve-open-items` applies to its answer line.
 
 **Why the log comes first.** A terminal closed while a question is open still leaves a complete log, whose unanswered proposals `plab-continue-session` already shows as re-decidable. The ask-first order, decided on 2026-10-19 and reversed on 2026-11-03 before it was built, would have left no log at all in that case. Writing first costs one edit and one more `check-log.py` run, and only on wraps that asked a question.
+
+## Closing Summary
+
+Every wrap tells the maintainer in the conversation what the session accomplished and what comes next, in priority order. Before 1.11.0 a wrap could end on the log path or on the hygiene question, so learning what had happened meant opening the log.
+
+**Copy the summary from the log just written.** Do not re-derive anything and do not re-read the file: the log's text is already in this session, and a summary built separately can disagree with the record it summarizes.
+
+The summary has four parts, in this order, and runs to about fifteen lines:
+
+1. **Accomplished.** Three to six bullets, each leading with the outcome, taken from Work Completed. Quick and blocked logs have no Work Completed section, so take them from Summary.
+2. **Next, by priority.** The first three to five items of What's Next, numbered in the log's order, most important first. Mark an item that waits on the maintainer with "(you)", and when the log names a single unlocking decision, say so on that item. Quick and blocked logs have no What's Next section, so use the continuation prompt's immediate action followed by its ordered secondary actions; a blocked wrap leads with the blocker and who can unblock it.
+3. **Waiting on you.** One line: the number of items and the date of the oldest `blocked since`, or "Nothing pending."
+4. **Log.** The log's path.
+
+When the wrap has hygiene proposals, the numbered proposals and the answer line follow the summary in the same message, so the answer line stays last (Wrap Order step 6). `--organize` writes no log and sends no summary.
+
+This is deliberately not a Log Self-Check gate, because `check-log.py` reads the log file and cannot see the conversation.
 
 ## Session Log Output
 
@@ -277,6 +294,7 @@ If nothing warrants an update, move on without commenting.
 - Never conflate "completed" with "verified" - state verification status explicitly
 - Never commit, push, or modify anything beyond the session log until the maintainer approves that proposal by its number. The only exceptions are the four auto actions in `references/hygiene-sweep.md`, each recorded in the log
 - Never ask a hygiene question before the log is written; write first, ask in one batch, then amend
+- Never end a wrap without the Closing Summary in the conversation, copied from the log rather than re-derived
 - Never update surrounding docs until their proposal is approved
 - The Waiting on You section is mandatory in every mode; an empty list is stated, never omitted
 - Summary must be ≤ 120 characters (for index display)

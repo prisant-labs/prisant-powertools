@@ -1,6 +1,6 @@
 # plab-wrap-session
 
-**Version:** 1.10.0
+**Version:** 1.11.0
 **Source:** [`skills/plab-wrap-session/`](../../../skills/plab-wrap-session/)
 
 Document and close agentic coding sessions with structured session logs. Deep mode is the default: a full log with evidence index, a verbose copy-paste-ready continuation prompt, a hygiene sweep (remote divergence, release state, doc drift, working-tree reconciliation) whose numbered proposals are asked in one batch after the log is written, and a mandatory Waiting on You section listing everything blocked on the maintainer, with links.
@@ -11,13 +11,13 @@ Document and close agentic coding sessions with structured session logs. Deep mo
 
 ### Quick Start
 
-At the end of any coding session:
+Install the plugin first (see Installation below), and add `_local/` to the repository's `.gitignore`, because the log is a local note and should never be committed. Then, at the end of any coding session:
 
 ```
 /plab-wrap-session
 ```
 
-The skill gathers evidence (git status, decisions, files changed), selects a mode, and writes a structured session log to `_local/_session-logs/` with a continuation prompt you can paste into the next session.
+The skill gathers evidence (git status, decisions, files changed), selects a mode, and writes a structured session log to `_local/_session-logs/` with a continuation prompt you can paste into the next session. It then tells you in the chat what the session accomplished, what comes next in priority order, and where the log is (see the closing summary under Output Shape).
 
 ### Where Logs Go
 
@@ -163,7 +163,15 @@ Run it twice and the second run does nothing. A full worked example with real co
 
 ## Output Shape
 
-The skill writes one session log to `_local/_session-logs/YYYY-MM-DD_HH-MM_<llm>_<brief-kebab-title>.md`. Section depth scales to the selected mode (quick / final / deep / blocked); the table below shows the full Final-mode shape:
+The skill writes one session log and then sends one closing summary in the conversation.
+
+The closing summary (since 1.11.0) is about fifteen lines copied from the log just written: what the session accomplished, the next three to five steps in priority order with the ones waiting on you marked "(you)", a one-line count of items waiting on you, and the log's path. Every mode sends it. Quick and blocked logs have no Work Completed or What's Next section, so their summary takes what was accomplished from the log's Summary and the next steps from the continuation prompt; a blocked wrap's next steps lead with the blocker and who can unblock it. `--organize` sends no summary, because it writes no log.
+
+When the hygiene sweep (deep and final modes) has numbered proposals, they follow the summary in the same message, and the message ends with the line telling you how to answer them, such as `H1 y, H2 n` or `ok`. The summary describes the log as first written. After you answer, the wrap amends the log with each proposal's outcome, and its last message reports those outcomes and restates the next steps only if an approved proposal changed them.
+
+If the wrap ends without a summary in the chat, the log is still the complete record: open the path it wrote, or ask for the summary, and it will be copied from that log.
+
+The log goes to `_local/_session-logs/YYYY-MM-DD_HH-MM_<llm>_<brief-kebab-title>.md`. Section depth scales to the selected mode (quick / final / deep / blocked); the table below shows the full Final-mode shape:
 
 | Section / Element | Purpose |
 |-------------------|---------|

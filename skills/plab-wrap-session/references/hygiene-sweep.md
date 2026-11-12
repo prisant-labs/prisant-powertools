@@ -112,7 +112,7 @@ A non-empty `collisions` list is different: it means a target filename already e
 
 ## Resolution protocol
 
-The log is written first, and the proposals are asked after it, in one message (`SKILL.md`, Wrap Order). Each finding gets one concrete, numbered proposal:
+The log is written first, and the proposals are asked after it, in one message that opens with the Closing Summary (`SKILL.md`, Wrap Order and Closing Summary). Each finding gets one concrete, numbered proposal:
 
 > **H1** Unpushed: 2 commits on main. Push to origin/main.
 > **H2** Doc drift: docs/skills/x/README.md says 1.1.0, SKILL.md says 1.2.0. Update the version line.

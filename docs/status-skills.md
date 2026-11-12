@@ -24,7 +24,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 | `plab-resolve-open-items` | 1.2.0 | Auto + explicit | `[--backlog \| <document>]` | Each item's home document; the walk record and any backlog file in `_local/decisions/` |
 | `plab-spec` | 1.3.4 | Auto + explicit | `--effort <id> [--target-release vX.Y.Z] [--revise] [--dry-run]` | `docs/internal/release-plans/_unassigned/` by default |
 | `plab-strategy-brief` | 1.1.1 | Auto + explicit | `[paste raw thinking]` | `_output/plab-strategy-brief/` |
-| `plab-wrap-session` | 1.10.0 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
+| `plab-wrap-session` | 1.11.0 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
 | `plab-ship` | 1.0.0 | **Explicit only** | `[<branch\|PR> ...] [--release] [--no-fetch]` | `_local/_shipped/YYYY-MM-DD_<byline>.md` (gitignored), plus merges and any release |
 | `plab-org-profile-readme` | 1.1.0 | **Explicit only** | `<org> [--setup] ["<instructions>"]` | A branch and one pull request in `<org>/.github`; nothing local |
 
@@ -34,7 +34,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 
 ## Per-skill detail
 
-### `plab-wrap-session` 1.10.0
+### `plab-wrap-session` 1.11.0
 
 The most-used skill in the plugin. Writes a structured session log and hands off to `plab-continue-session`.
 
@@ -48,7 +48,7 @@ The most-used skill in the plugin. Writes a structured session log and hands off
 | References | 4 files |
 | Paired with | `plab-continue-session`. A session-log format change in one requires a matching change in the other. Both load the session-log rules from the plugin's shared `lib/session-logs.py` |
 
-One call to `derive-log-facts.py` gathers the frontmatter facts, this session's id and start, the Waiting on You items of the log it carries from (the resumed log, or else the newest), the logs another session wrote while this one ran, and the detection results of a pre-wrap hygiene sweep across five checks (remote divergence, working tree, release state, documentation drift, session-log store). The agent judges that output and drafts numbered proposals, runs four auto actions (a pruning fetch first), writes the log, and runs one call to `check-log.py` as the Log Self-Check. It then asks every proposal in one batch, amends the log with the answers, and runs `check-log.py` again. It runs the two existing canary-proven detector gates (path citations, dashes) exactly as before, plus the decisions-count comparison, summary length, Tier 1 frontmatter completeness, and the Waiting on You rules, and in deep mode the Uncertainty Ledger and What You May Not Realize presence checks. It reports the same three states as the detectors it calls: `clean`, `findings`, `broken`, where `broken` blocks exactly as `findings` does.
+One call to `derive-log-facts.py` gathers the frontmatter facts, this session's id and start, the Waiting on You items of the log it carries from (the resumed log, or else the newest), the logs another session wrote while this one ran, and the detection results of a pre-wrap hygiene sweep across five checks (remote divergence, working tree, release state, documentation drift, session-log store). The agent judges that output and drafts numbered proposals, runs four auto actions (a pruning fetch first), writes the log, and runs one call to `check-log.py` as the Log Self-Check. It then sends a closing summary in the conversation, copied from the log: what was accomplished and what comes next in priority order. In the same message it asks every proposal in one batch, amends the log with the answers, and runs `check-log.py` again. It runs the two existing canary-proven detector gates (path citations, dashes) exactly as before, plus the decisions-count comparison, summary length, Tier 1 frontmatter completeness, and the Waiting on You rules, and in deep mode the Uncertainty Ledger and What You May Not Realize presence checks. It reports the same three states as the detectors it calls: `clean`, `findings`, `broken`, where `broken` blocks exactly as `findings` does.
 
 ### `plab-continue-session` 1.7.0
 
