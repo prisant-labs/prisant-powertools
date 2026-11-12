@@ -35,7 +35,7 @@ WHY ONLY RELEASE TAGS COUNT (`--match 'v[0-9]*.[0-9]*'`, 2026-11-08)
 -----------------------------------------------------------------------
 The merge check tags main as `pre-merge/<date>-<branch>` before every merge, so a backup tag almost always sits nearer HEAD than the last release. A bare `git describe --tags` returned that backup tag, the diff since it was empty, and the gate reported CLEAN while checking nothing. On 2026-11-08 it diffed 0 skill files against `pre-merge/2026-11-08-fix-citation-check-home-and-tags` where the true baseline, v0.13.0, has 57. The SH-01 spec measured the same failure in another repository on 2026-11-05 (its source S5). The glob accepts only a `v` followed by a dotted number, which also drops a floating major tag such as `v1`, the kind an action repository moves on each release. The self-test proves both exclusions and a repository whose only tag is a backup (BROKEN). The SH-01 spec's decision D2 would move the backups out of `refs/tags/` altogether; this filter is correct either way.
 
-The hygiene-sweep recipe in `skills/plab-wrap-session/references/hygiene-sweep.md` and `derive-log-facts.py` (its `latest-tag` and Check 4 fields) still call a bare `git describe --tags --abbrev=0` and carry the same defect. They live inside a skill and need that skill's own version bump, so they are left to a separate change.
+The hygiene-sweep recipe in `skills/plab-wrap-session/references/hygiene-sweep.md` and `derive-log-facts.py` (its `latest-tag`, base-resolution fallback, and Checks 3 and 4) carried the same defect and were fixed on 2026-11-09 in `plab-wrap-session` 1.9.1 with the same glob, proven by `test-derive-log-facts.py`. `skills/plab-current-status/scripts/derive-status-facts.py`, the last bare `git describe --tags --abbrev=0` for a latest-tag fact, was fixed on 2026-11-11 in `plab-current-status` 1.1.1 with the same glob, proven by `test-derive-status-facts.py`.
 
 WHY EVERY SUBPROCESS BOUNDARY PINS encoding="utf-8"
 -----------------------------------------------------
@@ -47,7 +47,7 @@ Every other fixture-based gate in this repository builds a plain directory tree,
 
 WHAT THIS SCRIPT DELIBERATELY DOES NOT CHECK
 ------------------------------------------------
-Whether the version written in `README.md`, `docs/status-skills.md`, or a usage README agrees with `skills/<name>/SKILL.md` (`scripts/version-parity-check.py`'s job). Whether a release plan's bookkeeping fields agree with its effort folders (`scripts/doc-lifecycle-check.py`'s job). Whether an unbumped version is semantically the right increment. And any skill whose folder has no diff at all since the latest tag, which is presumed correctly unbumped.
+Whether the version written in `docs/status-skills.md` or a usage README agrees with `skills/<name>/SKILL.md` (`scripts/version-parity-check.py`'s job). Whether a release plan's bookkeeping fields agree with its effort folders (`scripts/doc-lifecycle-check.py`'s job). Whether an unbumped version is semantically the right increment. And any skill whose folder has no diff at all since the latest tag, which is presumed correctly unbumped.
 """
 
 import argparse

@@ -1145,6 +1145,69 @@ def main() -> int:
             str(tags_tail),
         )
 
+        # ------------------------------------------------------------------
+        # 14. Only release tags count as the latest tag. The merge check tags
+        #     main as pre-merge/<date>-<branch> before every merge, and an
+        #     action repository may move a floating major tag such as v1. Both
+        #     sit nearer HEAD than the last release, and a bare
+        #     `git describe --tags` returned the backup: on 603df77 it gave
+        #     pre-merge/2026-11-08-fix-drift-check-release-tag, not v0.13.0,
+        #     so check 4 diffed against a recent backup and missed unbumped
+        #     skills. The same glob as scripts/skill-drift-check.py (PR #85).
+        # ------------------------------------------------------------------
+        backup_repo = init_repo(root / "backup-tag")
+        bt_skill = backup_repo / "skills" / "plab-demo"
+        bt_skill.mkdir(parents=True)
+        (bt_skill / "SKILL.md").write_text(
+            '---\nmetadata:\n  version: "1.0.0"\n---\n# plab-demo\n', encoding="utf-8"
+        )
+        (bt_skill / "HISTORY.md").write_text("| Version |\n|---|\n| 1.0.0 |\n", encoding="utf-8")
+        git(backup_repo, "add", "skills")
+        git(backup_repo, "commit", "-m", "add plab-demo")
+        git(backup_repo, "tag", "v1.0.0")
+        (bt_skill / "SKILL.md").write_text(
+            '---\nmetadata:\n  version: "1.0.0"\n---\n# plab-demo\n\nChanged without a bump.\n',
+            encoding="utf-8",
+        )
+        git(backup_repo, "add", "skills")
+        git(backup_repo, "commit", "-m", "change plab-demo without a bump")
+        git(backup_repo, "tag", "pre-merge/2026-11-09-demo")
+        git(backup_repo, "tag", "v1")
+
+        proc = run_script(str(backup_repo), "--json", no_session_env=True)
+        check("backup-tag fixture: --json run exits 0", proc.returncode == 0, proc.stderr)
+        data = json.loads(proc.stdout)
+        check("latest-tag skips a pre-merge/* backup tag and a floating v1 tag",
+              data.get("latest-tag") == "v1.0.0", str(data.get("latest-tag")))
+        check("base resolution's latest-tag fallback reaches the release tag",
+              data["base"] == {"ref": "v1.0.0", "resolution": "latest-tag"}, str(data["base"]))
+        check("files-changed is measured from the release tag",
+              data["files-changed"] == ["skills/plab-demo/SKILL.md"], str(data["files-changed"]))
+        check3_tag = data["hygiene-sweep"]["check3-release"]["version-vs-tag"]["latest-tag"]
+        check("check 3 compares the version against the release tag",
+              check3_tag == "v1.0.0", str(check3_tag))
+        drift = data["hygiene-sweep"]["check4-doc-drift"]
+        check("check 4 diffs against the release tag",
+              drift.get("last-tag") == "v1.0.0", str(drift))
+        check("check 4 still sees the unbumped skill behind a backup tag (canary)",
+              any("plab-demo" in f and "metadata.version" in f for f in drift.get("findings", [])),
+              str(drift))
+
+        only_backup = init_repo(root / "only-backup-tag")
+        git(only_backup, "tag", "pre-merge/2026-11-09-demo")
+        proc = run_script(str(only_backup), "--json", no_session_env=True)
+        data = json.loads(proc.stdout)
+        check("a repository whose only tag is a backup has no latest-tag",
+              data.get("latest-tag") is None, str(data.get("latest-tag")))
+        check("a backup tag is never the base resolution's latest-tag fallback",
+              data["base"]["resolution"] == "none", str(data["base"]))
+        # The reason must be no-tags, not no-skills-dir: this fixture has no
+        # skills/ folder, so an "available is False" check alone passed on the
+        # unfixed code for the wrong reason.
+        check("check 4 reports no release tag rather than diffing against a backup",
+              data["hygiene-sweep"]["check4-doc-drift"] == {"available": False, "reason": "no-tags"},
+              str(data["hygiene-sweep"]["check4-doc-drift"]))
+
         w07_cases(root)
 
     failed =[name for name, ok, _ in results if not ok]

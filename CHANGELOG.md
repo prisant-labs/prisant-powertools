@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The README lists skills as "name - what it does", grouped by stage.** The three-column table wrapped every skill name and description into narrow, ragged columns. Each skill is now one line, under six stage headings from Sessions to Weekly review, and a hand marks the eight manual-only skills. The page also gains a table of contents, badges, a quick start with a first run, and a project status section. The README no longer states per-skill versions; [`docs/status-skills.md`](docs/status-skills.md) carries them, so a version-only release no longer touches the README. `scripts/version-parity-check.py` stops reading the README (location L1 is retired), and a new self-test case proves it stays unread.
+
 ### Added
 
 - **`plab-continue-session` 1.7.0: it asks when more than one session is waiting.** If sessions ran in parallel and each left a handoff nobody has picked up in the last 7 days, `/plab-continue-session` lists them, with branch, how long each session ran and how many items wait on you, and asks which to resume. With one waiting session it resumes exactly as before.
@@ -22,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`plab-usage-audit` and `plab-project-pulse` 1.1.1: `pre-merge/*` backup tags no longer count as releases.** They are counted apart in `pre_merge_tags_in_window`.
 - **The skill drift gate diffs against the last release again.** `scripts/skill-drift-check.py` took the nearest tag, which is almost always one of the merge check's `pre-merge/*` backup tags, so it compared HEAD with itself and passed without checking anything. It now takes the nearest tag shaped like `v1.2.3`, which also skips a floating `v1`, and a repository whose only tag is a backup is reported as broken.
 - **`plab-wrap-session` 1.9.1: fewer false alarms from the path-citation gate.** The log self-check flagged home paths, site routes, git ranges, backup tags such as `pre-merge/2026-11-04-release-3.12.0.0`, and commands in backticks as missing files, which made six wraps reword correct logs. Those shapes are now excluded, and the path inside a backticked command is checked on its own, including a command with arguments, which was never checked before.
+- **`plab-wrap-session` 1.9.1: the session log's latest tag is the last release.** `derive-log-facts.py` took the nearest tag, which is almost always one of the merge check's `pre-merge/*` backup tags, so a log's `latest-tag` named a backup and the hygiene sweep's documentation-drift check missed skills changed since the release without a version bump. It now takes the nearest tag shaped like `v1.2.3`, the same rule as the skill drift gate, and the sweep's recipe does the same.
+- **`plab-current-status` 1.1.1: the snapshot's latest tag is the last release.** `derive-status-facts.py` took the nearest tag, which is almost always one of the merge check's `pre-merge/*` backup tags, so a snapshot named a backup as the newest tag, counted commits since it, and, with no earlier snapshot, started its accomplishments window at its date. It now takes the nearest tag shaped like `v1.2.3`, the same rule as the skill drift gate and `plab-wrap-session`.
 - **`plab-project-pulse` 1.1.1: `--spend` now works.** It joins `plab-usage-audit`'s `projects.json` onto the repositories by path, and names spend that matches no repository in `gaps`.
 
 ## [0.13.0] - 2026-11-06

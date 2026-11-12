@@ -25,9 +25,9 @@ WHY THIS IS A STRUCTURAL CHECK AND NOT A VERSION-STRING SWEEP
 ------------------------------------------------------------
 The obvious implementation, "find every `\\d+\\.\\d+\\.\\d+` in the tracked docs and compare it to something", is the implementation this repository already knows not to write. D-12's path-citation rule scored 13 flags with 11 false positives when a prose rule was mechanized literally (`docs/internal/release-plans/plan_04_gates-that-cannot-fail-open/D-12_path-citation-precision/spec.md`), and the lesson kept from it is "mechanize the structure, never the prose". Version-shaped strings in these documents are overwhelmingly historical: HISTORY tables, "carried through 1.2.1", changelog entries. Every one of those is correct precisely because it does NOT match the current version.
 
-This script therefore reads exactly six structured locations, each of which is a claim about what a version IS RIGHT NOW, and ignores every other version-shaped string in the repository:
+This script therefore reads exactly five structured locations, each of which is a claim about what a version IS RIGHT NOW, and ignores every other version-shaped string in the repository:
 
-  L1  `README.md`, the Skills table. A row whose first cell links a `plab-*` skill claims that skill's current version.
+  L1  Retired 2026-11-10. It was `README.md`'s Skills table. The root README now lists skills as `name - what it does` and claims no per-skill version at all; it links to `docs/status-skills.md` instead, which L2 and L5 already check. A document that states no version cannot drift, so the location was removed rather than re-matched. The label stays unused so that L2 to L6 keep the names older records cite, and `_self_test_root_readme_not_read` proves the README is no longer read.
   L2  `docs/status-skills.md`, the At a glance table. Same row shape, same claim.
   L3  `docs/skills/<skill>/README.md`, the `**Version:**` line near the top. One per usage README.
   L4  `docs/status-skills.md`, the `**Plugin version:**` line. A claim about `library.json`'s version, not a skill's.
@@ -38,13 +38,13 @@ Authoritative sources, never the other way round: a skill's version is whatever 
 
 WHY AN UNPARSEABLE LOCATION IS BROKEN, NOT CLEAN
 ------------------------------------------------
-Each of L1, L2, L3, L5 and L6 is matched by a shape. If someone reformats the Skills table, renames the `**Version:**` label, changes the section-heading format, or empties `components.skills`, the matcher stops finding claims and this gate goes quiet while the documents drift freely. A gate that reports CLEAN because it has gone blind is worse than no gate, and this repository has been bitten by that exact failure twice: the empty `git tag -l` in v0.5.2, and `AGENTS.md` never loading in the superpowers experiment.
+Each of L2, L3, L5 and L6 is matched by a shape. If someone reformats the At a glance table, renames the `**Version:**` label, changes the section-heading format, or empties `components.skills`, the matcher stops finding claims and this gate goes quiet while the documents drift freely. A gate that reports CLEAN because it has gone blind is worse than no gate, and this repository has been bitten by that exact failure twice: the empty `git tag -l` in v0.5.2, and `AGENTS.md` never loading in the superpowers experiment.
 
 So a location that yields ZERO claims when the repository has skills to claim is BROKEN, not clean. A location that yields SOME claims but is missing a particular skill is a FINDING, because that is real drift: a skill exists and the documentation does not list it.
 
 WHAT THIS SCRIPT DELIBERATELY DOES NOT CHECK
 --------------------------------------------
-Whether a version SHOULD have been bumped (Check 4's question, and one that needs git history). Whether `HISTORY.md` has a row for the current version (also Check 4). Whether the generated manifests agree with `library.json`, which is the toolkit's `gen-manifest.mjs` and its own parity gate. Whether a version number is semantically the right increment. And any version-shaped string outside the four locations above, all of which are presumed historical and correct.
+Whether a version SHOULD have been bumped (Check 4's question, and one that needs git history). Whether `HISTORY.md` has a row for the current version (also Check 4). Whether the generated manifests agree with `library.json`, which is the toolkit's `gen-manifest.mjs` and its own parity gate. Whether a version number is semantically the right increment. And any version-shaped string outside the five locations above, all of which are presumed historical and correct.
 """
 
 import argparse
@@ -156,7 +156,7 @@ def declared_library_components(repo_root):
 def table_claims(text, rel_path):
     """Every table row whose FIRST cell names exactly one `plab-*` skill contributes that row's version cells as claims about that skill.
 
-    Deliberately position-independent: README.md puts the version in the last cell and docs/status-skills.md puts it in the second, and hard-coding either would make this function silently wrong the first time a column moved. A row carrying two DIFFERENT version-shaped cells is ambiguous, so it is reported rather than resolved by guessing which column was meant."""
+    Deliberately position-independent: docs/status-skills.md puts the version in the second cell, the retired L1 README table put it in the last, and hard-coding either would make this function silently wrong the first time a column moved. A row carrying two DIFFERENT version-shaped cells is ambiguous, so it is reported rather than resolved by guessing which column was meant."""
     claims = []
     for lineno, line in enumerate(text.split("\n"), start=1):
         stripped = line.strip()
@@ -180,7 +180,7 @@ def table_claims(text, rel_path):
 
 
 def check_table_location(repo_root, rel_path, declared, label):
-    """L1 and L2. Zero claims from a file that should carry one per skill is BROKEN (the matcher went blind); a claim that disagrees, or a skill with no claim at all, is a FINDING."""
+    """L2. Zero claims from a file that should carry one per skill is BROKEN (the matcher went blind); a claim that disagrees, or a skill with no claim at all, is a FINDING."""
     text = read_text(os.path.join(repo_root, rel_path))
     claims = table_claims(text, rel_path)
     if not claims:
@@ -303,7 +303,6 @@ def run_all_checks(repo_root):
     declared = declared_skill_versions(repo_root)
     library_version = declared_library_version(repo_root)
     findings = []
-    findings += check_table_location(repo_root, README_REL, declared, "the root README Skills table")
     findings += check_table_location(repo_root, STATUS_REL, declared, "the status page At a glance table")
     findings += check_usage_readmes(repo_root, declared)
     findings += check_plugin_version(repo_root, library_version)
@@ -332,7 +331,7 @@ def _skill_md(name, version):
 
 def _fixture(tmp, skills, readme_versions=None, status_versions=None,
              usage_versions=None, plugin_version="1.0.0", library_version="1.0.0",
-             readme_table=True, usage_label="**Version:**",
+             status_table=True, usage_label="**Version:**",
              heading_versions=None, library_skill_versions=None,
              write_headings=True, library_has_components=True):
     """Build a miniature repository. Each *_versions dict may override what a location CLAIMS, so a canary is one dict entry away from an anti-canary."""
@@ -353,19 +352,22 @@ def _fixture(tmp, skills, readme_versions=None, status_versions=None,
         }
     _write(os.path.join(tmp, LIBRARY_REL), json.dumps(library_obj))
 
+    # The root README is written in the OLD table shape on purpose, carrying whatever readme_versions
+    # says. L1 is retired, so nothing may read it; _self_test_root_readme_not_read puts a stale version
+    # here and requires zero findings.
     rows = ["# Test\n\n## Skills\n", "| Skill | What it does | Version |", "|---|---|---|"]
     for name, version in sorted(readme_versions.items()):
-        if readme_table:
-            rows.append("| [`%s`](docs/skills/%s/README.md) | Does a thing | %s |" % (name, name, version))
-        else:
-            rows.append("- `%s` is at %s" % (name, version))
+        rows.append("| [`%s`](docs/skills/%s/README.md) | Does a thing | %s |" % (name, name, version))
     _write(os.path.join(tmp, README_REL), "\n".join(rows) + "\n")
 
     status = ["# Skill Status\n",
               "**Plugin version:** %s **Skills:** %d" % (plugin_version, len(skills)),
               "\n## At a glance\n", "| Skill | Version | Invocation |", "|---|---|---|"]
     for name, version in sorted(status_versions.items()):
-        status.append("| `%s` | %s | Auto |" % (name, version))
+        if status_table:
+            status.append("| `%s` | %s | Auto |" % (name, version))
+        else:
+            status.append("- `%s` is at %s" % (name, version))
     status.append("\n## Per-skill detail\n")
     if write_headings:
         for name, version in sorted(heading_versions.items()):
@@ -394,9 +396,8 @@ def _self_test_all_agree(failures):
 
 
 def _self_test_each_location_canary(failures):
-    """One canary per claim location, each proving that location is actually read. A single shared canary would let three of the four checks be deleted with the self-test still passing."""
+    """One canary per claim location, each proving that location is actually read. A single shared canary would let all but one of the checks be deleted with the self-test still passing."""
     cases = (
-        ("L1 root README table", dict(readme_versions={"plab-a": "9.9.9"}), "the root README Skills table"),
         ("L2 status page table", dict(status_versions={"plab-a": "9.9.9"}), "the status page At a glance table"),
         ("L3 usage README", dict(usage_versions={"plab-a": "9.9.9"}), "docs/skills/plab-a/README.md"),
         ("L4 plugin version", dict(plugin_version="9.9.9"), "claims plugin version 9.9.9"),
@@ -418,10 +419,10 @@ def _self_test_each_location_canary(failures):
 
 
 def _self_test_missing_skill_is_a_finding(failures):
-    """A skill that exists but is absent from a table is real drift, so it is a FINDING. Distinct from the blind-matcher case below, which is BROKEN."""
+    """A skill that exists but is absent from the status page table is real drift, so it is a FINDING. Distinct from the blind-matcher case below, which is BROKEN."""
     with tempfile.TemporaryDirectory() as tmp:
         _fixture(tmp, {"plab-a": "1.0.0", "plab-b": "2.0.0"},
-                 readme_versions={"plab-a": "1.0.0"})
+                 status_versions={"plab-a": "1.0.0"})
         try:
             _, findings = run_all_checks(tmp)
         except Broken as exc:
@@ -435,14 +436,14 @@ def _self_test_missing_skill_is_a_finding(failures):
 def _self_test_blind_matcher_is_broken(failures):
     """The load-bearing test. If the table shape changes so nothing matches, the gate must refuse to report CLEAN. This is the empty-`git tag -l` lesson applied to a prose matcher: a detector that has gone blind must say so rather than pass."""
     with tempfile.TemporaryDirectory() as tmp:
-        _fixture(tmp, {"plab-a": "1.0.0"}, readme_table=False)
+        _fixture(tmp, {"plab-a": "1.0.0"}, status_table=False)
         try:
             _, findings = run_all_checks(tmp)
         except Broken:
             pass
         else:
-            failures.append("a README whose Skills table no longer matches must raise Broken (exit 2), "
-                            "not report %r" % findings)
+            failures.append("a status page whose At a glance table no longer matches must raise Broken "
+                            "(exit 2), not report %r" % findings)
 
     with tempfile.TemporaryDirectory() as tmp:
         _fixture(tmp, {"plab-a": "1.0.0"}, usage_label="**Ver:**")
@@ -476,7 +477,7 @@ def _self_test_blind_matcher_is_broken(failures):
 
 
 def _self_test_heading_and_component_missing_skill_is_a_finding(failures):
-    """L5 and L6's version of the 'a skill exists but is absent from a location' case the README and status-table locations already prove (`_self_test_missing_skill_is_a_finding`)."""
+    """L5 and L6's version of the 'a skill exists but is absent from a location' case the status-table location already proves (`_self_test_missing_skill_is_a_finding`)."""
     with tempfile.TemporaryDirectory() as tmp:
         _fixture(tmp, {"plab-a": "1.0.0", "plab-b": "2.0.0"},
                  heading_versions={"plab-a": "1.0.0"},
@@ -509,12 +510,26 @@ def _self_test_history_versions_ignored(failures):
                             % findings)
 
 
+def _self_test_root_readme_not_read(failures):
+    """L1 is retired: the root README claims no version, so a version-shaped cell left in it must never become a finding. The fixture writes the old README table with a stale 9.9.9. If a later change reconnects the README to run_all_checks, this test fails, and whoever did it must restore L1 deliberately, with its own canary, rather than by accident."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _fixture(tmp, {"plab-a": "1.0.0"}, readme_versions={"plab-a": "9.9.9"})
+        try:
+            _, findings = run_all_checks(tmp)
+        except Broken as exc:
+            failures.append("root-README-not-read fixture must not be BROKEN, got %r" % exc)
+            return
+        if findings:
+            failures.append("the root README is no longer a claim location (L1 retired), so a stale version "
+                            "in it must produce zero findings, got %r" % findings)
+
+
 def _self_test_ambiguous_row_is_broken(failures):
     with tempfile.TemporaryDirectory() as tmp:
         _fixture(tmp, {"plab-a": "1.0.0"})
-        path = os.path.join(tmp, README_REL)
+        path = os.path.join(tmp, STATUS_REL)
         text = read_text(path)
-        _write(path, text.replace("| Does a thing | 1.0.0 |", "| 2.0.0 | 1.0.0 |"))
+        _write(path, text.replace("| `plab-a` | 1.0.0 | Auto |", "| `plab-a` | 1.0.0 | 2.0.0 |"))
         try:
             run_all_checks(tmp)
         except Broken:
@@ -532,6 +547,7 @@ def self_test():
     _self_test_heading_and_component_missing_skill_is_a_finding(failures)
     _self_test_blind_matcher_is_broken(failures)
     _self_test_history_versions_ignored(failures)
+    _self_test_root_readme_not_read(failures)
     _self_test_ambiguous_row_is_broken(failures)
     if failures:
         print("BROKEN: gate self-test failed, the detector is not trustworthy.", file=sys.stderr)
@@ -539,10 +555,11 @@ def self_test():
             print("  " + f, file=sys.stderr)
         print("\nExiting 2. Do NOT read this as a clean tree.", file=sys.stderr)
         return False
-    print("gate self-test: PASS (6 claim locations each proved against their own canary, an all-agree "
-          "anti-canary, a missing-skill finding for the README/status tables plus one for the "
+    print("gate self-test: PASS (5 claim locations each proved against their own canary, an all-agree "
+          "anti-canary, a missing-skill finding for the status table plus one for the "
           "section headings and the manifest components, four blind-matcher BROKEN cases, a "
-          "history-version false-positive guard, and an ambiguous-row BROKEN case)")
+          "history-version false-positive guard, a retired-L1 guard proving the root README is not "
+          "read, and an ambiguous-row BROKEN case)")
     return True
 
 
@@ -576,7 +593,7 @@ def main():
         print("\nAuthoritative sources: skills/<name>/SKILL.md metadata.version, and library.json version.")
         sys.exit(1)
 
-    print("CLEAN: canary proved, %d skill(s) checked across 6 claim locations, every claimed version "
+    print("CLEAN: canary proved, %d skill(s) checked across 5 claim locations, every claimed version "
           "matches what the repository declares." % len(declared))
     sys.exit(0)
 

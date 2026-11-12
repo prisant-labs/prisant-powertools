@@ -58,6 +58,18 @@ found nothing, because those two states are not the same fact.
 The transcript is streamed line by line, because it can be very large. Malformed
 JSON lines are skipped and counted, not fatal.
 
+WHY ONLY RELEASE TAGS COUNT (`--match 'v[0-9]*.[0-9]*'`, 2026-11-09)
+-----------------------------------------------------------------------
+The merge check tags main as `pre-merge/<date>-<branch>` before every merge, so a
+backup tag almost always sits nearer HEAD than the last release. A bare
+`git describe --tags --abbrev=0` returned that backup: on 603df77 it gave
+`pre-merge/2026-11-08-fix-drift-check-release-tag` where the last release is
+v0.13.0. The `latest-tag` field then named a backup, check 3 compared the plugin
+version against it, and check 4 diffed against a recent backup and missed skills
+changed since the release without a version bump. get_latest_tag passes the same
+glob as `scripts/skill-drift-check.py` (PR #85), which also drops a floating major
+tag such as `v1`. The base-resolution fallback uses it too; resolve_base says why.
+
 EXIT CODES
 ----------
 0  Always, once the project root exists. This script reports; it has no pass/fail
@@ -116,6 +128,10 @@ DECISION_LIST_ITEM_RE = re.compile(r"^(?:\d+\.|[-*])\s")
 DECISION_SUBHEADING_RE = re.compile(r"^### \S")
 VERIFICATION_COMMAND_RE = re.compile(r"\b(test|check|gate|lint|verify)\b", re.IGNORECASE)
 MAX_VERIFICATION_FACTS = 50
+# Same glob as scripts/skill-drift-check.py: a `v` and a dotted number, so the
+# merge check's pre-merge/* backups and a floating major tag such as v1 never
+# count as the latest tag.
+RELEASE_TAG_GLOB = "v[0-9]*.[0-9]*"
 
 
 # ---------------------------------------------------------------------------
@@ -217,7 +233,16 @@ def resolve_base(
     session's own work rather than nothing, for the common case of a session that
     already committed and pushed before wrapping, where the upstream tracking ref
     points at HEAD itself. Falls back to the upstream tracking ref, then the latest
-    reachable tag, then no base at all."""
+    release tag, then no base at all.
+
+    The latest-tag fallback takes a release tag only, through get_latest_tag, and
+    never a pre-merge/* backup tag (2026-11-09). A backup sits nearer the session
+    start than a release and so looks like a tighter base, but the resolution is
+    named latest-tag and is reported under that name, and the latest-tag
+    frontmatter field and check 4 mean a release. One meaning across the three
+    keeps a reader from having to know which of them takes backups. A session
+    that wants a tighter base gets one from session-start or upstream, which both
+    come first."""
     if base_arg:
         rc, _, _ = run_git(["rev-parse", "--verify", base_arg], project_root)
         return (base_arg, "explicit") if rc == 0 else (None, "explicit-unresolved")
@@ -230,9 +255,9 @@ def resolve_base(
     )
     if rc == 0 and out:
         return out, "upstream"
-    rc, out, _ = run_git(["describe", "--tags", "--abbrev=0"], project_root)
-    if rc == 0 and out:
-        return out, "latest-tag"
+    latest_tag = get_latest_tag(project_root)
+    if latest_tag:
+        return latest_tag, "latest-tag"
     return None, "none"
 
 
@@ -263,7 +288,11 @@ def get_commit_range(project_root: Path, base: str | None) -> str | None:
 
 
 def get_latest_tag(project_root: Path) -> str | None:
-    rc, out, _ = run_git(["describe", "--tags", "--abbrev=0"], project_root)
+    """The nearest release tag reachable from HEAD, or None. See the module
+    docstring section on release tags for why RELEASE_TAG_GLOB filters it."""
+    rc, out, _ = run_git(
+        ["describe", "--tags", "--abbrev=0", "--match", RELEASE_TAG_GLOB], project_root
+    )
     return out if rc == 0 and out else None
 
 
