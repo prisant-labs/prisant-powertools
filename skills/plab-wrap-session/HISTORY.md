@@ -2,6 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.11.0 | 2026-11-12 | unreleased | added | Closing Summary: every wrap tells the maintainer in the conversation what the session accomplished and what comes next in priority order, copied from the log just written, before any hygiene question. |
 | 1.10.0 | 2026-11-10 | unreleased | added | Session-aware wrap (W-07): each log records its `session-id`, `session-start` and `carried-from`; the wrap carries items from the resumed log or else the newest; logs another session wrote while this one ran are named, never archived, and stay visible to continue; a linked worktree writes to the main checkout's store. |
 | 1.9.1 | 2026-11-07 | unreleased | fixed | Path-citation gate: five false-alarm shapes found in real logs are excluded (home paths, POSIX paths and site routes, git ranges, tags ending in a version number, and commands in backticks), and a command with arguments has its path checked for the first time. The proof corpus grows from 40 entries to 60. `derive-log-facts.py` and the Check 4 recipe take the nearest release tag, so a `pre-merge/*` backup tag or a floating `v1` is never the `latest-tag` or the base for Check 4's drift diff. |
 | 1.9.0 | 2026-11-03 | v0.12.0 | changed | W-05 (wrap hygiene order): the wrap writes the log first, asks every hygiene proposal in one numbered batch (`H1 y, H2 n`), then amends the log and runs `check-log.py` again. Four actions that change only this checkout run without asking and are recorded as `auto:` lines, including a pruning fetch (W-05 D2). Parked items are carried forward like Waiting on You. |
@@ -15,6 +16,14 @@
 | 1.5.0 | 2026-08-18 | v0.2.0 | added | `--organize` files old logs into `YYYY-MM/` folders. Hygiene sweep gained Check 5. |
 | 1.4.1 | 2026-08-18 | v0.1.2 | fixed | Dropped the "what did we do" trigger. Added `type:` to the frontmatter block and `machine:` to the Quick and Blocked templates. |
 | 1.4.0 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.4.0; prior history remains there. |
+
+## 1.11.0 - 2026-11-12
+
+**Added: the Closing Summary.** A wrap could end on the log's path, or on the hygiene question when it had proposals, so the maintainer learned what the session did and what came next only by opening the log. Every wrap now sends a summary in the conversation as part of Wrap Order step 6: three to six bullets of what was accomplished, the first three to five items of What's Next in the log's order with any item waiting on the maintainer marked "(you)", a one-line count of Waiting on You with the oldest date, and the log's path. Quick and blocked logs have no Work Completed or What's Next section, so their summary takes Summary and the continuation prompt's ordered actions instead.
+
+The summary is copied from the log just written, not re-derived and not re-read, so it cannot disagree with the record and adds no tool calls. Hygiene proposals follow it in the same message, so the answer line stays last; after the amendment, the final message reports each proposal's outcome and restates Next only when an approved proposal changed it. `--organize` writes no log and sends no summary.
+
+No gate checks it, because `check-log.py` reads the file and cannot see the conversation. The proof is a live wrap run with this version loaded.
 
 ## 1.10.0 - 2026-11-10
 

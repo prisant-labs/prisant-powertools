@@ -1,6 +1,6 @@
 # plab-wrap-session
 
-**Version:** 1.10.0
+**Version:** 1.11.0
 **Source:** [`skills/plab-wrap-session/`](../../../skills/plab-wrap-session/)
 
 Document and close agentic coding sessions with structured session logs. Deep mode is the default: a full log with evidence index, a verbose copy-paste-ready continuation prompt, a hygiene sweep (remote divergence, release state, doc drift, working-tree reconciliation) whose numbered proposals are asked in one batch after the log is written, and a mandatory Waiting on You section listing everything blocked on the maintainer, with links.
@@ -163,7 +163,11 @@ Run it twice and the second run does nothing. A full worked example with real co
 
 ## Output Shape
 
-The skill writes one session log to `_local/_session-logs/YYYY-MM-DD_HH-MM_<llm>_<brief-kebab-title>.md`. Section depth scales to the selected mode (quick / final / deep / blocked); the table below shows the full Final-mode shape:
+The skill writes one session log and then sends one closing summary in the conversation.
+
+The closing summary (since 1.11.0) is about fifteen lines copied from the log just written: what the session accomplished, the next three to five steps in priority order with the ones waiting on you marked "(you)", a one-line count of items waiting on you, and the log's path. Any hygiene proposals follow it in the same message, so the answer line stays last. `--organize` sends no summary, because it writes no log.
+
+The log goes to `_local/_session-logs/YYYY-MM-DD_HH-MM_<llm>_<brief-kebab-title>.md`. Section depth scales to the selected mode (quick / final / deep / blocked); the table below shows the full Final-mode shape:
 
 | Section / Element | Purpose |
 |-------------------|---------|
