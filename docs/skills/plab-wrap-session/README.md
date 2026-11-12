@@ -35,7 +35,13 @@ Once a month closes, `--organize` files its logs into a `YYYY-MM/` subfolder. Ne
 
 ### Parallel and long-idle sessions
 
-Each log records which session wrote it (`session-id:`) and when that session began (`session-start:`), both read from the Claude Code transcript. The wrap carries Waiting on You and Parked items from the log you resumed from, or else from the newest log, and records which in `carried-from:`. When another session wrote a log while this one was running, the wrap names that log in its Summary as parallel work and never proposes archiving it, and `/plab-continue-session` still offers that session's handoff. Codex logs have no transcript lookup, so they omit the session fields and behave as before.
+Each log records which session wrote it (`session-id:`) and when that session began (`session-start:`), both read from the Claude Code transcript. The wrap carries Waiting on You and Parked items from the log you resumed from, or else from the newest log, and records which in `carried-from:`. When the session began with `/plab-continue-session`, the wrap passes the resumed log's name to `derive-log-facts.py` as `--resumed-from`; a name the script cannot find falls back to the newest log, and the digest says `resumed-from-not-found` so the fallback is visible. When another session wrote a log while this one was running, the wrap names that log in its Summary as parallel work and never proposes archiving it, and `/plab-continue-session` still offers that session's handoff. Codex logs have no transcript lookup, so they omit the session fields and behave as before.
+
+A parallel log appears in the Summary as one sentence naming it by file name, for example: "While this session ran, another session wrote `2026-11-11_15-20_claude_readme-list-layout-shipped.md`; its Waiting on You items were carried into this log." The second clause appears only when that parallel log was also the carry-forward source.
+
+**Which store did it use?** The digest from `derive-log-facts.py` prints a `store:` line with the path and how it was found: `checkout` for this checkout's own `_local/_session-logs/`, `main-checkout` from a linked worktree, or `checkout-fallback` with a reason when the main checkout could not be located. When the main checkout has no `_local/_session-logs/` yet, the wrap creates it there.
+
+**If it fails.** Both session skills load their shared rules from the plugin's `lib/session-logs.py`. If that file is missing, `derive-log-facts.py` stops with exit code 2 and names the path it looked for, and `check-log.py` reports its checks as `broken` rather than clean; the plugin install is incomplete, so update or reinstall the plugin and restart the harness. A missing `session-id` with the reason `no-session-id` means the transcript could not be read, which is normal under Codex; the wrap still writes a valid log without the session fields.
 
 ### Installation
 
@@ -276,7 +282,7 @@ Every log includes metadata for indexing and future tooling:
 
 Since 1.8.0, `derive-log-facts.py` also always returns two further Tier 1 fields, `commit-range` (the `base..HEAD` short-SHA range the script diffed) and `latest-tag` (the nearest reachable tag, distinct from the topic-keyword `tags` field above). `decisions-count` is filled in by the agent once the Decisions Made section is drafted, then checked mechanically by `check-log.py` (1.8.1) before the wrap is done, rather than shipping as an uncorrected model estimate.
 
-See `references/frontmatter-schema.md` for the field-by-field specification (25 fields as that file currently lists them, including `commit-range` and `latest-tag`).
+See `references/frontmatter-schema.md` for the field-by-field specification (28 fields, including `commit-range`, `latest-tag` and the three session fields `session-id`, `session-start` and `carried-from`).
 
 ### Session Types
 
@@ -343,7 +349,7 @@ skills/plab-wrap-session/
 
 - Never embeds full transcripts (references the transcript path only)
 - Never conflates "completed" with "verified"
-- Never auto-commits or pushes; only three local, reversible actions run without asking
+- Never auto-commits or pushes; only four local, reversible actions run without asking
 - Never asks a hygiene question before the log is written
 - Never updates surrounding docs until their proposal is approved
 - Summary must be 120 characters or less

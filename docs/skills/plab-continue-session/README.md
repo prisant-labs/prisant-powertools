@@ -17,7 +17,7 @@ At the beginning of any session where prior work exists:
 /plab-continue-session
 ```
 
-The skill finds the latest session log at `_local/_session-logs/`, surfaces the resumption context (what was done, what's next, the immediate next action), and asks if you want to proceed with the named immediate next action.
+The skill finds the session handoffs nobody has taken up at `_local/_session-logs/`, asks which one to resume when more than one is waiting, and then surfaces the resumption context (what was done, what's next, the immediate next action), and asks if you want to proceed with the named immediate next action.
 
 ### Common Invocations
 
@@ -154,6 +154,8 @@ Always asks: "Resume with the named immediate next action, or pick something els
 | **Branch mismatch** | Warns ("log was on `feature/x`; you're on `main`") but allows; asks before proceeding |
 | **Malformed log** | Reports the path and offers to read the file directly or pick a different log; never synthesizes a resumption from broken data |
 | **No log found** | Reports the locations it searched and offers options: start fresh, or manually name a log path |
+| **Several sessions waiting** | Lists each with its branch, wrap time, session start and Waiting on You count, marks a default, and asks which to resume. `--log <path>` skips the list |
+| **Shared rules missing** | `list-candidates.py` stops with exit code 2 and names the `lib/session-logs.py` path it looked for. The plugin install is incomplete: update or reinstall the plugin and restart the harness |
 
 ---
 
@@ -235,6 +237,24 @@ Options:
 
 ---
 
+### Two sessions waiting
+
+When two sessions each left a handoff, `scripts/list-candidates.py` reports them, and the skill asks which to resume. This is the script's real output on this repository on 2026-11-11, with the paths shortened:
+
+```
+store: <repo>\_local\_session-logs (checkout)
+current branch: feat/w-07-session-aware-logs
+mode: choose
+2 sessions have unconsumed logs from the last 7 days:
+
+  1. 2026-11-11_15-20_claude_readme-list-layout-shipped.md  feat/w-07-session-aware-logs  (wrapped Wed 2026-11-11 15:19, start unknown, 15 waiting)  [default: on the current branch]
+  2. 2026-11-08_21-24_claude_rm-01-built-org-profile-readme-1-1-0.md  main  (wrapped Sun 2026-11-08 21:24, start unknown, 14 waiting)
+```
+
+"start unknown" means the log predates the `session-start` field. The `store:` line shows which store was read: `checkout`, or `main-checkout` from a linked worktree. Answer with the number; the skill then resumes that log exactly as it resumes a single one.
+
+---
+
 ## Reference Files
 
 | File | Purpose |
@@ -253,7 +273,7 @@ Options:
 - Never dumps the whole continuation prompt in a fenced block by default; renders its immediate action as ordinary markdown and gives the log path instead. When the user does ask to see it ("show the prompt"), reproduces it verbatim, never paraphrased
 - Refuses cross-repo resumption
 - Surfaces age warnings (7+ days) and branch mismatches before acting
-- Never blends multiple logs together; one log per invocation
+- Never blends multiple logs together; one log per invocation. When several sessions are waiting it lists them so you can choose, then resumes exactly the one you pick
 - The reconciliation step (Phase 3) never mutates repository state: no `pull`, `merge`, `checkout`, `reset`, or `push` runs there, only a non-pruning fetch and read-only log/status/diff commands
 
 ---
