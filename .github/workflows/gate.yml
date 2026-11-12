@@ -331,6 +331,16 @@ jobs:
         if: always()
         run: python3 skills/plab-continue-session/scripts/test-reconcile.py
 
+      # W-07: the session-log rules both session skills load from lib/,
+      # and continue's candidate list built from them.
+      - name: The shared session-log rules
+        if: always()
+        run: python3 lib/test-session-logs.py
+
+      - name: The continue-session candidate list
+        if: always()
+        run: python3 skills/plab-continue-session/scripts/test-list-candidates.py
+
       # plab-ai-review's dispatch helper (A-02). This is the one script in this
       # job that talks to a subprocess at all, but that subprocess is a fake
       # codex-companion.mjs the test writes into a tempdir itself - never the

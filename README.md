@@ -65,7 +65,7 @@ codex plugin add prisant-powertools@prisant-labs
 
 Both harnesses read the same marketplace, `prisant-labs`, which pins a released tag.
 
-**Your first run.** Work in a git repository, and add `_local/` to its `.gitignore` first, because the session skills keep their local notes there. At the end of a coding session, type `/plab-wrap-session`. It writes a session log to `_local/_session-logs/` with what was done, what waits on you, and a continuation prompt, and prints the log's path when it finishes. When you come back, type `/plab-continue-session`. It reads that log, checks it against what has changed in the repository since, and confirms with you before it picks up the named next action.
+**Your first run.** Work in a git repository, and add `_local/` to its `.gitignore` first, because the session skills keep their local notes there. At the end of a coding session, type `/plab-wrap-session`. It writes a session log to `_local/_session-logs/` with what was done, what waits on you, and a continuation prompt, and prints the log's path when it finishes. When you come back, type `/plab-continue-session`. It reads that log, checks it against what has changed in the repository since, and confirms with you before it picks up the named next action. If two sessions ran in parallel and both left a handoff, it lists both and asks which to resume.
 
 **To update after a release:** in Claude Code, run `claude plugin marketplace update prisant-labs`, then `claude plugin update prisant-powertools@prisant-labs`, and restart. In Codex, run `codex plugin marketplace upgrade prisant-labs`.
 
@@ -82,7 +82,7 @@ Each skill name links to its usage guide. ✋ marks the eight skills that run on
 ### Sessions
 
 - [**plab-wrap-session**](docs/skills/plab-wrap-session/README.md) - Close a coding session with a structured log: hygiene sweep, evidence index, an uncertainty ledger, and a copy-paste-ready continuation prompt for next time.
-- [**plab-continue-session**](docs/skills/plab-continue-session/README.md) - Resume from the most recent session log and pick up the named next action.
+- [**plab-continue-session**](docs/skills/plab-continue-session/README.md) - Resume a session's handoff and pick up the named next action. When several sessions left handoffs nobody has taken up, it lists them and asks which.
 - [**plab-resolve-open-items**](docs/skills/plab-resolve-open-items/README.md) - Walk through the open questions, decisions and tasks a session has raised, take a one-line answer, and write each answer back to its home document.
 
 ### Thinking and documents
@@ -143,7 +143,7 @@ Each of the eight ships with `disable-model-invocation: true` for Claude Code, a
 
 - **Generated artifacts** are written to `_output/<skill-name>/` relative to your working directory. Every producing skill accepts an explicit destination to override that. Add `_output/` to your `.gitignore`.
 - **Planning and decision skills write where their artifacts belong instead.** `plab-spec` and `plab-release-plan` write into per-effort folders under `docs/internal/release-plans/`. `plab-init-project` writes into the repository it is scaffolding, with its dry-run and onboarding reports under `_local/plab-init-project/`. `plab-resolve-open-items` writes each answer into the document its question came from, and keeps its walk record in `_local/decisions/`, which is expected to be gitignored.
-- **Session logs** are written to `_local/_session-logs/`, which is expected to be gitignored. They are local working notes and are not intended to be committed. Once a store has been running a while, `/plab-wrap-session --organize` files logs from closed months into `YYYY-MM/` subfolders. `/plab-continue-session` reads the flat store and those month folders as one set, so resume keeps working either way.
+- **Session logs** are written to `_local/_session-logs/`, which is expected to be gitignored. They are local working notes and are not intended to be committed. Once a store has been running a while, `/plab-wrap-session --organize` files logs from closed months into `YYYY-MM/` subfolders. `/plab-continue-session` reads the flat store and those month folders as one set, so resume keeps working either way. From a linked git worktree, both skills use the main checkout's `_local/_session-logs/`, because a worktree has no `_local/` of its own. The time in a log's file name is the time the wrap ran; the log's `session-start` field records when the session began.
 - **Toolchain.** `plab-guide` shells out to headless Chrome for PDF rendering, and optionally to `pdfinfo` and `mmdc` (Mermaid CLI). It reports what is missing and degrades gracefully rather than failing. Run `skills/plab-guide/scripts/check-toolchain.sh` to see the current state.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

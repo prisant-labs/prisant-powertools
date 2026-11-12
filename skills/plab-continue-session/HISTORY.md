@@ -2,6 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.7.0 | 2026-11-10 | unreleased | added | When two or more sessions left handoffs nobody took up in the last 7 days, continue lists them and asks which to resume, instead of silently resuming the newest; one candidate behaves as before. A linked worktree reads the main checkout's store. |
 | 1.6.2 | 2026-11-03 | v0.12.0 | fixed | The commit check anchors on the end SHA of the log's `commit-range` when `commit-sha` is absent, so a pull request merged during a wrap no longer reads as new work. Remote commits are no longer called unreflected when the local branch already has them. C-02 OQ7. |
 | 1.6.1 | 2026-10-31 | v0.11.1 | fixed | The reconciliation's "Recent tags" note lists the five highest versions. `reconcile.py` read a plain `git tag -l`, which sorts as text, so from v0.10.0 onward it showed v0.7.0 to v0.9.0 as the newest tags. |
 | 1.6.0 | 2026-10-15 | v0.8.0 | added | A new Phase 3 reconciles the log's claims against live repository state before anything is displayed, and leads the resumption context with what changed. |
@@ -10,6 +11,14 @@
 | 1.3.0 | 2026-08-18 | v0.2.0 | added | Discovery reads `YYYY-MM/` month folders alongside the flat store. Empty-store message diagnoses version skew. |
 | 1.2.1 | 2026-08-18 | v0.1.2 | fixed | Body trigger list aligned with the narrowed description. Records the 2026-08-17 description change that shipped un-versioned. |
 | 1.2.0 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.2.0; prior history remains there. |
+
+## 1.7.0 - 2026-11-10
+
+**Added: continue offers every session still waiting, and asks.** Newest-wins hid a parallel session: when two sessions wrapped, only the later log was offered, unless both wrapped in the same minute. `scripts/list-candidates.py` now builds a candidate set: logs from the last 7 days whose handoff no newer log took up, one per session. A newer log takes a log up when it resumed from it, or carried from it after starting later. With one candidate, continue resumes as it always has. With several, it lists them newest first with branch, session span and Waiting on You count, marks the one on the current branch, and asks. With none in the window, it resumes from the newest log with the age warning.
+
+**Fixed: a linked worktree reads the main checkout's store**, where `plab-wrap-session` 1.10.0 writes every log.
+
+Logs written before spec W-07 carry no session fields and keep newest-wins on their branch. The rules live in the plugin's shared `lib/session-logs.py`, which `plab-wrap-session` loads too. `references/log-discovery.md` keeps the shell pipelines as the fallback when the script cannot run.
 
 ## 1.6.2 - 2026-11-03
 

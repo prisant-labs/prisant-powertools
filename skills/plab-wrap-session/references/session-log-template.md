@@ -25,6 +25,9 @@ status:
 decisions-count:
 skills-used: []
 resumed-from: # log filename if this session resumed from one. Filename only, never a path: archiving moves logs into YYYY-MM/ folders. Same rule for every log reference in the body.
+session-id: # from derive-log-facts.py; omit when the script reports null
+session-start: # from derive-log-facts.py, ISO 8601 in UTC; omit when the script reports null
+carried-from: # the script's carry-forward log, file name only; omit when its rule is none
 ---
 
 # Session: [Brief Title]
@@ -127,6 +130,9 @@ session-type:
 model:
 model-settings:
 status: completed
+session-id: # from derive-log-facts.py; omit when the script reports null
+session-start: # from derive-log-facts.py, ISO 8601 in UTC; omit when the script reports null
+carried-from: # the script's carry-forward log, file name only; omit when its rule is none
 ---
 
 # Session: [Brief Title]
@@ -161,6 +167,9 @@ session-type:
 model:
 model-settings:
 status: blocked
+session-id: # from derive-log-facts.py; omit when the script reports null
+session-start: # from derive-log-facts.py, ISO 8601 in UTC; omit when the script reports null
+carried-from: # the script's carry-forward log, file name only; omit when its rule is none
 ---
 
 # Session: [Brief Title]

@@ -9,8 +9,8 @@ description: "Resume an interrupted work session by replaying its recorded hando
 argument-hint: "[--log <path>]"
 license: MIT
 metadata:
-  version: "1.6.2"
-  updated: 2026-11-03
+  version: "1.7.0"
+  updated: 2026-11-10
 ---
 
 # Continue Session
@@ -33,19 +33,26 @@ Resume the work that the last session left set up to resume. Pairs with `/plab-w
 
 ## Workflow
 
-### Phase 1: Locate the latest session log
+### Phase 1: Choose the session log
 
-1. Collect `.md` files from **all three** stores, skipping any that do not exist:
-   - `_local/_session-logs/` (current) - both its top level and its `YYYY-MM/` month folders
-   - `_agent-context/session-log/` (legacy, plab-wrap-session v1.1.0 - v1.2.x)
-   - `AGENTS/session-log/` (legacy, plab-wrap-session v1.0.x)
+1. Run the candidate script once and read its output once:
 
-   Month folders are the only subdirectory shape that is read. `_capture/` and anything else inside the store are deliberately invisible. Full rules and both shell pipelines: `references/log-discovery.md`.
-2. Pick the newest across the combined set - not the first location that happens to be non-empty. The filename pattern is `YYYY-MM-DD_HH-MM_<llm>_<title>.md`, so lexical descending sort = most recent first. Searching all locations matters because a project mid-migration has old logs in a legacy path and new ones in `_local/_session-logs/`; stopping at the first non-empty directory would resume from the wrong era. Because the sort is on the filename and never the path, an archived log in `2026-06/` and a hot log at the top level order correctly against each other.
-3. Confirm the file exists and is non-empty. If no location yields a log, report "no prior session log found" and ask the user how to proceed.
-4. If the winning log came from a legacy path, surface a migration note alongside the resumption.
+   ```bash
+   python <this skill's base directory>/scripts/list-candidates.py <project_root>
+   ```
 
-If multiple logs share the same date+time prefix (rare; concurrent sessions by different LLMs), surface all and ask the user which to resume.
+   `<this skill's base directory>` is this skill's own installed location, as in Phase 3. The script pools the current store, its `YYYY-MM/` month folders and the two legacy stores, and applies the candidate rule in the plugin's shared `lib/session-logs.py`: a log from the last 7 days that no newer log took up, one per session. In a linked git worktree it reads the main checkout's store, where every session's log lives. Rules and the manual fallback: `references/log-discovery.md`.
+2. Act on the `mode` it reports:
+   - **`one`**: resume from that log, exactly as before.
+   - **`choose`**: two or more sessions left handoffs nobody has taken up. Show the list the script prints, in the form `references/log-discovery.md` gives, and ask which to resume. Mark the default when the script names one, but never pick silently.
+   - **`fallback`**: no log from the last 7 days is waiting. Resume from the newest log the script names, and show the age warning in Constraints below.
+   - **`none`**: no log anywhere. Report "no prior session log found" and ask the user how to proceed, after the version-skew check in `references/log-discovery.md`.
+3. Confirm the chosen file exists and is non-empty.
+4. If the chosen log came from a legacy path, surface a migration note alongside the resumption.
+
+Two logs of the same minute are two sessions, so the candidate list already shows both. `--log <path>` bypasses the script entirely, as it bypasses discovery.
+
+If the script cannot run, because `lib/session-logs.py` is missing or Python is unavailable, say so, and fall back to the manual newest-wins pipelines in `references/log-discovery.md`.
 
 ### Phase 2: Read and parse
 
@@ -134,7 +141,7 @@ Never auto-execute the continuation prompt without explicit user confirmation. T
 
 When the user confirms resumption, do not narrate "I'll continue from where we left off." Just start the named immediate next action. The continuation prompt was the handoff; processing it is acting on it.
 
-Note the consumed log's filename: when this session is eventually wrapped, `/plab-wrap-session` (1.4.0+) records it in the new log's `resumed-from:` frontmatter. That field is how log consumption, and the wrap/continue pair's actual payout rate, gets measured.
+Note the consumed log's filename: when this session is eventually wrapped, `/plab-wrap-session` (1.4.0+) records it in the new log's `resumed-from:` frontmatter, and from 1.10.0 passes it to its facts script as `--resumed-from`, which makes it the log the wrap carries Waiting on You items from. That field is how log consumption, and the wrap/continue pair's actual payout rate, gets measured.
 
 ## Constraints
 
@@ -162,7 +169,7 @@ If a session you're resuming was wrapped poorly (missing prompt, vague prompt), 
 
 | File | Purpose | Load when |
 |------|---------|-----------|
-| `references/log-discovery.md` | How to find the latest log; newest-wins search across current and legacy locations; tie-breaking rules | Phase 1 |
+| `references/log-discovery.md` | The candidate set, the store in a worktree, the newest-wins search across current and legacy locations, and the manual fallback | Phase 1 |
 | `references/objection-detection.md` | How to detect and surface a stated objection that justifies a lighter-than-verbose continuation prompt | Phase 2 |
 | `references/reconciliation.md` | How to invoke `scripts/reconcile.py`, read its three-state (`ok` / `finding` / `broken`) output, and what each check covers | Phase 3 |
 | `references/handoff-display.md` | The resumption context display format; what to include and what to elide | Phase 4 |

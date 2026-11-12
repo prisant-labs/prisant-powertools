@@ -1,6 +1,6 @@
 # plab-continue-session
 
-**Version:** 1.6.2
+**Version:** 1.7.0
 **Source:** [`skills/plab-continue-session/`](../../../skills/plab-continue-session/)
 
 Resume an interrupted work session by replaying its recorded handoff. Reads the most recent session log, reports what is blocked on you and what the named next action is, then confirms before acting. The read-side companion to `/plab-wrap-session`, which writes the log this reads.
@@ -17,7 +17,7 @@ At the beginning of any session where prior work exists:
 /plab-continue-session
 ```
 
-The skill finds the latest session log at `_local/_session-logs/`, surfaces the resumption context (what was done, what's next, the immediate next action), and asks if you want to proceed with the named immediate next action.
+The skill finds the session handoffs nobody has taken up at `_local/_session-logs/`, asks which one to resume when more than one is waiting, and then surfaces the resumption context (what was done, what's next, the immediate next action), and asks if you want to proceed with the named immediate next action.
 
 ### Common Invocations
 
@@ -58,9 +58,11 @@ Install via the prisant-labs marketplace:
 
 ## How It Works
 
-### Phase 1: Locate the latest log
+### Phase 1: Choose the log
 
-Searches three locations and picks the newest log across all of them - not the first one that happens to be non-empty:
+`scripts/list-candidates.py` builds a candidate set, with the rules in the plugin's shared `lib/session-logs.py`. A candidate is a log from the last 7 days whose handoff no newer log took up, counted once per session. With one candidate, the skill resumes from it as it always has. With several, from sessions that ran in parallel, it lists them newest first with each one's branch, session span and Waiting on You count, and asks which to resume. With none in the window, it resumes from the newest log with the age warning. In a linked git worktree it reads the main checkout's store.
+
+The script searches three locations and pools them, so the newest log across all of them counts, not the first one that happens to be non-empty:
 
 | Location | Written by | Status |
 |----------|-----------|--------|
@@ -80,7 +82,7 @@ Filenames follow the pattern `YYYY-MM-DD_HH-MM_<llm>_<title>.md`, so lexical des
 
 If the store's top level is empty but it contains month folders, that is a version-skew symptom rather than an empty store: it was organized by a newer `plab-wrap-session` than the one installed. The skill says so and points at `/plugin update` instead of offering to start fresh.
 
-If two logs share the same timestamp prefix (rare; concurrent sessions), the skill asks which to resume rather than guessing.
+Two sessions that wrapped in parallel both appear in the candidate list, even when their logs share a minute, and the skill asks which to resume rather than guessing. The file name's `HH-MM` is the wrap time; a log from plab-wrap-session 1.10.0 or later records the session's start in `session-start:`.
 
 ### Phase 2: Read and parse
 
@@ -152,6 +154,8 @@ Always asks: "Resume with the named immediate next action, or pick something els
 | **Branch mismatch** | Warns ("log was on `feature/x`; you're on `main`") but allows; asks before proceeding |
 | **Malformed log** | Reports the path and offers to read the file directly or pick a different log; never synthesizes a resumption from broken data |
 | **No log found** | Reports the locations it searched and offers options: start fresh, or manually name a log path |
+| **Several sessions waiting** | Lists each with its branch, wrap time, session start and Waiting on You count, marks a default, and asks which to resume. `--log <path>` skips the list |
+| **Shared rules missing** | `list-candidates.py` stops with exit code 2 and names the `lib/session-logs.py` path it looked for. The plugin install is incomplete: update or reinstall the plugin and restart the harness |
 
 ---
 
@@ -233,11 +237,29 @@ Options:
 
 ---
 
+### Two sessions waiting
+
+When two sessions each left a handoff, `scripts/list-candidates.py` reports them, and the skill asks which to resume. This is the script's real output on this repository on 2026-11-11, with the paths shortened:
+
+```
+store: <repo>\_local\_session-logs (checkout)
+current branch: feat/w-07-session-aware-logs
+mode: choose
+2 sessions have unconsumed logs from the last 7 days:
+
+  1. 2026-11-11_15-20_claude_readme-list-layout-shipped.md  feat/w-07-session-aware-logs  (wrapped Wed 2026-11-11 15:19, start unknown, 15 waiting)  [default: on the current branch]
+  2. 2026-11-08_21-24_claude_rm-01-built-org-profile-readme-1-1-0.md  main  (wrapped Sun 2026-11-08 21:24, start unknown, 14 waiting)
+```
+
+"start unknown" means the log predates the `session-start` field. The `store:` line shows which store was read: `checkout`, or `main-checkout` from a linked worktree. Answer with the number; the skill then resumes that log exactly as it resumes a single one.
+
+---
+
 ## Reference Files
 
 | File | Purpose |
 |------|---------|
-| [`references/log-discovery.md`](../../../skills/plab-continue-session/references/log-discovery.md) | How to find the latest log, tie-breaking, newest-wins search across current and legacy locations |
+| [`references/log-discovery.md`](../../../skills/plab-continue-session/references/log-discovery.md) | The candidate set, the worktree store, choosing between sessions, newest-wins search across current and legacy locations |
 | [`references/objection-detection.md`](../../../skills/plab-continue-session/references/objection-detection.md) | Detecting and surfacing lighter-than-verbose continuation prompts |
 | [`references/reconciliation.md`](../../../skills/plab-continue-session/references/reconciliation.md) | How to invoke `scripts/reconcile.py`, read its `ok` / `finding` / `broken` output, and what each check covers |
 | [`references/handoff-display.md`](../../../skills/plab-continue-session/references/handoff-display.md) | The standard resumption display format |
@@ -251,7 +273,7 @@ Options:
 - Never dumps the whole continuation prompt in a fenced block by default; renders its immediate action as ordinary markdown and gives the log path instead. When the user does ask to see it ("show the prompt"), reproduces it verbatim, never paraphrased
 - Refuses cross-repo resumption
 - Surfaces age warnings (7+ days) and branch mismatches before acting
-- Never blends multiple logs together; one log per invocation
+- Never blends multiple logs together; one log per invocation. When several sessions are waiting it lists them so you can choose, then resumes exactly the one you pick
 - The reconciliation step (Phase 3) never mutates repository state: no `pull`, `merge`, `checkout`, `reset`, or `push` runs there, only a non-pruning fetch and read-only log/status/diff commands
 
 ---

@@ -30,14 +30,14 @@
       {
         "name": "plab-wrap-session",
         "path": "skills/plab-wrap-session/SKILL.md",
-        "version": "1.9.1",
+        "version": "1.10.0",
         "tier": "universal",
         "status": "active"
       },
       {
         "name": "plab-continue-session",
         "path": "skills/plab-continue-session/SKILL.md",
-        "version": "1.6.2",
+        "version": "1.7.0",
         "tier": "universal",
         "status": "active"
       },

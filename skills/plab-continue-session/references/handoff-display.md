@@ -2,6 +2,10 @@
 
 The structured resumption context shown to the user in Phase 4 of `/plab-continue-session`.
 
+## When several sessions are waiting
+
+When `scripts/list-candidates.py` reports mode `choose`, show its list and ask which session to resume before anything else; the example is in `references/log-discovery.md`. Then show the structure below for the chosen log only. Continue resumes from exactly one log per invocation, whichever the user picks.
+
 ## Required structure
 
 ```markdown

@@ -2,7 +2,7 @@
 
 The current configuration of every skill in `prisant-powertools`, as declared in the repository. One row per skill, plus the setup each one needs and where its output lands.
 
-**Plugin version:** 0.13.0 **Skills:** 15 (7 auto-discoverable, 8 explicit-invocation only) **Verified against:** `library.json`, `manifest.generated.json`, and each `skills/*/SKILL.md` **As of:** 2026-11-08
+**Plugin version:** 0.13.0 **Skills:** 15 (7 auto-discoverable, 8 explicit-invocation only) **Verified against:** `library.json`, `manifest.generated.json`, and each `skills/*/SKILL.md` **As of:** 2026-11-10
 
 > This file describes what the repository declares, not what is installed on any given machine. To check a local install, read `~/.claude/plugins/installed_plugins.json`.
 
@@ -17,14 +17,14 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 | `plab-current-status` | 1.1.1 | **Explicit only** | `[<byline>] [--no-fetch]` | `_local/_status/YYYY-MM-DD_<model>_<byline>.md` (gitignored) |
 | `plab-project-pulse` | 1.1.1 | **Explicit only** | `[--quick\|--week] [--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD/`, private, outside any repository or ignored by it |
 | `plab-usage-audit` | 1.1.1 | **Explicit only** | `[--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD_claude-usage/`; a tracked folder only when the settings allow it |
-| `plab-continue-session` | 1.6.2 | Auto + explicit | `[--log <path>]` | Nothing. Displays context only |
+| `plab-continue-session` | 1.7.0 | Auto + explicit | `[--log <path>]` | Nothing. Displays context only |
 | `plab-guide` | 2.2.3 | Auto + explicit | `<topic-or-repo-url> [--type repo-url\|tool\|concept] [--out <dir>] [--force]` | `_output/plab-guide/` |
 | `plab-init-project` | 1.3.1 | **Explicit only** | `[--profile minimal\|standard\|public] [--type ...] [--dry-run]` | The target repository root |
 | `plab-release-plan` | 1.6.2 | **Explicit only** | `--create \| --promote \| --demote \| --update \| --gate` | `docs/internal/release-plans/plan_NN_<slug>/` |
 | `plab-resolve-open-items` | 1.2.0 | Auto + explicit | `[--backlog \| <document>]` | Each item's home document; the walk record and any backlog file in `_local/decisions/` |
 | `plab-spec` | 1.3.4 | Auto + explicit | `--effort <id> [--target-release vX.Y.Z] [--revise] [--dry-run]` | `docs/internal/release-plans/_unassigned/` by default |
 | `plab-strategy-brief` | 1.1.1 | Auto + explicit | `[paste raw thinking]` | `_output/plab-strategy-brief/` |
-| `plab-wrap-session` | 1.9.1 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
+| `plab-wrap-session` | 1.10.0 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
 | `plab-ship` | 1.0.0 | **Explicit only** | `[<branch\|PR> ...] [--release] [--no-fetch]` | `_local/_shipped/YYYY-MM-DD_<byline>.md` (gitignored), plus merges and any release |
 | `plab-org-profile-readme` | 1.1.0 | **Explicit only** | `<org> [--setup] ["<instructions>"]` | A branch and one pull request in `<org>/.github`; nothing local |
 
@@ -34,7 +34,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 
 ## Per-skill detail
 
-### `plab-wrap-session` 1.9.1
+### `plab-wrap-session` 1.10.0
 
 The most-used skill in the plugin. Writes a structured session log and hands off to `plab-continue-session`.
 
@@ -42,26 +42,26 @@ The most-used skill in the plugin. Writes a structured session log and hands off
 |---|---|
 | Default mode | **deep**. Every wrap produces the full template unless the agent records a specific objection in the log justifying a lighter mode |
 | Modes | `deep` (default), `quick`, `final`, `blocked`, plus `--organize` |
-| Output | `_local/_session-logs/`, flat, archived into `YYYY-MM/` folders by `--organize` |
+| Output | `_local/_session-logs/`, flat, archived into `YYYY-MM/` folders by `--organize`. From a linked worktree, the main checkout's store |
 | Scripts | `derive-log-facts.py`, `check-log.py`, `dash-check.py`, `organize-logs.py`, `path-citation-check.py`, plus `test-derive-log-facts.py`, `test-check-log.py`, and `test-organize-logs.py` |
 | Setup required | Python 3 on PATH. No other dependency; the dash gate is pure-Python regex, with no `ripgrep` requirement (that applies only to the repository-wide `scripts/check-dashes.py`, a different script) |
 | References | 4 files |
-| Paired with | `plab-continue-session`. A session-log format change in one requires a matching change in the other |
+| Paired with | `plab-continue-session`. A session-log format change in one requires a matching change in the other. Both load the session-log rules from the plugin's shared `lib/session-logs.py` |
 
-One call to `derive-log-facts.py` gathers the frontmatter facts, the previous log's Waiting on You items, and the detection results of a pre-wrap hygiene sweep across five checks (remote divergence, working tree, release state, documentation drift, session-log store). The agent judges that output and drafts numbered proposals, runs four auto actions (a pruning fetch first), writes the log, and runs one call to `check-log.py` as the Log Self-Check. It then asks every proposal in one batch, amends the log with the answers, and runs `check-log.py` again. It runs the two existing canary-proven detector gates (path citations, dashes) exactly as before, plus the decisions-count comparison, summary length, Tier 1 frontmatter completeness, and the Waiting on You rules, and in deep mode the Uncertainty Ledger and What You May Not Realize presence checks. It reports the same three states as the detectors it calls: `clean`, `findings`, `broken`, where `broken` blocks exactly as `findings` does.
+One call to `derive-log-facts.py` gathers the frontmatter facts, this session's id and start, the Waiting on You items of the log it carries from (the resumed log, or else the newest), the logs another session wrote while this one ran, and the detection results of a pre-wrap hygiene sweep across five checks (remote divergence, working tree, release state, documentation drift, session-log store). The agent judges that output and drafts numbered proposals, runs four auto actions (a pruning fetch first), writes the log, and runs one call to `check-log.py` as the Log Self-Check. It then asks every proposal in one batch, amends the log with the answers, and runs `check-log.py` again. It runs the two existing canary-proven detector gates (path citations, dashes) exactly as before, plus the decisions-count comparison, summary length, Tier 1 frontmatter completeness, and the Waiting on You rules, and in deep mode the Uncertainty Ledger and What You May Not Realize presence checks. It reports the same three states as the detectors it calls: `clean`, `findings`, `broken`, where `broken` blocks exactly as `findings` does.
 
-### `plab-continue-session` 1.6.2
+### `plab-continue-session` 1.7.0
 
-Reads the newest session log and replays its recorded handoff.
+Finds the session handoffs nobody has taken up, asks which to resume when there is more than one, and replays the chosen log's handoff.
 
 | Property | Value |
 |---|---|
-| Default behavior | Find newest log, reconcile it against the repository, display resumption context led by what changed, confirm before acting |
+| Default behavior | List the waiting sessions and ask when several are waiting, otherwise take the one, reconcile it against the repository, display resumption context led by what changed, confirm before acting |
 | Output | **None.** The output is the displayed context and the act of starting the named next action |
-| Scripts | `reconcile.py`, plus `test-reconcile.py` |
+| Scripts | `list-candidates.py`, `reconcile.py`, plus `test-list-candidates.py` and `test-reconcile.py` |
 | Setup required | Python 3 on PATH and a readable session-log store. Reconciliation runs one non-pruning fetch, with a 20-second timeout |
 | References | 4 files |
-| Discovery paths | `_local/_session-logs/` (current, including `YYYY-MM/` folders), `_agent-context/session-log/` (legacy), `AGENTS/session-log/` (legacy) |
+| Discovery paths | `_local/_session-logs/` (current, including `YYYY-MM/` folders), `_agent-context/session-log/` (legacy), `AGENTS/session-log/` (legacy). From a linked worktree, the main checkout's store |
 
 Deliberately does **not** fire on status questions ("where are we", "what's next"). Those get answered directly. Never auto-executes a continuation prompt without confirmation.
 

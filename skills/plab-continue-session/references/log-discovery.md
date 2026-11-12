@@ -2,6 +2,8 @@
 
 How `/plab-continue-session` finds the right session log to resume from.
 
+Since plab-continue-session 1.7.0 (W-07), `scripts/list-candidates.py` does this work, with the rules in the plugin's shared `lib/session-logs.py`. This document describes what it computes and keeps the shell pipelines as the manual fallback for a harness that cannot run it.
+
 ## Search locations
 
 Search all three stores, in this order for reporting purposes only. Skip any that do not exist.
@@ -47,7 +49,29 @@ Pool the `.md` files from every location that exists, then pick the single newes
 
 This matters during migration. A project that has just moved to `_local/_session-logs/` still has its history in a legacy path, and a first-non-empty rule gets it wrong in both directions: before the first new log is written it resumes from the legacy path indefinitely, and immediately after it permanently hides everything older. Newest-wins across the union is correct at every point in the migration.
 
+## Candidate set
+
+Newest-wins hides a parallel session: when two sessions wrap, only the later log is offered. So the script first builds a candidate set from the pooled logs, and only the candidate set decides what continue offers.
+
+A log is a candidate when its file name's date is within the last 7 days, the same 7 days as the age warning below, and no newer log took up its handoff. A newer log takes it up when it names it in `resumed-from:`, or names it in `carried-from:` and its own session started after the log was written. A session that was already running when the log was written carried its items without taking up its handoff, so that log stays a candidate. A log written before W-07 has no `session-id`, and any newer log on its branch takes it up, which keeps newest-wins for those logs. Two logs with one `session-id` count once, as the newer.
+
+The rule lives in `lib/session-logs.py`, whose docstring explains it; do not restate it elsewhere.
+
+| Candidates | Mode | What continue does |
+|---|---|---|
+| exactly one | `one` | resumes from it, as before W-07 |
+| two or more | `choose` | lists them newest first and asks |
+| none, but logs exist | `fallback` | resumes from the newest log, with the age warning |
+| no logs at all | `none` | the "no prior session log" path below |
+
+## Worktrees
+
+In a linked git worktree, the store is the main checkout's `_local/_session-logs/`, found through `git rev-parse --git-common-dir`. A worktree has no `_local/` of its own until something writes one, and removing a worktree removes whatever it held, so one store in the main checkout is the only place every session's log survives. The log's `branch:` field still names the worktree's branch.
+
 ## Sort rule
+
+The file name's `HH-MM` is the local time the wrap ran, not the time the session started. A log written days after its session began still carries the day it was written, so the newest handoff always sorts first. A log from plab-wrap-session 1.10.0 or later records the start in `session-start:`.
+
 
 Filenames follow the pattern `YYYY-MM-DD_HH-MM_<llm>_<brief-kebab-title>.md`. Because the date+time prefix is ISO-style and zero-padded, **lexical descending sort = most recent first**. The prefix is location-independent, so pooled filenames from different directories sort correctly against each other.
 
@@ -92,18 +116,20 @@ If the winning log came from a legacy path, surface this alongside the resumptio
 
 Do not move anything automatically. The choice is the user's.
 
-## Tie-breaking
+## Choosing between sessions
 
-If two logs share the same `YYYY-MM-DD_HH-MM_` prefix (different LLMs ran a session at the exact same minute, rare but possible), surface both to the user and ask which to resume:
+Two logs of the same minute are two sessions, so they arrive as two candidates; there is no separate tie rule. In mode `choose`, show the script's list and ask:
 
 ```
-Two logs share the most-recent timestamp:
-  1. 2026-05-28_14-30_claude_<title>.md
-  2. 2026-05-28_14-30_codex_<title>.md
+Two sessions have unconsumed logs from the last 7 days:
+
+  1. 2026-11-10_11-00_claude_b-work.md  feat/b  (session Mon 10:00 to Tue 11:00, 0 waiting)
+  2. 2026-11-09_17-00_claude_a-work.md  feat/a  (session Mon 09:00 to Mon 17:00, 2 waiting)
+
 Which session should I resume?
 ```
 
-Do not silently pick one. The choice is the user's.
+When exactly one candidate is on the current branch, the script marks it as the default. Do not silently pick it. The choice is the user's.
 
 ## Empty or missing directory
 
