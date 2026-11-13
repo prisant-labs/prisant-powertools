@@ -43,6 +43,8 @@ A parallel log appears in the Summary as one sentence naming it by file name, fo
 
 **If it fails.** Both session skills load their shared rules from the plugin's `lib/session-logs.py`. If that file is missing, `derive-log-facts.py` stops with exit code 2 and names the path it looked for, and `check-log.py` reports its checks as `broken` rather than clean; the plugin install is incomplete, so update or reinstall the plugin and restart the harness. A missing `session-id` with the reason `no-session-id` means the transcript could not be read, which is normal under Codex; the wrap still writes a valid log without the session fields.
 
+**If the self-check reports the log's times.** Since 1.11.1, `check-log.py`'s session-fields check reports `date ... is not later than session-start ...`, or `the file name's time ... is earlier than carried-from's ...`. Both mean the session's start time was written where the wrap's time belongs. To repair the log, take the time from the `date:` line of `derive-log-facts.py`'s output, put it in the log's `date:` field, and rename the file so its `YYYY-MM-DD_HH-MM` matches; then run `check-log.py` again. Each rule is skipped when a value it needs is missing, so a log with no `session-start`, as under Codex, or with no `carried-from`, as in a repository's first log, is never reported by it.
+
 ### Installation
 
 Install via the prisant-labs marketplace:
