@@ -4,7 +4,7 @@ title: "Implementation plan: Session-aware wrap and continue"
 type: implementation-plan
 status: in-progress
 created: 2026-11-10
-updated: 2026-11-10
+updated: 2026-11-13
 linked-spec: spec.md
 linked-release: null
 ac-coverage: complete
@@ -45,7 +45,7 @@ phase-count: 7
 | P4 | Rewire the wrap's Evidence Gathering, write location and Summary to the script's output | AC-5 (the skill), AC-6, AC-9 (the wrap's write) | agent | Done 2026-11-10 |
 | P5 | Give continue a candidate script and a candidate list | AC-1 (discovery), AC-7, AC-8, AC-9 (continue's reads) | agent | Done 2026-11-10 |
 | P6 | Documentation, versions and CI | AC-1 (the README) | agent | Done 2026-11-10 |
-| P7 | Live runs, then the first real parallel case | AC-7 (the real store), AC-9 (a real worktree), AC-10 | agent, then maintainer | Partial 2026-11-10: Steps 1 and 2 done; Steps 3 to 5 wait on a resumed session and the release |
+| P7 | Live runs, then the first real parallel case | AC-7 (the real store), AC-9 (a real worktree), AC-10 | agent, then maintainer | Partial 2026-11-10: Steps 1 and 2 done. Updated 2026-11-13: v0.14.0 released the work on 2026-11-12, so Steps 3 to 5 now wait on a resumed session and on both installs being updated to v0.14.0 |
 
 ---
 
@@ -267,7 +267,7 @@ phase-count: 7
 
 **Verification:** Steps 1 to 3 each produce a recorded output that matches the expectation stated in the step. AC-10's checkbox is ticked only from a real case, never from a fixture.
 
-**Partial 2026-11-10.** Step 1: `list-candidates.py` on this repository's real store, read-only, reports mode `one` with the 2026-11-08 log. The store has not changed since 2026-11-10, so this is also AC-7's snapshot expectation. Step 2: in a real linked worktree at `E:/tmp/pt-w07`, which has no `_local/` of its own, `list-candidates.py` and `derive-log-facts.py` both report the store as `main-checkout`, find the same 2026-11-08 log, and carry 14 Waiting on You items from it. The worktree and its branch were then removed. Step 2 deliberately wrote no throwaway log, because that log would have become the newest one in the maintainer's real store. A real wrap from a worktree after release proves the write instead. Steps 3 to 5 are open. Step 3 needs a session resumed with `claude --resume`. Steps 4 and 5 need the release and the maintainer's install update.
+**Partial 2026-11-10.** Step 1: `list-candidates.py` on this repository's real store, read-only, reports mode `one` with the 2026-11-08 log. The store has not changed since 2026-11-10, so this is also AC-7's snapshot expectation. Step 2: in a real linked worktree at `E:/tmp/pt-w07`, which has no `_local/` of its own, `list-candidates.py` and `derive-log-facts.py` both report the store as `main-checkout`, find the same 2026-11-08 log, and carry 14 Waiting on You items from it. The worktree and its branch were then removed. Step 2 deliberately wrote no throwaway log, because that log would have become the newest one in the maintainer's real store. A real wrap from a worktree after release proves the write instead. Steps 3 to 5 are open. Step 3 needs a session resumed with `claude --resume`. Steps 4 and 5 need the release and the maintainer's install update. Update 2026-11-13: the release shipped as v0.14.0 on 2026-11-12, so Steps 4 and 5 now need only the install update.
 
 ---
 
