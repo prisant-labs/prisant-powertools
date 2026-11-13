@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-11-12
+
+A minor release. The session pair now knows which session wrote each log: a log records its session's id and start, carries waiting items from the log you resumed, names logs another session wrote in parallel, and saves to the main checkout from a worktree. When several sessions left handoffs, `/plab-continue-session` asks which to resume. Every wrap ends with a summary in the conversation. `plab-org-profile-readme` ships for the first time, and several readers stop mistaking the merge check's backup tags for releases. Existing logs and existing use keep working.
+
 ### Changed
 
 - **The README lists skills as "name - what it does", grouped by stage.** The three-column table wrapped every skill name and description into narrow, ragged columns. Each skill is now one line, under six stage headings from Sessions to Weekly review, and a hand marks the eight manual-only skills. The page also gains a table of contents, badges, a quick start with a first run, and a project status section. The README no longer states per-skill versions; [`docs/status-skills.md`](docs/status-skills.md) carries them, so a version-only release no longer touches the README. `scripts/version-parity-check.py` stops reading the README (location L1 is retired), and a new self-test case proves it stays unread.

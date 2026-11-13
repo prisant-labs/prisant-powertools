@@ -2,8 +2,8 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 1.1.0 | 2026-11-08 | Unreleased | changed | Ignoring a repository is reachable from any run: the skill asks add or ignore for each repository new to the page, takes an instruction such as "ignore scratch-repo", and the checker enforces it. A run with no organization asks for one, and a run with no `.github` repository or nothing to check stops cleanly. |
-| 1.0.0 | 2026-11-08 | Unreleased | added | First version, specified by RM-01 (the org profile README skill). Sets a standard for a GitHub organization's profile README and keeps the page true to it and to the public repositories, through one pull request it never merges. Manual invocation only. |
+| 1.1.0 | 2026-11-08 | v0.14.0 | changed | Ignoring a repository is reachable from any run: the skill asks add or ignore for each repository new to the page, takes an instruction such as "ignore scratch-repo", and the checker enforces it. A run with no organization asks for one, and a run with no `.github` repository or nothing to check stops cleanly. |
+| 1.0.0 | 2026-11-08 | v0.14.0 | added | First version, specified by RM-01 (the org profile README skill). Sets a standard for a GitHub organization's profile README and keeps the page true to it and to the public repositories, through one pull request it never merges. Manual invocation only. |
 
 ## 1.1.0 - 2026-11-08
 
