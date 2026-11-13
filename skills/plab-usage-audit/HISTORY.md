@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 1.1.1 | 2026-11-06 | unreleased | fixed | The first live run found four defects. The reconciliation now tests the row an earlier audit wrote, at that row's own cutoff, and no longer the row this run just appended. `prior_same_cutoff` records the prior week stopped at the focus week's local cutoff, and the usage brief compares against it. `pre-merge/*` tags no longer count as releases. R8 no longer flags a URL, and `scrub.py` removes every drive letter R8 would flag. |
+| 1.1.1 | 2026-11-06 | v0.14.0 | fixed | The first live run found four defects. The reconciliation now tests the row an earlier audit wrote, at that row's own cutoff, and no longer the row this run just appended. `prior_same_cutoff` records the prior week stopped at the focus week's local cutoff, and the usage brief compares against it. `pre-merge/*` tags no longer count as releases. R8 no longer flags a URL, and `scrub.py` removes every drive letter R8 would flag. |
 | 1.1.0 | 2026-11-03 | v0.12.0 | changed | Recommendation ids are date-scoped, such as `2026-11-03 R2`, in place of a rotating letter. `bundle-check.py` rule R3 requires the new form and one date per bundle. Older letter ids map to their bundle's date plus the letter. UA-01 D1. |
 | 1.0.0 | 2026-10-30 | v0.11.0 | added | First version, specified by UA-01 (usage audit skill). Runs the owner's weekly audit of their own Claude Code usage and writes a scrubbed, verified bundle. Manual invocation only. Built on six working-default decisions, D1 to D6 in the UA-01 spec, all still `Open` pending the maintainer's ratification. |
 
