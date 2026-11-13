@@ -268,13 +268,62 @@ def check_tier1_frontmatter(frontmatter: str) -> dict:
     return {"state": "clean", "detail": "all 9 Tier 1 fields present"}
 
 
-def check_session_fields(frontmatter: str) -> dict:
+def parse_timestamp(raw: str | None):
+    """An ISO 8601 value from the frontmatter as an aware datetime, or None
+    when it is absent, unparsable, or carries no offset."""
+    import datetime as dt
+
+    if raw is None:
+        return None
+    try:
+        value = dt.datetime.fromisoformat(unquote(raw).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return value if value.tzinfo is not None else None
+
+
+def session_order_findings(frontmatter: str, log_name: str | None) -> list[str]:
+    """The log's own times must agree with its session fields. `date` and the
+    file name are the wrap's time; `session-start` is when the session began;
+    `carried-from` names a log written earlier. A wrap that copies the
+    session's start into `date` and the file name sorts its log before the
+    log it carried from, so continue offers the older handoff first. On
+    2026-11-11 one did, and every other check passed it.
+
+    Two rules, each skipped when a value it needs is missing:
+    - `date` must be later than `session-start`. They are equal only when the
+      start was copied into `date`, because the wrap runs after the session's
+      first message.
+    - The file name's `YYYY-MM-DD_HH-MM` must not be earlier than the
+      `carried-from` file name's. Both are local wrap times in the same form,
+      so they compare as text. The same minute passes."""
+    findings = []
+    date = parse_timestamp(frontmatter_field(frontmatter, "date"))
+    start = parse_timestamp(frontmatter_field(frontmatter, "session-start"))
+    if date is not None and start is not None and date <= start:
+        findings.append(
+            f"date {date.isoformat()} is not later than session-start {start.isoformat()}; "
+            "date and the file name are the wrap's time, from derive-log-facts.py's date line"
+        )
+    carried = frontmatter_field(frontmatter, "carried-from")
+    if log_name and carried is not None:
+        carried = unquote(carried)
+        if LOG_FILENAME_RE.match(log_name) and LOG_FILENAME_RE.match(carried) and log_name[:16] < carried[:16]:
+            findings.append(
+                f"the file name's time {log_name[:16]} is earlier than carried-from's {carried[:16]}; "
+                "a log cannot carry items from a log written after it, so name it at the wrap's time"
+            )
+    return findings
+
+
+def check_session_fields(frontmatter: str, log_name: str | None = None) -> dict:
     """W-07's three optional fields: `session-id`, `session-start` and
     `carried-from`. All three are optional, because a log written before W-07,
     or by Codex, carries none of them, and `session-start` is omitted when no
     transcript was found. A value that is present must be well formed:
     `session-start` parses as ISO 8601, and `carried-from` is a bare session-log
-    file name, because continue matches it against file names."""
+    file name, because continue matches it against file names. Since 1.11.1 the
+    values must also agree with the log's own times; see session_order_findings."""
     import datetime as dt
 
     session_id = frontmatter_field(frontmatter, "session-id")
@@ -291,6 +340,8 @@ def check_session_fields(frontmatter: str) -> dict:
         value = unquote(carried)
         if not LOG_FILENAME_RE.match(value):
             findings.append(f"carried-from must be a session-log file name with no directory: {value}")
+    if not findings:
+        findings.extend(session_order_findings(frontmatter, log_name))
     if findings:
         return {"state": "findings", "detail": findings}
     present = [name for name, raw in (("session-id", session_id), ("session-start", start),
@@ -360,7 +411,7 @@ def run_all_checks(log_path: Path, repo_root: str, mode: str) -> dict:
     results["decisions-count"] = check_decisions_count(text, frontmatter, mode, dlf)
     results["summary-length"] = check_summary_length(frontmatter)
     results["tier1-frontmatter"] = check_tier1_frontmatter(frontmatter)
-    results["session-fields"] = check_session_fields(frontmatter)
+    results["session-fields"] = check_session_fields(frontmatter, log_path.name)
     results["waiting-on-you"] = check_waiting_on_you(text, dlf)
     if mode == "deep":
         results["uncertainty-ledger"] = check_section_present(

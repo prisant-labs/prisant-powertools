@@ -2,6 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.11.1 | 2026-11-12 | unreleased | fixed | `check-log.py` fails a log stamped with its session's start time instead of the wrap's: `date` must be later than `session-start`, and the file name's time no earlier than the `carried-from` log's. |
 | 1.11.0 | 2026-11-12 | unreleased | added | Closing Summary: every wrap tells the maintainer in the conversation what the session accomplished and what comes next in priority order, copied from the log just written, before any hygiene question. |
 | 1.10.0 | 2026-11-10 | unreleased | added | Session-aware wrap (W-07): each log records its `session-id`, `session-start` and `carried-from`; the wrap carries items from the resumed log or else the newest; logs another session wrote while this one ran are named, never archived, and stay visible to continue; a linked worktree writes to the main checkout's store. |
 | 1.9.1 | 2026-11-07 | unreleased | fixed | Path-citation gate: five false-alarm shapes found in real logs are excluded (home paths, POSIX paths and site routes, git ranges, tags ending in a version number, and commands in backticks), and a command with arguments has its path checked for the first time. The proof corpus grows from 40 entries to 60. `derive-log-facts.py` and the Check 4 recipe take the nearest release tag, so a `pre-merge/*` backup tag or a floating `v1` is never the `latest-tag` or the base for Check 4's drift diff. |
@@ -16,6 +17,12 @@
 | 1.5.0 | 2026-08-18 | v0.2.0 | added | `--organize` files old logs into `YYYY-MM/` folders. Hygiene sweep gained Check 5. |
 | 1.4.1 | 2026-08-18 | v0.1.2 | fixed | Dropped the "what did we do" trigger. Added `type:` to the frontmatter block and `machine:` to the Quick and Blocked templates. |
 | 1.4.0 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.4.0; prior history remains there. |
+
+## 1.11.1 - 2026-11-12
+
+**Fixed: a log stamped with its session's start time now fails the self-check.** On 2026-11-11 a wrap copied its session's start, two days earlier, into `date` and the file name. The log then sorted before the log it carried its items from, continue offered the older handoff as a separate session, and every check passed it. The facts script had reported the right wrap time; the model used the wrong field. The session-fields check now adds two rules, each skipped when a value it needs is missing: `date` must be later than `session-start`, and the file name's `YYYY-MM-DD_HH-MM` must not be earlier than the `carried-from` file name's. SKILL.md now says plainly that both the date and the file name come from the script's `date` line.
+
+Proof: eight new fixture checks in `test-check-log.py`, including that log's real values and a canary that removes the two rules and shows the real slip then passes. Run against the 46 logs in the maintainer's store, the rules flag that one log and no other.
 
 ## 1.11.0 - 2026-11-12
 

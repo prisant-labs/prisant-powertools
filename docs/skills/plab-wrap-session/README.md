@@ -1,6 +1,6 @@
 # plab-wrap-session
 
-**Version:** 1.11.0
+**Version:** 1.11.1
 **Source:** [`skills/plab-wrap-session/`](../../../skills/plab-wrap-session/)
 
 Document and close agentic coding sessions with structured session logs. Deep mode is the default: a full log with evidence index, a verbose copy-paste-ready continuation prompt, a hygiene sweep (remote divergence, release state, doc drift, working-tree reconciliation) whose numbered proposals are asked in one batch after the log is written, and a mandatory Waiting on You section listing everything blocked on the maintainer, with links.
@@ -319,7 +319,7 @@ Before writing the log, the skill checks whether changes warrant updates to READ
 | `references/hygiene-sweep.md` | The five checks, their commands, the numbered-batch protocol, and the four auto actions | When understanding what the sweep inspects and proposes |
 | `references/doc-update-rules.md` | When/how to update README, CHANGELOG, plans, and ADRs | When understanding the surrounding document update rules |
 | `scripts/derive-log-facts.py` | One call gathers the frontmatter facts, the session id and start, the store, the carry-forward log and any concurrent logs, the Waiting on You carry-forward, and the detection results of all five hygiene checks. The session-log rules come from the plugin's shared `lib/session-logs.py` | Run once per wrap, before drafting the log |
-| `scripts/check-log.py` | Log Self-Check: one call runs the decisions-count, summary-length, Tier 1, session-fields, Waiting on You, and deep-mode-section checks, plus the two detector scripts below | After writing the log |
+| `scripts/check-log.py` | Log Self-Check: one call runs the decisions-count, summary-length, Tier 1, session-fields, Waiting on You, and deep-mode-section checks, plus the two detector scripts below. Since 1.11.1 the session-fields check also fails a log stamped with its session's start time instead of the wrap's | After writing the log |
 | `scripts/dash-check.py` | No em-dash or en-dash in the drafted log, detector-backed and canary-proven; called by `check-log.py` | After writing |
 | `scripts/path-citation-check.py` | Path citations in the drafted log resolve, detector-backed and canary-proven; called by `check-log.py` | After writing |
 | `scripts/organize-logs.py` | Files logs from closed months into `YYYY-MM/` folders; dry run by default | Run by `--organize` and by hygiene Check 5 |

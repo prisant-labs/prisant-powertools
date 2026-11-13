@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`plab-wrap-session` 1.11.1: a log stamped with its session's start time fails the self-check.** A wrap that copied the session's start into the log's date and file name made the log sort before the log it carried from, so continue offered the older handoff as a separate session. `check-log.py` now requires the date to be later than the session start and the file name to be no older than the log it carried from.
 - **`plab-wrap-session` 1.10.0 and `plab-continue-session` 1.7.0: worktree sessions share one log store.** A wrap in a linked git worktree wrote its log into the worktree's own `_local/`, which the next resume never read and which vanished with the worktree. Both skills now use the main checkout's store.
 - **`plab-usage-audit` 1.1.1: the reconciliation can now fail.** It re-ran the row the same run had just appended, so it always agreed. It now tests the row an earlier audit wrote, at that row's own cutoff, including a row from before schema 2 read through the mapping file.
 - **`plab-usage-audit` 1.1.1: a like-for-like prior figure.** The focus week stops at the cutoff and the prior week ran through its whole last day, which read as a false fall. `prior_same_cutoff` holds the prior week stopped at the same local time, and the usage brief compares against it.

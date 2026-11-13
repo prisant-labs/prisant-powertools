@@ -13,7 +13,7 @@ description: "Document and close agentic coding sessions with structured session
 argument-hint: "[mode: quick|final|deep|blocked] [--organize]"
 license: MIT
 metadata:
-  version: "1.11.0"
+  version: "1.11.1"
   updated: 2026-11-12
 ---
 
@@ -162,7 +162,7 @@ Store layout, and why discovery reads both the flat store and month folders, are
 
 ### Frontmatter
 
-Include all Tier 1 fields. Add Tier 2 and Tier 3 when available. See `references/frontmatter-schema.md` for the complete field reference. `date`, `type`, `machine`, `repo`, `branch`, and `files-changed` come from the Evidence Gathering run of `derive-log-facts.py` above, as do the two fields it adds, `commit-range` and `latest-tag`, and the three W-07 session fields: `session-id` and `session-start` when the script reports them, and `carried-from`, the file name on its `carry-forward:` line, unless the rule is `none`. Omit a field the script reports as null. `decisions-count` is filled in by the agent once the Decisions Made section below is drafted, by counting that section's own entries, and `check-log.py` (see Log Self-Check below) then verifies the count mechanically before the wrap is done - it never ships as an uncorrected estimate. Everything else in this block is agent-filled.
+Include all Tier 1 fields. Add Tier 2 and Tier 3 when available. See `references/frontmatter-schema.md` for the complete field reference. `date`, `type`, `machine`, `repo`, `branch`, and `files-changed` come from the Evidence Gathering run of `derive-log-facts.py` above, as do the two fields it adds, `commit-range` and `latest-tag`, and the three W-07 session fields: `session-id` and `session-start` when the script reports them, and `carried-from`, the file name on its `carry-forward:` line, unless the rule is `none`. `date` and the file name's time are both the script's `date` line, the wrap's time; never copy `session-start` into either, because the log then sorts before logs written while the session ran. Omit a field the script reports as null. `decisions-count` is filled in by the agent once the Decisions Made section below is drafted, by counting that section's own entries, and `check-log.py` (see Log Self-Check below) then verifies the count mechanically before the wrap is done - it never ships as an uncorrected estimate. Everything else in this block is agent-filled.
 
 ```yaml
 ---
@@ -259,7 +259,7 @@ Write the log, then run one command, and fix every finding before the wrap count
 python <skill-dir>/scripts/check-log.py <log-path> --repo-root <project-root> --mode <quick|final|deep|blocked>
 ```
 
-It runs every mechanical gate this section used to list as separate steps, in one invocation: the two detector-backed gates below exactly as they are, each still proving its own canary corpus before it scans and still reporting clean, findings, or broken, where a broken detector makes this script's own result broken too; `decisions-count` compared against a mechanical count of the Decisions Made section (skipped, not failed, in quick and blocked modes, whose templates carry neither); summary length (120 characters or fewer); Tier 1 frontmatter completeness, including `machine:`; the W-07 session fields, which are optional but must be well formed when present (`session-start` an ISO 8601 timestamp, `carried-from` a bare session-log file name); the Waiting on You rules (section present, "Nothing pending." counting, no item beginning "Optional", every item carrying `(blocked since YYYY-MM-DD)`); and, in deep mode only, that the Uncertainty Ledger and What You May Not Realize sections are present ("Nothing material." and "Nothing surfaced." counting; absence does not). Exit 0 clean, 1 findings, 2 broken; `--json` for machine-readable output. Re-run after every fix until clean.
+It runs every mechanical gate this section used to list as separate steps, in one invocation: the two detector-backed gates below exactly as they are, each still proving its own canary corpus before it scans and still reporting clean, findings, or broken, where a broken detector makes this script's own result broken too; `decisions-count` compared against a mechanical count of the Decisions Made section (skipped, not failed, in quick and blocked modes, whose templates carry neither); summary length (120 characters or fewer); Tier 1 frontmatter completeness, including `machine:`; the W-07 session fields, which are optional but must be well formed when present (`session-start` an ISO 8601 timestamp, `carried-from` a bare session-log file name) and must agree with the log's own times (`date` later than `session-start`, and the file name's time no earlier than the `carried-from` log's); the Waiting on You rules (section present, "Nothing pending." counting, no item beginning "Optional", every item carrying `(blocked since YYYY-MM-DD)`); and, in deep mode only, that the Uncertainty Ledger and What You May Not Realize sections are present ("Nothing material." and "Nothing surfaced." counting; absence does not). Exit 0 clean, 1 findings, 2 broken; `--json` for machine-readable output. Re-run after every fix until clean.
 
 The two detector scripts it calls:
 
