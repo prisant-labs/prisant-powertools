@@ -125,6 +125,7 @@ def session_field_cases(root: Path) -> None:
     """W-07 AC-3: the three optional session fields. A log that carries them
     and a log that carries none are both clean; a malformed value is a finding."""
     good = {
+        "date": "2026-11-10T20:00:00-08:00",
         "session-id": "d7a7141e-930b-4a78-9521-6b03879064a3",
         "session-start": '"2026-11-10T19:10:29.691Z"',
         "carried-from": "2026-11-08_21-24_claude_rm-01-built-org-profile-readme-1-1-0.md",
@@ -167,7 +168,7 @@ def session_field_cases(root: Path) -> None:
     bad_log = write(bad / "log.md", build_log(make_frontmatter(dict(good, **{"session-start": "yesterday"})),
                                               DECISIONS_TWO, WAITING_OK, LEDGER_OK, WYMNR_OK))
     original = mod.check_session_fields
-    mod.check_session_fields = lambda frontmatter: {"state": "clean", "detail": "mutant"}
+    mod.check_session_fields = lambda *args, **kwargs: {"state": "clean", "detail": "mutant"}
     try:
         mutated = mod.run_all_checks(bad_log, str(bad), "deep")
     finally:
@@ -176,6 +177,66 @@ def session_field_cases(root: Path) -> None:
           mutated["session-fields"]["state"] != "findings", str(mutated.get("session-fields")))
     real = mod.run_all_checks(bad_log, str(bad), "deep")
     check("W-07 AC-3 canary: the real check flags the same log",
+          real["session-fields"]["state"] == "findings", str(real.get("session-fields")))
+
+    session_order_cases(root, mod)
+
+
+def session_order_cases(root: Path, mod) -> None:
+    """1.11.1: a log's own times must agree with its session fields. The file
+    name and `date` are the wrap's time, `session-start` is the session's, and
+    `carried-from` names an earlier log. On 2026-11-11 a wrap copied its
+    session's start time into `date` and the file name, so the log sorted two
+    days before the log it carried from. These are that log's real values."""
+    start = '"2026-11-10T00:35:22.294Z"'
+    carried = "2026-11-11_15-20_claude_readme-list-layout-shipped.md"
+    cases = [
+        ("a log named and dated at its wrap time, after the log it carried from",
+         "2026-11-11_20-26_claude_release-tag-readers.md",
+         {"date": "2026-11-11T20:26:59-08:00", "session-start": start, "carried-from": carried}, "clean"),
+        ("the 2026-11-11 slip: session start copied into date and the file name",
+         "2026-11-09_16-35_claude_release-tag-readers.md",
+         {"date": "2026-11-09T16:35:22-08:00", "session-start": start, "carried-from": carried}, "findings"),
+        ("a date earlier than session-start",
+         "2026-11-11_20-26_claude_x.md",
+         {"date": "2026-11-09T10:00:00-08:00", "session-start": start}, "findings"),
+        ("a file name older than its carried-from log, with a correct date",
+         "2026-11-09_16-35_claude_x.md",
+         {"date": "2026-11-11T20:26:59-08:00", "session-start": start, "carried-from": carried}, "findings"),
+        ("a file name in the same minute as its carried-from log",
+         "2026-11-11_15-20_claude_second-wrap.md",
+         {"date": "2026-11-11T15:20:40-08:00", "session-start": start, "carried-from": carried}, "clean"),
+        ("a file name with no time stamp, which cannot be ordered",
+         "log.md",
+         {"date": "2026-11-11T20:26:59-08:00", "session-start": start, "carried-from": carried}, "clean"),
+    ]
+    for i, (label, name, fields, want) in enumerate(cases):
+        repo = root / f"order-{i}"
+        repo.mkdir()
+        log = write(repo / name, build_log(make_frontmatter(fields), DECISIONS_TWO, WAITING_OK,
+                                           LEDGER_OK, WYMNR_OK))
+        data = json.loads(run_check(log, repo, mode="deep").stdout)
+        got = data["checks"].get("session-fields", {}).get("state")
+        check(f"session order: {label} is {want}", got == want, str(data["checks"].get("session-fields")))
+
+    # Canary, in process: with the ordering rules removed, the real slip passes,
+    # so the case above is what would notice their removal.
+    bad = root / "order-canary"
+    bad.mkdir()
+    slip = write(bad / "2026-11-09_16-35_claude_release-tag-readers.md",
+                 build_log(make_frontmatter({"date": "2026-11-09T16:35:22-08:00", "session-start": start,
+                                             "carried-from": carried}),
+                           DECISIONS_TWO, WAITING_OK, LEDGER_OK, WYMNR_OK))
+    original = mod.session_order_findings
+    mod.session_order_findings = lambda *args, **kwargs: []
+    try:
+        mutated = mod.run_all_checks(slip, str(bad), "deep")
+    finally:
+        mod.session_order_findings = original
+    check("session order canary: without the ordering rules the real slip passes",
+          mutated["session-fields"]["state"] == "clean", str(mutated.get("session-fields")))
+    real = mod.run_all_checks(slip, str(bad), "deep")
+    check("session order canary: the real check flags the same log",
           real["session-fields"]["state"] == "findings", str(real.get("session-fields")))
 
 

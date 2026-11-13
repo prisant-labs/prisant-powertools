@@ -53,7 +53,7 @@ Records which log this wrap copied Waiting on You and Parked items from. The val
 
 ### `session-id` and `session-start` semantics
 
-Both come from `derive-log-facts.py` and are omitted when it reports null. Together they tell continue which logs one session wrote and when that session began, so two wraps of one session collapse to one candidate, and a log another session wrote while this one ran is recognized as parallel work. `session-start` is the session's start, not the wrap's: the wrap's time is in `date:` and in the file name.
+Both come from `derive-log-facts.py` and are omitted when it reports null. Together they tell continue which logs one session wrote and when that session began, so two wraps of one session collapse to one candidate, and a log another session wrote while this one ran is recognized as parallel work. `session-start` is the session's start, not the wrap's: the wrap's time is in `date:` and in the file name. Since 1.11.1, `check-log.py` reports a finding when `date` is not later than `session-start`, or when the file name's time is earlier than the `carried-from` log's, because either means the session's start was used where the wrap's time belongs.
 
 ### Session Types
 
