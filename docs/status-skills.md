@@ -25,7 +25,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 | `plab-spec` | 1.3.4 | Auto + explicit | `--effort <id> [--target-release vX.Y.Z] [--revise] [--dry-run]` | `docs/internal/release-plans/_unassigned/` by default |
 | `plab-strategy-brief` | 1.1.1 | Auto + explicit | `[paste raw thinking]` | `_output/plab-strategy-brief/` |
 | `plab-wrap-session` | 1.11.1 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
-| `plab-ship` | 1.0.0 | **Explicit only** | `[<branch\|PR> ...] [--release] [--no-fetch]` | `_local/_shipped/YYYY-MM-DD_<byline>.md` (gitignored), plus merges and any release |
+| `plab-ship` | 1.1.0 | **Explicit only** | `[<branch\|PR> ...] [--release] [--no-fetch]` | `_local/_shipped/YYYY-MM-DD_<byline>.md` (gitignored), plus merges and any release |
 | `plab-org-profile-readme` | 1.1.0 | **Explicit only** | `<org> [--setup] ["<instructions>"]` | A branch and one pull request in `<org>/.github`; nothing local |
 
 **Explicit only** means the skill carries `disable-model-invocation: true` for Claude Code and `policy.allow_implicit_invocation: false` in `agents/openai.yaml` for Codex. It never fires on its own and is absent from the auto-loaded skill listing. It runs when you type its name and only then. **`plab-init-project`, `plab-audit`, `plab-release-plan`, `plab-current-status`, `plab-usage-audit`, `plab-project-pulse`, `plab-ship` and `plab-org-profile-readme` carry it now.** `plab-release-plan` carried it through 1.3.0, was auto-discoverable from 1.4.0 to 1.5.1, and carries it again from 1.6.0, provisionally. `plab-spec` carried it through 1.2.1 and is now auto-discoverable, using an explicit do-NOT-fire clause in its description instead of the binary flag.
@@ -251,7 +251,7 @@ Rolls every repository under the configured roots into one private weekly pulse.
 
 ---
 
-### `plab-ship` 1.0.0, explicit only
+### `plab-ship` 1.1.0, explicit only
 
 Documents, verifies, screens and merges finished branches in one pass, with an optional release, and writes a checked run record.
 

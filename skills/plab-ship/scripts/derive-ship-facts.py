@@ -269,6 +269,54 @@ def pending_decisions(repo, gaps):
             for item in json.loads(out or "[]") if item.get("kind", "pending") == "pending"]
 
 
+def decisions_in_diff(repo, base_ref, head_ref, decisions):
+    """For each pending decision whose home document this range changes, say whether a changed line is its own entry.
+
+    A changed line touches a decision when it holds the decision's id as a whole word or its full title,
+    which is how its table row or bullet reads. An edit elsewhere in the same document, such as a count,
+    leaves `touched` false. Returns None when git cannot diff the range.
+    """
+    homes = sorted({d["home"] for d in decisions if d.get("home")})
+    if not homes:
+        return []
+    rc, out, _ = git(repo, "diff", "--unified=0", "--no-color", "--no-ext-diff", "%s...%s" % (base_ref, head_ref),
+                     "--", *homes)
+    if rc != 0:
+        return None
+    changed, current = {}, None
+    for line in out.splitlines():
+        if line.startswith("diff --git "):
+            current = line.split(" b/", 1)[1] if " b/" in line else None
+            changed.setdefault(current, [])
+        elif current and line[:1] in "+-" and not line.startswith(("+++", "---")):
+            changed[current].append(line[1:])
+    rows = []
+    for d in decisions:
+        if d.get("home") not in changed:
+            continue
+        ident, title = (d.get("id") or "").strip(), (d.get("title") or "").strip()
+        id_re = re.compile(r"(?<![\w-])%s(?![\w-])" % re.escape(ident)) if ident else None
+        touched = any((id_re and id_re.search(text)) or (title and title in text) for text in changed[d["home"]])
+        rows.append({"id": d.get("id"), "home": d["home"], "touched": bool(touched)})
+    return rows
+
+
+def annotate_decisions(repo, base, branches, prs, decisions, gaps):
+    for row in branches:
+        found = decisions_in_diff(repo, base, row["name"], decisions)
+        if found is None:
+            gaps.append({"source": "decisions in diff", "reason": "git could not diff %s against %s" % (row["name"], base)})
+        row["decisions_in_diff"] = found
+    for pr in prs:
+        head = "origin/%s" % pr["head"] if git(repo, "rev-parse", "-q", "--verify", "origin/%s" % pr["head"])[0] == 0 else pr["head"]
+        base_ref = "origin/%s" % pr["base"] if git(repo, "rev-parse", "-q", "--verify", "origin/%s" % pr["base"])[0] == 0 else pr["base"]
+        found = decisions_in_diff(repo, base_ref, head, decisions)
+        if found is None:
+            gaps.append({"source": "decisions in diff",
+                         "reason": "pull request %s's branch %s is not in this clone, so its decisions were not read" % (pr["number"], pr["head"])})
+        pr["decisions_in_diff"] = found
+
+
 def settings_map(repo):
     path = repo / SETTINGS
     if not path.is_file():
@@ -349,6 +397,10 @@ def derive(repo_arg, do_fetch, gh):
     rows, truncated = commits_since(repo, latest[1] if latest else None)
 
     version_files = [f for f in VERSION_FILES if (repo / f).is_file()]
+    branches = local_branches(repo, base)
+    prs = pull_requests(repo, gh, slug, gaps)
+    decisions = pending_decisions(repo, gaps)
+    annotate_decisions(repo, base, branches, prs, decisions, gaps)
     return {
         "repo": slug or repo.name,
         "root": repo.as_posix(),
@@ -376,9 +428,9 @@ def derive(repo_arg, do_fetch, gh):
         },
         "open_item_files": [f for f in OPEN_ITEM_FILES if (repo / f).is_file()],
         "worktrees": worktrees(repo),
-        "local_branches": local_branches(repo, base),
-        "pull_requests": pull_requests(repo, gh, slug, gaps),
-        "pending_decisions": pending_decisions(repo, gaps),
+        "local_branches": branches,
+        "pull_requests": prs,
+        "pending_decisions": decisions,
         "doc_map": doc_map(repo),
         "gaps": gaps,
     }
