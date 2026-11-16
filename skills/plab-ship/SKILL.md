@@ -5,8 +5,8 @@ argument-hint: "[<branch|PR> ...] [--release] [--no-fetch]"
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.0.0"
-  updated: 2026-11-06
+  version: "1.1.0"
+  updated: 2026-11-15
 ---
 
 # Ship
@@ -81,7 +81,7 @@ Merge only when all of these hold:
 - The check ends in `VERDICT: merge`. Run it again before each merge, and once more if it reports the clean check as unknown.
 - The documents match the change.
 - The pull request has no unresolved review thread (`pull_requests[].unresolved_threads`).
-- No pending decision blocks it. A decision in `pending_decisions` blocks a branch when its home document is in the branch's diff, or when it names the branch's work.
+- No pending decision blocks it. A decision blocks a branch when the branch changes the decision's own entry, which the facts report as `touched: true` under the branch's or pull request's `decisions_in_diff`, or when the decision names the branch's work. An edit elsewhere in the decision's home document, such as a count, is reported as `touched: false` and does not block: read that file's hunks once to confirm it, and say so in the Merged row. When `decisions_in_diff` is null, the branch could not be diffed, so treat every decision whose home it changes as touched. Before 1.1.0 any change to a home document blocked, and on 2026-11-15 a count line stopped a merge that every check had passed.
 
 Use the merge command the check prints, which carries `--match-head-commit`, with the merge method the repository's history shows. Anything else stays open, and the record says why. A verdict that asks the maintainer is reported with the check that asked and what it said.
 

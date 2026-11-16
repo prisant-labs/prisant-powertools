@@ -132,6 +132,67 @@ def test_facts():
         check("a folder that is not a repository exits 2", rc == 2 and "BROKEN" in out, out[:200])
 
 
+PLAN = """---
+id: X-01
+title: "Example plan"
+type: implementation-plan
+status: active
+created: 2026-06-29
+---
+
+# Example plan
+
+There are 88 decision records.
+
+## Open Questions / Decisions
+
+| ID | Title | Resolution | Status | Updated |
+|----|-------|------------|--------|---------|
+| D1 | Build the generator or not | (pending) | Open | 2026-06-29 |
+"""
+
+
+def test_decisions():
+    """A branch blocks on a decision only when it changes that decision's own entry.
+
+    Before plab-ship 1.1.0 a decision blocked any branch whose diff held its home
+    document, so a count edit in the same file stopped a safe merge on 2026-11-15.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp) / "repo"
+        repo.mkdir()
+        git(repo, "init", "-q", "-b", "main")
+        write(repo, "README.md", "# Example\n")
+        write(repo, "docs/plan.md", PLAN)
+        commit(repo, "base")
+
+        git(repo, "checkout", "-q", "-b", "count-only")
+        write(repo, "docs/plan.md", PLAN.replace("88 decision", "92 decision"))
+        commit(repo, "docs: count")
+        git(repo, "checkout", "-q", "-b", "row-edit", "main")
+        write(repo, "docs/plan.md", PLAN.replace("(pending) | Open", "Build it | Open"))
+        commit(repo, "docs: answer D1")
+        git(repo, "checkout", "-q", "-b", "readme-only", "main")
+        write(repo, "README.md", "# Example\n\nMore.\n")
+        commit(repo, "docs: readme")
+        git(repo, "checkout", "-q", "main")
+
+        rc, out = facts(repo)
+        check("decision facts exit 0", rc == 0, out[:200])
+        data = json.loads(out)
+        check("the fixture's decision is pending", [d["id"] for d in data["pending_decisions"]] == ["D1"],
+              data["pending_decisions"])
+        rows = {b["name"]: b for b in data["local_branches"]}
+        check("a count edit in the home document does not touch the decision",
+              rows["count-only"].get("decisions_in_diff") == [{"id": "D1", "home": "docs/plan.md", "touched": False}],
+              rows["count-only"].get("decisions_in_diff"))
+        check("an edit to the decision's own row touches it",
+              rows["row-edit"].get("decisions_in_diff") == [{"id": "D1", "home": "docs/plan.md", "touched": True}],
+              rows["row-edit"].get("decisions_in_diff"))
+        check("a branch that leaves the home document alone lists no decision",
+              rows["readme-only"].get("decisions_in_diff") == [], rows["readme-only"].get("decisions_in_diff"))
+
+
 def commit_empty(repo, message):
     git(repo, "commit", "-q", "--allow-empty", "-m", message)
     return git(repo, "rev-parse", "HEAD")
@@ -207,6 +268,7 @@ def test_skill_text():
 def main():
     try:
         test_facts()
+        test_decisions()
         test_screen()
         test_skill_text()
     except (RuntimeError, OSError, ValueError, KeyError, AttributeError) as exc:

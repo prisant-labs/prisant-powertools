@@ -1,6 +1,6 @@
 # plab-ship
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Source:** [`skills/plab-ship/`](../../../skills/plab-ship/)
 
 Carry finished branches over the line in one pass: documented in depth, verified, screened, merged where your merge check allows, cleaned up and reported. It can also publish a new version, and it decides the version number itself. Manual invocation only.
@@ -59,7 +59,7 @@ Ships with the `prisant-powertools` plugin. Because it carries `disable-model-in
 | `VERDICT: merge`, `VERDICT: ask` | The merge check's two answers. Only the first allows a merge. The second names the check that wants you, which this page calls an ask |
 | Undo point | The state of the main branch just before a merge: a backup tag or a commit hash. The report gives one per merge |
 | Layer | Who a document is for: human readers, technical maintainers, or agents |
-| Pending decision | A question recorded in a spec or plan that is still open. It holds back a branch that depends on the answer |
+| Pending decision | A question recorded in a spec or plan that is still open. It holds back a branch that changes its own entry or depends on the answer. An edit elsewhere in the same document, such as a count, does not |
 | Cold reader | A fresh agent on the Sonnet model, which reads only the documents and tries to use them |
 | Canary | A deliberate fault used to prove a check can fail. A check that cannot fail proves nothing |
 

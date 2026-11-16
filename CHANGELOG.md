@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`plab-ship` 1.1.0: an open decision blocks a merge only when the branch changes that decision.** Before, any edit to the document holding an open decision stopped the merge, so updating a count in a project plan blocked a branch that passed every check. The facts now report, for each branch and pull request, which open decisions sit in a changed document and whether the change touched each one's own entry. Only a touched decision blocks, and the agent still reads the changed lines once before merging past an untouched one.
+
 ## [0.14.0] - 2026-11-12
 
 A minor release. The session pair now knows which session wrote each log: a log records its session's id and start, carries waiting items from the log you resumed, names logs another session wrote in parallel, and saves to the main checkout from a worktree. When several sessions left handoffs, `/plab-continue-session` asks which to resume. Every wrap ends with a summary in the conversation. `plab-org-profile-readme` ships for the first time, and several readers stop mistaking the merge check's backup tags for releases. Existing logs and existing use keep working.

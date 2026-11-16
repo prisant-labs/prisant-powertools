@@ -2,7 +2,18 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.1.0 | 2026-11-15 | Unreleased | fixed | A pending decision blocks a branch only when the branch changes that decision's own entry. The facts report `decisions_in_diff` on each local branch and pull request, with `touched` true or false. |
 | 1.0.0 | 2026-11-06 | v0.13.0 | added | First version, specified by SH-01 (the ship skill). Documents, verifies, screens and merges finished branches in one pass, with an optional `--release` whose version the model decides, and writes a checked run record to `_local/_shipped/`. Manual invocation only. |
+
+## 1.1.0 - 2026-11-15
+
+**Fixed: a count line no longer stops a merge.** Through 1.0.0, a pending decision blocked any branch whose diff held the decision's home document. On 2026-11-15 that stopped a merge in a template library that every check had passed: the branch added four decision records, so it moved the decision-record count in the project plan, and the plan is also where four unrelated open decisions live. The maintainer approved the merge and asked for the rule to be narrowed.
+
+`derive-ship-facts.py` now diffs each local branch and each pull request against its base, restricted to the home documents of pending decisions. A changed line touches a decision when it holds the decision's id as a whole word, or its full title, which is how a decisions-table row or a waiting bullet reads. Each branch and pull request carries `decisions_in_diff`, one entry per decision whose home it changes, with `touched` true or false. The skill blocks only on `touched: true`, and treats a branch that could not be diffed (`null`) as touching every such decision.
+
+**What it does not catch.** An edit to prose about a decision that names neither its id nor its title, such as a paragraph below the table, reads as untouched. The skill therefore still asks the agent to read the home document's hunks once before merging through a `touched: false`.
+
+**Proof.** A new test builds three branches over one decisions table: a count edit, an edit to the decision's row, and a README edit. It failed with all three cases before the change and passes after. On the real repository, the 2026-11-15 merge range reports its four decisions untouched, and the commit that first wrote those decision rows reports all four touched.
 
 ## 1.0.0 - 2026-11-06
 
