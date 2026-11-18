@@ -17,14 +17,14 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 | `plab-current-status` | 1.1.1 | **Explicit only** | `[<byline>] [--no-fetch]` | `_local/_status/YYYY-MM-DD_<model>_<byline>.md` (gitignored) |
 | `plab-project-pulse` | 1.1.1 | **Explicit only** | `[--quick\|--week] [--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD/`, private, outside any repository or ignored by it |
 | `plab-usage-audit` | 1.1.1 | **Explicit only** | `[--date YYYY-MM-DD] [--config <path>] [--digest <file>] [--out <dir>]` | `<output_dir>/YYYY-MM-DD_claude-usage/`; a tracked folder only when the settings allow it |
-| `plab-continue-session` | 1.7.0 | Auto + explicit | `[--log <path>]` | Nothing. Displays context only |
+| `plab-continue-session` | 1.7.1 | Auto + explicit | `[--log <path>]` | Nothing. Displays context only |
 | `plab-guide` | 2.2.3 | Auto + explicit | `<topic-or-repo-url> [--type repo-url\|tool\|concept] [--out <dir>] [--force]` | `_output/plab-guide/` |
 | `plab-init-project` | 1.3.1 | **Explicit only** | `[--profile minimal\|standard\|public] [--type ...] [--dry-run]` | The target repository root |
 | `plab-release-plan` | 1.6.2 | **Explicit only** | `--create \| --promote \| --demote \| --update \| --gate` | `docs/internal/release-plans/plan_NN_<slug>/` |
 | `plab-resolve-open-items` | 1.2.0 | Auto + explicit | `[--backlog \| <document>]` | Each item's home document; the walk record and any backlog file in `_local/decisions/` |
 | `plab-spec` | 1.3.4 | Auto + explicit | `--effort <id> [--target-release vX.Y.Z] [--revise] [--dry-run]` | `docs/internal/release-plans/_unassigned/` by default |
 | `plab-strategy-brief` | 1.1.1 | Auto + explicit | `[paste raw thinking]` | `_output/plab-strategy-brief/` |
-| `plab-wrap-session` | 1.11.1 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
+| `plab-wrap-session` | 1.12.0 | Auto + explicit | `[mode: quick\|final\|deep\|blocked] [--organize]` | `_local/_session-logs/` (gitignored) |
 | `plab-ship` | 1.1.0 | **Explicit only** | `[<branch\|PR> ...] [--release] [--no-fetch]` | `_local/_shipped/YYYY-MM-DD_<byline>.md` (gitignored), plus merges and any release |
 | `plab-org-profile-readme` | 1.1.0 | **Explicit only** | `<org> [--setup] ["<instructions>"]` | A branch and one pull request in `<org>/.github`; nothing local |
 
@@ -34,7 +34,7 @@ The current configuration of every skill in `prisant-powertools`, as declared in
 
 ## Per-skill detail
 
-### `plab-wrap-session` 1.11.1
+### `plab-wrap-session` 1.12.0
 
 The most-used skill in the plugin. Writes a structured session log and hands off to `plab-continue-session`.
 
@@ -46,11 +46,11 @@ The most-used skill in the plugin. Writes a structured session log and hands off
 | Scripts | `derive-log-facts.py`, `check-log.py`, `dash-check.py`, `organize-logs.py`, `path-citation-check.py`, plus `test-derive-log-facts.py`, `test-check-log.py`, and `test-organize-logs.py` |
 | Setup required | Python 3 on PATH. No other dependency; the dash gate is pure-Python regex, with no `ripgrep` requirement (that applies only to the repository-wide `scripts/check-dashes.py`, a different script) |
 | References | 4 files |
-| Paired with | `plab-continue-session`. A session-log format change in one requires a matching change in the other. Both load the session-log rules from the plugin's shared `lib/session-logs.py` |
+| Paired with | `plab-continue-session`; the pairing contract is in the root README, under "How the skills fit together". Both load the session-log rules from the plugin's shared `lib/session-logs.py`, and `references/frontmatter-schema.md` is the one list of log fields |
 
-One call to `derive-log-facts.py` gathers the frontmatter facts, this session's id and start, the Waiting on You items of the log it carries from (the resumed log, or else the newest), the logs another session wrote while this one ran, and the detection results of a pre-wrap hygiene sweep across five checks (remote divergence, working tree, release state, documentation drift, session-log store). The agent judges that output and drafts numbered proposals, runs four auto actions (a pruning fetch first), writes the log, and runs one call to `check-log.py` as the Log Self-Check, which since 1.11.1 also fails a log whose date or file name carries the session's start time instead of the wrap's. It then sends a closing summary in the conversation, copied from the log: what was accomplished and what comes next in priority order. In the same message it asks every proposal in one batch, amends the log with the answers, and runs `check-log.py` again. It runs the two existing canary-proven detector gates (path citations, dashes) exactly as before, plus the decisions-count comparison, summary length, Tier 1 frontmatter completeness, and the Waiting on You rules, and in deep mode the Uncertainty Ledger and What You May Not Realize presence checks. It reports the same three states as the detectors it calls: `clean`, `findings`, `broken`, where `broken` blocks exactly as `findings` does.
+One call to `derive-log-facts.py` gathers the frontmatter facts, this session's id and start, the Waiting on You items of the log it carries from (the resumed log, or else the newest), the logs another session wrote while this one ran, and the detection results of a pre-wrap hygiene sweep across five checks (remote divergence, working tree, release state, documentation drift, session-log store). The agent judges that output and drafts numbered proposals, runs four auto actions (a pruning fetch first), writes the log, and runs one call to `check-log.py` as the Log Self-Check, which since 1.11.1 also fails a log whose date or file name carries the session's start time instead of the wrap's, and since 1.12.0 a log that carries `resumed-from` and `resumed-from-outcome` apart, or an outcome other than `fulfilled`, `superseded` or `ignored`. It then sends a closing summary in the conversation, copied from the log: what was accomplished and what comes next in priority order. In the same message it asks every proposal in one batch, amends the log with the answers, and runs `check-log.py` again. It runs the two existing canary-proven detector gates (path citations, dashes) exactly as before, plus the decisions-count comparison, summary length, Tier 1 frontmatter completeness, and the Waiting on You rules, and in deep mode the Uncertainty Ledger and What You May Not Realize presence checks. It reports the same three states as the detectors it calls: `clean`, `findings`, `broken`, where `broken` blocks exactly as `findings` does.
 
-### `plab-continue-session` 1.7.0
+### `plab-continue-session` 1.7.1
 
 Finds the session handoffs nobody has taken up, asks which to resume when there is more than one, and replays the chosen log's handoff.
 

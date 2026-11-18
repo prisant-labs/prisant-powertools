@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`plab-wrap-session` 1.12.0: a resumed session's log records whether the plan it resumed survived.** After `/plab-continue-session`, the wrap writes `resumed-from-outcome` beside `resumed-from`: `fulfilled` when the resumed log's next action was done, `superseded` when circumstances changed and it was rightly dropped, or `ignored` when the session went its own way. A run of `ignored` is the signal that the handoffs are not being used. A session with no resume writes neither field, and the Log Self-Check fails a log that carries one without the other. Nothing else reads the field; it is one line per log. Specified as C-04 (consumption disposition).
+
+### Fixed
+
+- **`plab-wrap-session` 1.12.0: a wrap that follows the template now passes its own self-check.** The template's frontmatter blocks lacked `commit-range` and `latest-tag`, two fields the Log Self-Check requires.
+
+### Changed
+
+- **`plab-wrap-session` 1.12.0 and `plab-continue-session` 1.7.1: the session-log fields are listed in one place.** `plab-wrap-session`'s `references/frontmatter-schema.md` is the one list of fields, and a test in CI fails when the template, either skill's instructions, `check-log.py`, or the scripts continue reads logs with disagree with it. The copies had drifted: the template lacked two required fields, the wrap README's table lacked seven, and continue's own list lacked three. The READMEs no longer carry their own field tables or field counts. Specified as D-10 (log-format contract).
+
 ## [0.14.1] - 2026-11-17
 
 A patch release. `/plab-ship` no longer stops a merge because the branch edited a document that also holds an open decision. It stops only when the branch changes that decision's own entry. Existing use keeps working.

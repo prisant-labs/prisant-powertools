@@ -318,8 +318,24 @@ def case_window(m, tmp: Path):
              got2 == ["2026-11-04_10-00_claude_edge.md"], f"got {got2}")]
 
 
+def case_outcome_key(m, tmp: Path):
+    """C-04 (consumption disposition): `resumed-from-outcome` begins with
+    `resumed-from`, so a reader that matched keys by prefix would read the
+    outcome's value as the resumed log. The reader must match the whole key."""
+    store = tmp / "s"
+    p = write_log(store, "2026-11-17_09-00_claude_outcome.md", resumed="2026-11-13_01-43_claude_x.md")
+    text = p.read_text(encoding="utf-8").replace(
+        "resumed-from: 2026-11-13_01-43_claude_x.md\n",
+        "resumed-from: 2026-11-13_01-43_claude_x.md\nresumed-from-outcome: fulfilled\n")
+    p.write_text(text, encoding="utf-8")
+    fm = m.read_frontmatter(p)
+    return [("frontmatter: resumed-from-outcome does not overwrite resumed-from (C-04)",
+             fm.get("resumed-from") == "2026-11-13_01-43_claude_x.md", f"got {fm}")]
+
+
 CASES = [case_pool, case_frontmatter, case_wrapped_at, case_store_root, case_carry_forward,
-         case_concurrent, case_example1, case_example1b, case_example3, case_ac7, case_legacy, case_window]
+         case_concurrent, case_example1, case_example1b, case_example3, case_ac7, case_legacy, case_window,
+         case_outcome_key]
 
 
 def run_case(case, m) -> list[tuple[str, bool, str]]:
@@ -355,6 +371,18 @@ def canaries(m):
     def store_root_own(project_root):
         return Path(project_root) / "_local" / "_session-logs", "checkout"
 
+    def parse_by_prefix(text):
+        out = {f: None for f in m.FIELDS}
+        lines = text.splitlines()
+        for line in lines[1:]:
+            if line.strip() == "---":
+                break
+            for field in m.FIELDS:
+                if line.startswith(field):
+                    out[field] = line.split(":", 1)[1].strip() or None
+        out["malformed"] = False
+        return out
+
     return [
         ("canary: ignoring resumed-from is caught (AC-4)", "carry_forward_source",
          carry_ignoring_resumed, case_carry_forward),
@@ -366,6 +394,8 @@ def canaries(m):
          consumes_every_carried, case_ac7),
         ("canary: a worktree reading its own store is caught (AC-9)", "store_root",
          store_root_own, case_store_root),
+        ("canary: a reader that matches keys by prefix is caught (C-04)", "parse_frontmatter",
+         parse_by_prefix, case_outcome_key),
     ]
 
 

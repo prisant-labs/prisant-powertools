@@ -13,8 +13,8 @@ description: "Document and close agentic coding sessions with structured session
 argument-hint: "[mode: quick|final|deep|blocked] [--organize]"
 license: MIT
 metadata:
-  version: "1.11.1"
-  updated: 2026-11-12
+  version: "1.12.0"
+  updated: 2026-11-17
 ---
 
 # Wrap Session
@@ -55,6 +55,7 @@ From that output, the agent still:
 6. In deep and final modes, judges whether the script's `carry-forward` log covers the same arc as this session. That log is the only one the judgment may consider, and only when it is not under `concurrent logs`: a log another session wrote while this one ran was not superseded by this one. If it covers the same arc, prepares one archive proposal for the hygiene batch (see Wrap Order below): propose moving it to `_superseded/` inside the store the script reports, execute only when its number is approved, and record the disposition, declared plus archived-or-not, in the new log's Summary. When the rule is `none`, or the log is concurrent, there is nothing to judge.
 7. Carries every still-unresolved Waiting on You item from the script's `carry-forward` log forward into this log with its original date, never today's, so a blocker's age survives across wraps instead of resetting, and copies that log's file name into `carried-from:`. Carries every Parked item the script reports into this log's Parked section the same way, verbatim, dropping only items this session resolved or promoted to Waiting on You; before 1.9.0 nothing read Parked, so a parked item lasted one log. If the script's carry-forward rule is `none`, start fresh and say nothing.
 8. Names every log the script lists under `concurrent logs` in this log's Summary, by file name, as work another session did while this one ran, and proposes nothing about those logs. When the `carry-forward` log is one of them, says that the carried items came from that parallel session.
+9. When this session resumed with `/plab-continue-session`, the same condition that adds `--resumed-from` above, judges what became of the resumed log's named next action and writes `fulfilled`, `superseded` or `ignored` into this log's `resumed-from-outcome:`, as `references/frontmatter-schema.md` defines them. The judgment uses this session's work and conversation, nothing new. It writes into the log being written, never into the resumed log. With no resume this session, both fields are omitted; `check-log.py` fails a log that carries one without the other.
 
 If the script reports git as unavailable, note that and proceed with session context only.
 
@@ -162,13 +163,13 @@ Store layout, and why discovery reads both the flat store and month folders, are
 
 ### Frontmatter
 
-Include all Tier 1 fields. Add Tier 2 and Tier 3 when available. See `references/frontmatter-schema.md` for the complete field reference. `date`, `type`, `machine`, `repo`, `branch`, and `files-changed` come from the Evidence Gathering run of `derive-log-facts.py` above, as do the two fields it adds, `commit-range` and `latest-tag`, and the three W-07 session fields: `session-id` and `session-start` when the script reports them, and `carried-from`, the file name on its `carry-forward:` line, unless the rule is `none`. `date` and the file name's time are both the script's `date` line, the wrap's time; never copy `session-start` into either, because the log then sorts before logs written while the session ran. Omit a field the script reports as null. `decisions-count` is filled in by the agent once the Decisions Made section below is drafted, by counting that section's own entries, and `check-log.py` (see Log Self-Check below) then verifies the count mechanically before the wrap is done - it never ships as an uncorrected estimate. Everything else in this block is agent-filled.
+Include all Tier 1 fields. Add Tier 2 and Tier 3 when available. `references/frontmatter-schema.md` is the one list of fields, and `scripts/test-check-log.py` checks this block and the template against it; add or rename a field there first. `date`, `machine`, `repo`, `branch`, `files-changed`, `commit-range` and `latest-tag` come from the Evidence Gathering run of `derive-log-facts.py` above; `type` is the constant `session-log`. So do the three W-07 session fields: `session-id` and `session-start` when the script reports them, and `carried-from`, the file name on its `carry-forward:` line, unless the rule is `none`. `date` and the file name's time are both the script's `date` line, the wrap's time; never copy `session-start` into either, because the log then sorts before logs written while the session ran. Omit a field the script reports as null. `decisions-count` is filled in by the agent once the Decisions Made section below is drafted, by counting that section's own entries, and `check-log.py` (see Log Self-Check below) then verifies the count mechanically before the wrap is done - it never ships as an uncorrected estimate. Everything else in this block is agent-filled.
 
 ```yaml
 ---
 date: # ISO 8601 datetime - from derive-log-facts.py
 type: # always session-log
-machine: # hostname - from derive-log-facts.py; which checkout wrote this log; logs are machine-local and cannot cross checkouts
+machine: # from derive-log-facts.py; which checkout wrote this log
 repo: # from derive-log-facts.py
 branch: # from derive-log-facts.py
 summary: # max 120 chars, human-scannable
@@ -183,6 +184,7 @@ status: # completed|interrupted|blocked
 decisions-count: # integer - agent counts the drafted Decisions Made section's own entries; check-log.py verifies the count mechanically
 skills-used: # skills invoked this session, e.g. [plab-guide, plab-ai-review] - feeds usage telemetry
 resumed-from: # written only by an in-session /plab-continue-session resume; never back-filled from memory. See references/frontmatter-schema.md.
+resumed-from-outcome: # fulfilled|superseded|ignored, Evidence Gathering step 9; only with resumed-from, else omit both
 session-id: # from derive-log-facts.py; omit when it reports null
 session-start: # from derive-log-facts.py, ISO 8601 in UTC; omit when it reports null
 carried-from: # the file name on the script's carry-forward: line; omit when its rule is none

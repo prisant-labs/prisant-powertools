@@ -2,6 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.7.1 | 2026-11-17 | Unreleased | changed | Phase 2 reads the field list from plab-wrap-session's `references/frontmatter-schema.md` instead of hand-listing eight fields, three Tier 1 fields short (D-10, log-format contract). No behaviour change. |
 | 1.7.0 | 2026-11-10 | v0.14.0 | added | When two or more sessions left handoffs nobody took up in the last 7 days, continue lists them and asks which to resume, instead of silently resuming the newest; one candidate behaves as before. A linked worktree reads the main checkout's store. |
 | 1.6.2 | 2026-11-03 | v0.12.0 | fixed | The commit check anchors on the end SHA of the log's `commit-range` when `commit-sha` is absent, so a pull request merged during a wrap no longer reads as new work. Remote commits are no longer called unreflected when the local branch already has them. C-02 OQ7. |
 | 1.6.1 | 2026-10-31 | v0.11.1 | fixed | The reconciliation's "Recent tags" note lists the five highest versions. `reconcile.py` read a plain `git tag -l`, which sorts as text, so from v0.10.0 onward it showed v0.7.0 to v0.9.0 as the newest tags. |
@@ -11,6 +12,14 @@
 | 1.3.0 | 2026-08-18 | v0.2.0 | added | Discovery reads `YYYY-MM/` month folders alongside the flat store. Empty-store message diagnoses version skew. |
 | 1.2.1 | 2026-08-18 | v0.1.2 | fixed | Body trigger list aligned with the narrowed description. Records the 2026-08-17 description change that shipped un-versioned. |
 | 1.2.0 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.2.0; prior history remains there. |
+
+## 1.7.1 - 2026-11-17
+
+**Changed: the log's fields are defined in one place (D-10, log-format contract).** Phase 2 used to hand-list eight frontmatter fields to extract, and the list had drifted: it lacked `type`, `machine` and `files-changed`. It now names plab-wrap-session's `references/frontmatter-schema.md` as the field list and says which fields the display shows and which ones the constraints compare. `references/handoff-display.md` and the usage README point at the same file. A test in plab-wrap-session's `scripts/test-check-log.py` now fails when `reconcile.py` or the shared `lib/session-logs.py` reads a field the schema does not list.
+
+**Changed: the pairing paragraph in the 1.2.0 entry below points to the root README**, which is now the one place the pairing contract is stated.
+
+Resuming works exactly as in 1.7.0. Logs written by plab-wrap-session 1.12.0 may carry `resumed-from-outcome`; continue does not read it.
 
 ## 1.7.0 - 2026-11-10
 
@@ -148,4 +157,4 @@ First public release. The skill is unchanged in behaviour from its last private 
 
 **Not carried over.** The prior HISTORY file is not reproduced here; it referenced private-repo layouts and skills that do not ship in this plugin.
 
-**Pairing contract.** This skill reads what `/plab-wrap-session` writes. The two move and version together; a change to the session-log format in one requires a matching change in the other. Legacy locations (`_agent-context/session-log/`, `AGENTS/session-log/`) are still searched so projects on an older layout keep working.
+**Pairing contract.** This skill reads what `/plab-wrap-session` writes. The pairing contract is stated in the root README, under "How the skills fit together". Legacy locations (`_agent-context/session-log/`, `AGENTS/session-log/`) are still searched so projects on an older layout keep working.

@@ -2,9 +2,9 @@
 id: C-04
 title: "Implementation plan: Record whether a resumed log's next action survived contact with reality"
 type: implementation-plan
-status: draft
+status: in-progress
 created: 2026-08-23
-updated: 2026-11-13
+updated: 2026-11-17
 linked-spec: spec.md
 linked-release: null
 ac-coverage: complete
@@ -55,16 +55,24 @@ Four facts have changed since the 2026-10-06 draft:
 
 The steps below assume OQ-1 A, OQ-2 A and R1 B, and write the field as `resumed-from-outcome`. Under OQ-1 B, substitute the spec's name throughout. Under R1 A, Phase 2 is dropped and Phase 3's verification is the three walkthroughs.
 
+**Ruled 2026-11-17.** The maintainer chose every recommendation: OQ-1 A, OQ-2 A and R1 B.
+
+**Execution record, 2026-11-17.** The plan ran as written, with three differences:
+
+1. **All three template blocks got the field, not only the Final block.** The Quick and Blocked blocks also lacked `resumed-from`, so a quick wrap after a resume had nowhere to record it. Both now carry `resumed-from` and `resumed-from-outcome`, with the same omit-both comment. `check-log.py` applies the pairing rule in every mode, so the template had to match it.
+2. **The test count changed.** Phase 2 planned five fixture cases; seven were written, adding a second clean value (`ignored`) and an empty outcome.
+3. **The rule was run over the real store.** 24 of the maintainer's 49 logs carry `resumed-from`, and all 24 would now be flagged, because they predate the field. Only a wrap runs `check-log.py`, and only on the log it has just written, so no existing log is ever checked against the rule. Nothing else calls `check-log.py`.
+
 ---
 
 ## Completion Status
 
 | Phase | Goal | Fulfills AC | Owner | Status |
 |---|---|---|---|---|
-| P1 | Refresh the spec against current code and the rulings | N/A (spec amendment) | agent | Not started |
-| P2 | `check-log.py` rule, tests first | AC-1, AC-2 (mechanical half) | agent | Not started |
-| P3 | Schema row, template, and the wrap-time judgment step | AC-1, AC-2, AC-3, AC-4, AC-5 | agent | Not started |
-| P4 | Restraint check, then version and document both efforts | AC-6 | agent | Not started |
+| P1 | Refresh the spec against current code and the rulings | N/A (spec amendment) | agent | Done 2026-11-17 |
+| P2 | `check-log.py` rule, tests first | AC-1, AC-2 (mechanical half) | agent | Done 2026-11-17 |
+| P3 | Schema row, template, and the wrap-time judgment step | AC-1, AC-2, AC-3, AC-4, AC-5 | agent | Done 2026-11-17 |
+| P4 | Restraint check, then version and document both efforts | AC-6 | agent | Done 2026-11-17 |
 
 ---
 
@@ -77,10 +85,10 @@ The steps below assume OQ-1 A, OQ-2 A and R1 B, and write the field as `resumed-
 **Fulfills:** N/A (spec amendment; no criterion changes substance).
 
 **Steps:**
-- [ ] Step 1: Record OQ-1 and OQ-2 as decided, with the maintainer's answers and the date, and rename the field throughout under OQ-1 A.
-- [ ] Step 2: Update the Purpose and Requirement 3 dependency text. D-06 shipped, not "shipping in v0.4.0". The gate is the same condition that adds `--resumed-from` at wrap `SKILL.md:39`.
-- [ ] Step 3: Under R1 B, append to AC-6: "The log's own self-check in `check-log.py`, which reads only the log being written, is not consumption in this sense." Add "Verified by `check-log.py`" to AC-1 and AC-2.
-- [ ] Step 4: Unwrap the hard-wrapped prose the 2026-08-23 draft carries, because AGENTS.md forbids it. Set `updated: 2026-11-13`, and add a Revisions row.
+- [x] Step 1: Record OQ-1 and OQ-2 as decided, with the maintainer's answers and the date, and rename the field throughout under OQ-1 A.
+- [x] Step 2: Update the Purpose and Requirement 3 dependency text. D-06 shipped, not "shipping in v0.4.0". The gate is the same condition that adds `--resumed-from` at wrap `SKILL.md:39`.
+- [x] Step 3: Under R1 B, append to AC-6: "The log's own self-check in `check-log.py`, which reads only the log being written, is not consumption in this sense." Add "Verified by `check-log.py`" to AC-1 and AC-2.
+- [x] Step 4: Unwrap the hard-wrapped prose the 2026-08-23 draft carries, because AGENTS.md forbids it. Set `updated: 2026-11-13`, and add a Revisions row.
 
 **Verification:** `C:/Users/jpris/AppData/Local/Programs/Miniconda3/python.exe scripts/frontmatter-check.py && C:/Users/jpris/AppData/Local/Programs/Miniconda3/python.exe scripts/doc-lifecycle-check.py` both exit 0.
 
@@ -95,10 +103,10 @@ The steps below assume OQ-1 A, OQ-2 A and R1 B, and write the field as `resumed-
 **Fulfills:** AC-1 and AC-2, mechanical half.
 
 **Steps:**
-- [ ] Step 1: Add five fixture cases to `test-check-log.py`: both fields present with `fulfilled` (clean); `resumed-from` alone (finding: "resumed-from is set, so resumed-from-outcome must be fulfilled, superseded or ignored"); the outcome alone (finding: "resumed-from-outcome needs resumed-from"); `resumed-from-outcome: partial` (finding naming the three values); neither field (clean). Run them and quote the three red cases before Step 3.
-- [ ] Step 2: Add one case to `lib/test-session-logs.py`: a log carrying `resumed-from: a.md` and `resumed-from-outcome: fulfilled` reads `resumed-from` as `a.md`. This proves the key does not collide.
-- [ ] Step 3: Add the rule to `check_session_fields()` in `check-log.py`, beside the W-07 checks, with `OUTCOME_VALUES = ("fulfilled", "superseded", "ignored")` as the one place in code the three values live. Extend the function's docstring and the "all present" detail line.
-- [ ] Step 4: Add `resumed-from-outcome` to the schema's Tier 2 table (Phase 3 Step 1) before running D-10's contract test, which otherwise fails on a field the schema does not list.
+- [x] Step 1: Add five fixture cases to `test-check-log.py`: both fields present with `fulfilled` (clean); `resumed-from` alone (finding: "resumed-from is set, so resumed-from-outcome must be fulfilled, superseded or ignored"); the outcome alone (finding: "resumed-from-outcome needs resumed-from"); `resumed-from-outcome: partial` (finding naming the three values); neither field (clean). Run them and quote the three red cases before Step 3.
+- [x] Step 2: Add one case to `lib/test-session-logs.py`: a log carrying `resumed-from: a.md` and `resumed-from-outcome: fulfilled` reads `resumed-from` as `a.md`. This proves the key does not collide.
+- [x] Step 3: Add the rule to `check_session_fields()` in `check-log.py`, beside the W-07 checks, with `OUTCOME_VALUES = ("fulfilled", "superseded", "ignored")` as the one place in code the three values live. Extend the function's docstring and the "all present" detail line.
+- [x] Step 4: Add `resumed-from-outcome` to the schema's Tier 2 table (Phase 3 Step 1) before running D-10's contract test, which otherwise fails on a field the schema does not list.
 
 **Verification:** `C:/Users/jpris/AppData/Local/Programs/Miniconda3/python.exe skills/plab-wrap-session/scripts/test-check-log.py && C:/Users/jpris/AppData/Local/Programs/Miniconda3/python.exe lib/test-session-logs.py` both exit 0 after Step 3, and the quoted pre-rule run shows the three finding cases failing.
 
@@ -113,11 +121,11 @@ The steps below assume OQ-1 A, OQ-2 A and R1 B, and write the field as `resumed-
 **Fulfills:** AC-1, AC-2, AC-3, AC-4, AC-5.
 
 **Steps:**
-- [ ] Step 1: In the schema's Tier 2 table, after `resumed-from`, add: "| `resumed-from-outcome` | Enum | What happened to the resumed log's named next action: `fulfilled`, `superseded` or `ignored`. Written only with `resumed-from` | Semi - agent judges |".
-- [ ] Step 2: After the "`resumed-from` semantics" subsection, add "`resumed-from-outcome` semantics", defining the values in the spec's AC-3 words. `fulfilled`: the prior log's named next action was completed. `superseded`: circumstances changed and the plan was correctly abandoned. `ignored`: the session re-derived context and went on without engaging the named action. Add that the field is written only when `resumed-from` is, into the new log only, never into the resumed log, and that `check-log.py` enforces the pairing.
-- [ ] Step 3: In the template's Final block, add after `resumed-from:` the line `resumed-from-outcome: # fulfilled|superseded|ignored; only with resumed-from, else omit`. Add the same line to wrap `SKILL.md`'s Frontmatter block after line 185.
-- [ ] Step 4: Add Evidence Gathering step 9 to wrap `SKILL.md`, after step 8: "When this session resumed with `/plab-continue-session`, the same condition that adds `--resumed-from`, judge the resumed log's named next action against this session's work, and write one of the three values in `references/frontmatter-schema.md` into this log's `resumed-from-outcome:`. Write it only into the log being written, never into the resumed log. With no resume this session, omit both fields."
-- [ ] Step 5: Walk the spec's three walkthroughs (fulfilled, ignored, no resume) against Step 4's text and record the result in the PR body.
+- [x] Step 1: In the schema's Tier 2 table, after `resumed-from`, add: "| `resumed-from-outcome` | Enum | What happened to the resumed log's named next action: `fulfilled`, `superseded` or `ignored`. Written only with `resumed-from` | Semi - agent judges |".
+- [x] Step 2: After the "`resumed-from` semantics" subsection, add "`resumed-from-outcome` semantics", defining the values in the spec's AC-3 words. `fulfilled`: the prior log's named next action was completed. `superseded`: circumstances changed and the plan was correctly abandoned. `ignored`: the session re-derived context and went on without engaging the named action. Add that the field is written only when `resumed-from` is, into the new log only, never into the resumed log, and that `check-log.py` enforces the pairing.
+- [x] Step 3: In the template's Final block, add after `resumed-from:` the line `resumed-from-outcome: # fulfilled|superseded|ignored; only with resumed-from, else omit`. Add the same line to wrap `SKILL.md`'s Frontmatter block after line 185.
+- [x] Step 4: Add Evidence Gathering step 9 to wrap `SKILL.md`, after step 8: "When this session resumed with `/plab-continue-session`, the same condition that adds `--resumed-from`, judge the resumed log's named next action against this session's work, and write one of the three values in `references/frontmatter-schema.md` into this log's `resumed-from-outcome:`. Write it only into the log being written, never into the resumed log. With no resume this session, omit both fields."
+- [x] Step 5: Walk the spec's three walkthroughs (fulfilled, ignored, no resume) against Step 4's text and record the result in the PR body.
 
 **Verification:** `grep -n "resumed-from-outcome" skills/plab-wrap-session/references/frontmatter-schema.md skills/plab-wrap-session/references/session-log-template.md skills/plab-wrap-session/SKILL.md` matches all three files, and the schema match names all three values. `test-check-log.py` still exits 0, including D-10's contract test.
 
@@ -132,12 +140,12 @@ The steps below assume OQ-1 A, OQ-2 A and R1 B, and write the field as `resumed-
 **Fulfills:** AC-6.
 
 **Steps:**
-- [ ] Step 1: `git diff --stat origin/main` lists no new file under `scripts/` and no new section in the template. `grep -rn "resumed-from-outcome" --include=*.py .` matches only `check-log.py` and the two test files.
-- [ ] Step 2: Bump wrap to 1.12.0 and continue to 1.7.1, with `updated: 2026-11-13`, in each `SKILL.md`, `library.json` and both usage READMEs.
-- [ ] Step 3: Write wrap's 1.12.0 HISTORY entry (D-10 consolidation, the template's missing `commit-range` and `latest-tag`, the contract test, the new field and its rule) and continue's 1.7.1 entry (Phase 2 now defers to the schema; the pairing paragraph points to the README). Neither entry may quote "18-field" or either pairing wording (D-10 plan, Phase 6 Step 2).
-- [ ] Step 4: Add `[Unreleased]` bullets to `CHANGELOG.md`, user value first: a resumed session's log now records whether the plan it resumed survived, and a wrap that follows the template no longer fails its own self-check.
-- [ ] Step 5: Regenerate the manifests with `node <agent-skills-toolkit>/scripts/generators/gen-manifest.mjs . --write --target=all`; never hand-edit them.
-- [ ] Step 6: Run the gates in AGENTS.md, "Build and validate", plus both skills' test suites, and run `check-log.py` read-only against the newest real log in the main checkout's store and `derive-log-facts.py` against the worktree. Quote each output in the PR body.
+- [x] Step 1: `git diff --stat origin/main` lists no new file under `scripts/` and no new section in the template. `grep -rn "resumed-from-outcome" --include=*.py .` matches only `check-log.py` and the two test files.
+- [x] Step 2: Bump wrap to 1.12.0 and continue to 1.7.1, with `updated: 2026-11-13`, in each `SKILL.md`, `library.json` and both usage READMEs.
+- [x] Step 3: Write wrap's 1.12.0 HISTORY entry (D-10 consolidation, the template's missing `commit-range` and `latest-tag`, the contract test, the new field and its rule) and continue's 1.7.1 entry (Phase 2 now defers to the schema; the pairing paragraph points to the README). Neither entry may quote "18-field" or either pairing wording (D-10 plan, Phase 6 Step 2).
+- [x] Step 4: Add `[Unreleased]` bullets to `CHANGELOG.md`, user value first: a resumed session's log now records whether the plan it resumed survived, and a wrap that follows the template no longer fails its own self-check.
+- [x] Step 5: Regenerate the manifests with `node <agent-skills-toolkit>/scripts/generators/gen-manifest.mjs . --write --target=all`; never hand-edit them.
+- [x] Step 6: Run the gates in AGENTS.md, "Build and validate", plus both skills' test suites, and run `check-log.py` read-only against the newest real log in the main checkout's store and `derive-log-facts.py` against the worktree. Quote each output in the PR body.
 
 **Verification:** `C:/Users/jpris/AppData/Local/Programs/Miniconda3/python.exe scripts/skill-drift-check.py` reports both skills bumped with HISTORY entries, `scripts/version-parity-check.py` exits 0, and `git diff origin/main -- library.json` shows only the two skill versions changed.
 

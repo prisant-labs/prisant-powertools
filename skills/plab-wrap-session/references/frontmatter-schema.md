@@ -6,21 +6,23 @@ The session log YAML frontmatter has 3 tiers. Always include Tier 1. Add Tier 2 
 
 ## Tier 1: Essential (Always Include)
 
-All fields are auto-derivable from the environment.
+This file is the one list of session-log fields. Every other copy of the list (wrap `SKILL.md`'s Frontmatter block, the template's three frontmatter blocks, `check-log.py`'s Tier 1 lists, and the fields `lib/session-logs.py` and continue's `reconcile.py` read) is checked against these tables by `scripts/test-check-log.py`, which CI runs. Change a field here first.
+
+Where a field's "How to Derive" cell names `derive-log-facts.py`, the script is the one statement of how the value is found; copy the value from the script's `Frontmatter fields` output and do not re-derive it. `check-log.py` fails a log that is missing any Tier 1 field.
 
 | Field | Type | How to Derive | Example |
 |-------|------|--------------|---------|
-| `date` | ISO 8601 datetime | System clock | `2026-04-05T14:30:00-07:00` |
-| `type` | const | Always `session-log` (per document-conventions.md §2.4) | `session-log` |
-| `machine` | String | `hostname` - which checkout wrote this log (logs are machine-local) | `dev-laptop` |
-| `repo` | String | `git remote -v` or directory name | `acme/example-repo` |
-| `branch` | String | `git branch --show-current` | `main` |
+| `date` | ISO 8601 datetime | `derive-log-facts.py`; the wrap's time, never the session's start | `2026-04-05T14:30:00-07:00` |
+| `type` | const | Constant, always `session-log`; the agent writes it | `session-log` |
+| `machine` | String | `derive-log-facts.py`; which checkout wrote this log, because logs are machine-local | `dev-laptop` |
+| `repo` | String | `derive-log-facts.py` | `acme/example-repo` |
+| `branch` | String | `derive-log-facts.py` | `main` |
 | `summary` | String (≤120 chars) | Agent generates from session context | `"Deployed strategy-brief skill and CI pipeline"` |
-| `files-changed` | List of paths | `git diff --name-only` | `["skills/plab-strategy-brief/SKILL.md"]` |
+| `files-changed` | List of paths | `derive-log-facts.py`; copy the whole list verbatim | `["skills/plab-strategy-brief/SKILL.md"]` |
 | `commit-range` | String | `derive-log-facts.py`; the `base..HEAD` short-SHA range it diffed | `a1b2c3d..e4f5a6b` |
-| `latest-tag` | String or null | `derive-log-facts.py`; nearest reachable release tag via `git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*'`, so never a `pre-merge/*` backup tag or a floating major tag such as `v1` - distinct from the Tier 3 `tags:` topic-keyword field below | `v0.6.0` |
+| `latest-tag` | String or null | `derive-log-facts.py`; the nearest release tag, never a merge-check backup tag. Distinct from the Tier 3 `tags:` topic-keyword field below | `v0.6.0` |
 
-Added in 1.8.0 (W-02, derived log facts). Both come from the same `derive-log-facts.py` run as the other six script-derived Tier 1 fields (`date`, `type`, `machine`, `repo`, `branch`, `files-changed`); `summary` is the one Tier 1 field the agent writes. Neither new field collides with the existing Tier 3 `commit-sha` (a single SHA) or `tags` (topic keywords) fields.
+`commit-range` and `latest-tag` were added in 1.8.0 (W-02, derived log facts). Neither collides with the Tier 3 `commit-sha` (a single SHA) or `tags` (topic keywords) fields. The agent writes `summary` and the constant `type`; the script produces the other seven.
 
 ## Tier 2: High Value (When Available)
 
@@ -35,6 +37,7 @@ Added in 1.8.0 (W-02, derived log facts). Both come from the same `derive-log-fa
 | `decisions-count` | Integer | Count from decisions section | Auto |
 | `skills-used` | List | Skills invoked during the session (usage telemetry; feeds pruning decisions) | Semi - agent recalls, user corrects |
 | `resumed-from` | Filename | The session log this session resumed from via /plab-continue-session, if any (measures log consumption) | Auto when resumption happened |
+| `resumed-from-outcome` | Enum | What happened to the resumed log's named next action: `fulfilled`, `superseded` or `ignored`. Written only with `resumed-from` | Semi - agent judges |
 | `session-id` | String | This session's id, from `derive-log-facts.py`, which reads `CLAUDE_CODE_SESSION_ID`. Omitted when the script reports null, as under Codex | Auto |
 | `session-start` | ISO 8601 datetime, UTC | When this session began: the first timestamp in its transcript, from `derive-log-facts.py`. Omitted when the script reports null | Auto |
 | `carried-from` | Filename | The log this wrap carried Waiting on You and Parked items from: the script's `carry-forward` log | Auto when the script names one |
@@ -46,6 +49,16 @@ back-fill this field from narrative memory of a resume that happened in some pri
 resume occurred this session, omit the field entirely rather than guessing. Cross-repo lineage, when
 it matters, belongs in the Summary section's prose, not in this field: continue already refuses
 cross-repo resumption, so a value this field ever holds is always a same-repo filename.
+
+### `resumed-from-outcome` semantics
+
+Records whether the resumed log's named next action survived this session. Written only when `resumed-from` is, and into this log only, never into the log `resumed-from` names. Exactly one of three values:
+
+- `fulfilled`: the resumed log's named next action was completed.
+- `superseded`: circumstances changed, and the plan was correctly abandoned.
+- `ignored`: the session re-derived context and went on without engaging the named action.
+
+A mixed session takes the closest of the three; there is no fourth value. `ignored` is the value that matters most, because a run of them says the handoffs are not being used. `check-log.py` reports a finding when `resumed-from` appears without this field, when this field appears without `resumed-from`, or when its value is not one of the three. Nothing else reads the field: no digest or report is built on it. Added in 1.12.0 (C-04, consumption disposition).
 
 ### `carried-from` semantics
 
@@ -77,29 +90,7 @@ Both come from `derive-log-facts.py` and are omitted when it reports null. Toget
 
 ## Example Frontmatter
 
-```yaml
----
-date: 2026-04-05T14:30:00-07:00
-repo: acme/example-repo
-branch: main
-summary: "Deployed strategy-brief skill and CI validation pipeline"
-files-changed:
-  - skills/plab-strategy-brief/SKILL.md
-  - skills/plab-strategy-brief/references/section-guide.md
-  - skills/plab-strategy-brief/references/analysis-lenses.md
-  - skills/plab-strategy-brief/references/template.md
-  - skills/plab-strategy-brief/references/examples.md
-  - .github/workflows/validation.yml
-  - scripts/lint-skills-frontmatter.sh
-session-type: feature
-model: claude opus 4.6
-model-settings: extended-thinking max
-agent: claude-code
-status: completed
-decisions-count: 1
-tags: [skills, deployment, ci]
----
-```
+The frontmatter a wrap writes is wrap `SKILL.md`'s Frontmatter block, filled in from `derive-log-facts.py`'s `Frontmatter fields` output. There is deliberately no second hand-kept example here: the one this section carried until 1.12.0 had drifted to omit four of the nine Tier 1 fields.
 
 ## Filename Convention
 

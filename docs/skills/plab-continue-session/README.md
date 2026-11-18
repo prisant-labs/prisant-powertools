@@ -1,6 +1,6 @@
 # plab-continue-session
 
-**Version:** 1.7.0
+**Version:** 1.7.1
 **Source:** [`skills/plab-continue-session/`](../../../skills/plab-continue-session/)
 
 Resume an interrupted work session by replaying its recorded handoff. Reads the most recent session log, reports what is blocked on you and what the named next action is, then confirms before acting. The read-side companion to `/plab-wrap-session`, which writes the log this reads.
@@ -86,7 +86,7 @@ Two sessions that wrapped in parallel both appear in the candidate list, even wh
 
 ### Phase 2: Read and parse
 
-Extracts from frontmatter: `date`, `repo`, `branch`, `summary`, `status`, `session-type`, `model`, `agent`. Extracts from body: the `## Continuation Prompt` section, `## Waiting on You`, any objection recorded for a lighter-than-verbose prompt, plus `## Outstanding Issues`, `## What's Next`, and any proposals declined at wrap time in `## Hygiene Sweep`.
+Reads the frontmatter, whose fields are defined once in plab-wrap-session's [`references/frontmatter-schema.md`](../../../skills/plab-wrap-session/references/frontmatter-schema.md). The display shows the date, model, status, summary and branch, and the repository and branch are compared with your checkout. Extracts from body: the `## Continuation Prompt` section, `## Waiting on You`, any objection recorded for a lighter-than-verbose prompt, plus `## Outstanding Issues`, `## What's Next`, and any proposals declined at wrap time in `## Hygiene Sweep`.
 
 ### Phase 3: Reconcile against reality
 

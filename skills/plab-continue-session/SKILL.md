@@ -9,8 +9,8 @@ description: "Resume an interrupted work session by replaying its recorded hando
 argument-hint: "[--log <path>]"
 license: MIT
 metadata:
-  version: "1.7.0"
-  updated: 2026-11-10
+  version: "1.7.1"
+  updated: 2026-11-17
 ---
 
 # Continue Session
@@ -57,7 +57,7 @@ If the script cannot run, because `lib/session-logs.py` is missing or Python is 
 ### Phase 2: Read and parse
 
 1. Read the full log file.
-2. Extract from frontmatter: `date`, `repo`, `branch`, `summary`, `status`, `session-type`, `model`, `agent`.
+2. Read the frontmatter. Its fields are defined once, in `plab-wrap-session/references/frontmatter-schema.md`; do not restate them here. Phase 4 displays `date`, `model`, `status`, `summary` and `branch`, and Constraints compares `repo` and `branch` with the current checkout.
 3. Extract from body: the `## Continuation Prompt` section (always present in a well-formed log) and any objection statement if the prompt was lighter than verbose (see `references/objection-detection.md`).
 4. Extract from body: `## Waiting on You` (required in logs from plab-wrap-session 1.3.0+), `## Outstanding Issues` (if any), `## What's Next` (if present), and any declined or unanswered proposals recorded in `## Hygiene Sweep`.
 
