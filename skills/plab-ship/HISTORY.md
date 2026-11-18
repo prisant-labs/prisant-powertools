@@ -2,7 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
-| 1.1.0 | 2026-11-15 | Unreleased | fixed | A pending decision blocks a branch only when the branch changes that decision's own entry. The facts report `decisions_in_diff` on each local branch and pull request, with `touched` true or false. |
+| 1.1.0 | 2026-11-15 | v0.14.1 | fixed | A pending decision blocks a branch only when the branch changes that decision's own entry. The facts report `decisions_in_diff` on each local branch and pull request, with `touched` true or false. |
 | 1.0.0 | 2026-11-06 | v0.13.0 | added | First version, specified by SH-01 (the ship skill). Documents, verifies, screens and merges finished branches in one pass, with an optional `--release` whose version the model decides, and writes a checked run record to `_local/_shipped/`. Manual invocation only. |
 
 ## 1.1.0 - 2026-11-15
