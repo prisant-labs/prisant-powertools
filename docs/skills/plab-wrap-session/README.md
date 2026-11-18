@@ -1,6 +1,6 @@
 # plab-wrap-session
 
-**Version:** 1.11.1
+**Version:** 1.12.0
 **Source:** [`skills/plab-wrap-session/`](../../../skills/plab-wrap-session/)
 
 Document and close agentic coding sessions with structured session logs. Deep mode is the default: a full log with evidence index, a verbose copy-paste-ready continuation prompt, a hygiene sweep (remote divergence, release state, doc drift, working-tree reconciliation) whose numbered proposals are asked in one batch after the log is written, and a mandatory Waiting on You section listing everything blocked on the maintainer, with links.
@@ -173,22 +173,7 @@ When the hygiene sweep (deep and final modes) has numbered proposals, they follo
 
 If the wrap ends without a summary in the chat, the log is still the complete record: open the path it wrote, or ask for the summary, and it will be copied from that log.
 
-The log goes to `_local/_session-logs/YYYY-MM-DD_HH-MM_<llm>_<brief-kebab-title>.md`. Section depth scales to the selected mode (quick / final / deep / blocked); the table below shows the full Final-mode shape:
-
-| Section / Element | Purpose |
-|-------------------|---------|
-| YAML frontmatter | Machine-readable metadata across 3 tiers (date, machine, repo, branch, summary, files-changed always; session-type, model, status, decisions-count, skills-used, resumed-from, session-id, session-start, carried-from when available) for indexing and tooling |
-| `## Summary` | 2-4 sentences: what happened and why it matters |
-| `## Work Completed` | Bulleted, specific list of accomplishments |
-| `## Decisions Made` | Each decision with rationale, scaled from one-liner to full alternatives analysis |
-| `## Files Changed` | From git, grouped by purpose |
-| `## Gitignored Outputs` | Work products git cannot see (`_local/` and kin): path + one-liner each |
-| `## Verification` | Checklist of what was tested, assumed, or skipped (never conflates completed with verified) |
-| `## Outstanding Issues` | Blockers, risks, unfinished work |
-| `## Hygiene Sweep` | Sweep findings and the fate of each proposal |
-| `## Waiting on You` | Items blocked on the maintainer, with links; required in every mode |
-| `## What's Next` | Ordered list, most important action first |
-| `## Continuation Prompt` | Copy-paste-ready fenced block: task context, current state, immediate next action, file paths, branch, and the Waiting on You list. Verbose by default in every mode |
+The log goes to `_local/_session-logs/YYYY-MM-DD_HH-MM_<llm>_<brief-kebab-title>.md`. Section depth scales to the selected mode (quick / final / deep / blocked). A Final-mode log has YAML frontmatter (see [YAML Frontmatter](#yaml-frontmatter) below), then these sections in order: Summary, Work Completed, Decisions Made, Files Changed, Gitignored Outputs, Verification, Outstanding Issues, Hygiene Sweep, Waiting on You, What's Next, and Continuation Prompt. What each section must contain is defined once, in [`SKILL.md`](../../../skills/plab-wrap-session/SKILL.md), under Body Sections (Final Mode); the Final table under [Four Modes](#four-modes) above gives a one-line summary of each.
 
 Quick mode trims to summary + files + waiting-on + continuation prompt; blocked mode swaps in a `## Blocker` (what / who can unblock / impact); deep mode adds an `## Evidence Index` and a `## Verification Detail` table. Per-mode skeletons live in [`references/session-log-template.md`](../../../skills/plab-wrap-session/references/session-log-template.md).
 
@@ -209,11 +194,15 @@ Filename: `_local/_session-logs/2026-04-08_16-45_claude_fix-null-pointer.md`
 ```yaml
 ---
 date: 2026-04-08T16:45:00-07:00
+type: session-log
+machine: dev-laptop
 repo: my-project
 branch: fix/null-check
 summary: "Fix null pointer in user lookup when email is missing"
 files-changed:
   - src/users/lookup.ts
+commit-range: 3f2a1bc..9d8e7f6
+latest-tag: v2.3.0
 session-type: bugfix
 model: claude opus 4.6
 model-settings: extended-thinking max
@@ -282,17 +271,11 @@ Continue where we left off on the project.
 
 ## YAML Frontmatter
 
-Every log includes metadata for indexing and future tooling:
+Every log carries YAML frontmatter in three tiers: Tier 1 in every log, Tier 2 and Tier 3 when the data exists. The field list, what each field means, and which fields `derive-log-facts.py` fills in are in [`references/frontmatter-schema.md`](../../../skills/plab-wrap-session/references/frontmatter-schema.md), the one list of fields. It is deliberately not repeated here: the table this section carried until 1.12.0 had fallen seven fields behind. `check-log.py` fails a log that is missing a Tier 1 field, and since 1.12.0 a test in CI fails when the template, `SKILL.md` or either skill's scripts disagree with the schema.
 
-| Tier | Fields | When |
-|------|--------|------|
-| **1 (always)** | date, type, machine, repo, branch, summary, files-changed, commit-range, latest-tag | Every log |
-| **2 (when available)** | session-type, parent-session, model, model-settings, agent, status, decisions-count | Most logs |
-| **3 (when applicable)** | duration-minutes, tokens-used, commit-sha, tags, related-issues | Complex sessions |
+`decisions-count` is filled in by the agent once the Decisions Made section is drafted, then checked mechanically by `check-log.py` before the wrap is done, rather than shipping as an uncorrected model estimate.
 
-Since 1.8.0, `derive-log-facts.py` also always returns two further Tier 1 fields, `commit-range` (the `base..HEAD` short-SHA range the script diffed) and `latest-tag` (the nearest reachable tag, distinct from the topic-keyword `tags` field above). `decisions-count` is filled in by the agent once the Decisions Made section is drafted, then checked mechanically by `check-log.py` (1.8.1) before the wrap is done, rather than shipping as an uncorrected model estimate.
-
-See `references/frontmatter-schema.md` for the field-by-field specification (28 fields, including `commit-range`, `latest-tag` and the three session fields `session-id`, `session-start` and `carried-from`).
+**Did the resumed plan survive?** Since 1.12.0, a session that began with `/plab-continue-session` records one more field, `resumed-from-outcome`, beside `resumed-from`. Its value is `fulfilled` when the resumed log's next action was done, `superseded` when circumstances changed and the plan was rightly dropped, or `ignored` when the session went its own way without engaging it. A session with no resume writes neither field. That is all it is: one line per log, with no dashboard or digest behind it. A run of `ignored` values across logs is the signal that the handoffs are not being used.
 
 ### Session Types
 
@@ -316,7 +299,7 @@ Before writing the log, the skill checks whether changes warrant updates to READ
 
 | File | Purpose | When to Read |
 |------|---------|-------------|
-| `references/frontmatter-schema.md` | Complete 28-field metadata specification (3 tiers) | When customizing frontmatter or building tooling |
+| `references/frontmatter-schema.md` | The one list of log fields, in three tiers | When customizing frontmatter or building tooling |
 | `references/session-log-template.md` | Output skeletons for all 4 modes | When examining exact output structure per mode |
 | `references/hygiene-sweep.md` | The five checks, their commands, the numbered-batch protocol, and the four auto actions | When understanding what the sweep inspects and proposes |
 | `references/doc-update-rules.md` | When/how to update README, CHANGELOG, plans, and ADRs | When understanding the surrounding document update rules |
@@ -336,7 +319,7 @@ skills/plab-wrap-session/
 ├── SKILL.md                        # Core instructions
 ├── HISTORY.md                      # Per-version change record
 ├── references/
-│   ├── frontmatter-schema.md       # 28-field metadata reference (3 tiers)
+│   ├── frontmatter-schema.md       # the one list of log fields (3 tiers)
 │   ├── session-log-template.md     # Output templates for all 4 modes
 │   ├── hygiene-sweep.md            # The 5 checks, the numbered batch, and the auto actions
 │   └── doc-update-rules.md         # README/CHANGELOG/plan/ADR update rules

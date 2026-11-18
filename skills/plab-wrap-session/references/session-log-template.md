@@ -10,13 +10,15 @@ Body prose is not hard-wrapped: one paragraph is one line. See `SKILL.md`'s Sess
 
 ```markdown
 ---
-date:
+date: # from derive-log-facts.py; the wrap's time
 type: session-log
-machine: # hostname
-repo:
-branch:
+machine: # from derive-log-facts.py
+repo: # from derive-log-facts.py
+branch: # from derive-log-facts.py
 summary: # ≤ 120 chars
-files-changed: []
+files-changed: [] # from derive-log-facts.py, copied verbatim
+commit-range: # from derive-log-facts.py
+latest-tag: # from derive-log-facts.py
 session-type:
 model: # full model name, e.g. "claude opus 4.6"
 model-settings: # e.g. "extended-thinking max"
@@ -25,6 +27,7 @@ status:
 decisions-count:
 skills-used: []
 resumed-from: # log filename if this session resumed from one. Filename only, never a path: archiving moves logs into YYYY-MM/ folders. Same rule for every log reference in the body.
+resumed-from-outcome: # fulfilled|superseded|ignored; only with resumed-from, else omit both
 session-id: # from derive-log-facts.py; omit when the script reports null
 session-start: # from derive-log-facts.py, ISO 8601 in UTC; omit when the script reports null
 carried-from: # the script's carry-forward log, file name only; omit when its rule is none
@@ -119,17 +122,21 @@ key constraints, relevant file paths, branch name.]
 
 ```markdown
 ---
-date:
+date: # from derive-log-facts.py; the wrap's time
 type: session-log
-machine: # hostname
-repo:
-branch:
+machine: # from derive-log-facts.py
+repo: # from derive-log-facts.py
+branch: # from derive-log-facts.py
 summary:
-files-changed: []
+files-changed: [] # from derive-log-facts.py, copied verbatim
+commit-range: # from derive-log-facts.py
+latest-tag: # from derive-log-facts.py
 session-type:
 model:
 model-settings:
 status: completed
+resumed-from: # log filename if this session resumed from one; omit otherwise
+resumed-from-outcome: # fulfilled|superseded|ignored; only with resumed-from, else omit both
 session-id: # from derive-log-facts.py; omit when the script reports null
 session-start: # from derive-log-facts.py, ISO 8601 in UTC; omit when the script reports null
 carried-from: # the script's carry-forward log, file name only; omit when its rule is none
@@ -156,17 +163,21 @@ carried-from: # the script's carry-forward log, file name only; omit when its ru
 
 ```markdown
 ---
-date:
+date: # from derive-log-facts.py; the wrap's time
 type: session-log
-machine: # hostname
-repo:
-branch:
+machine: # from derive-log-facts.py
+repo: # from derive-log-facts.py
+branch: # from derive-log-facts.py
 summary:
-files-changed: []
+files-changed: [] # from derive-log-facts.py, copied verbatim
+commit-range: # from derive-log-facts.py
+latest-tag: # from derive-log-facts.py
 session-type:
 model:
 model-settings:
 status: blocked
+resumed-from: # log filename if this session resumed from one; omit otherwise
+resumed-from-outcome: # fulfilled|superseded|ignored; only with resumed-from, else omit both
 session-id: # from derive-log-facts.py; omit when the script reports null
 session-start: # from derive-log-facts.py, ISO 8601 in UTC; omit when the script reports null
 carried-from: # the script's carry-forward log, file name only; omit when its rule is none

@@ -52,10 +52,10 @@ Specs written before being assigned to a release: the documented default home `/
 | [AU-01](_unassigned/AU-01_audit-skill/spec.md) | audit skill | AU (audit-skill roadmap item) | committed | in-progress | P1 | No |
 | [C-02](_unassigned/C-02_reconcile-at-resume/spec.md) | reconcile at resume | C (continue-session roadmap item) | committed | complete | P1 | Yes |
 | [C-03](_unassigned/C-03_cold-repo-degradation/spec.md) | cold repo degradation | C (continue-session roadmap item) | draft | draft | P2 | Yes |
-| [C-04](_unassigned/C-04_consumption-disposition/spec.md) | consumption disposition | C (continue-session roadmap item) | draft | draft | P2 | No |
+| [C-04](_unassigned/C-04_consumption-disposition/spec.md) | consumption disposition | C (continue-session roadmap item) | committed | in-progress | P2 | No |
 | [C-05](_unassigned/C-05_arc-resume/spec.md) | arc resume | C (continue-session roadmap item) | draft | draft | P2 | No |
 | [CS-01](_unassigned/CS-01_current-status/spec.md) | current status | CS (current-status roadmap item) | fulfilled | complete | P2 | Yes |
-| [D-10](_unassigned/D-10_log-format-contract/spec.md) | log format contract | D (defect in the wrap and continue pair) | draft | draft | P2 | No |
+| [D-10](_unassigned/D-10_log-format-contract/spec.md) | log format contract | D (defect in the wrap and continue pair) | committed | in-progress | P2 | No |
 | [H-05](_unassigned/H-05_retire-dash-enforcement/spec.md) | retire dash enforcement | H (hygiene and repo-wide) | draft | (no implementation plan yet) | P3 | Yes |
 | [H-06](_unassigned/H-06_optional-release-plan-version/spec.md) | optional release plan version | H (hygiene and repo-wide) | draft | (no implementation plan yet) | P3 | Yes |
 | [PH-01](_unassigned/PH-01_pages-hub/spec.md) | pages hub | PH (pages-hub roadmap item) | draft | (no implementation plan yet) | P3 | Yes |
@@ -91,10 +91,10 @@ One row per effort, grouped by release in sequence order (see the Release column
 | [AU-01](_unassigned/AU-01_audit-skill/spec.md) | audit skill | AU (audit-skill roadmap item) | committed | in-progress | `_unassigned/` | - | P1 | No |
 | [C-02](_unassigned/C-02_reconcile-at-resume/spec.md) | reconcile at resume | C (continue-session roadmap item) | committed | complete | `_unassigned/` | - | P1 | Yes |
 | [C-03](_unassigned/C-03_cold-repo-degradation/spec.md) | cold repo degradation | C (continue-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | Yes |
-| [C-04](_unassigned/C-04_consumption-disposition/spec.md) | consumption disposition | C (continue-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | No |
+| [C-04](_unassigned/C-04_consumption-disposition/spec.md) | consumption disposition | C (continue-session roadmap item) | committed | in-progress | `_unassigned/` | - | P2 | No |
 | [C-05](_unassigned/C-05_arc-resume/spec.md) | arc resume | C (continue-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | No |
 | [CS-01](_unassigned/CS-01_current-status/spec.md) | current status | CS (current-status roadmap item) | fulfilled | complete | `_unassigned/` | - | P2 | Yes |
-| [D-10](_unassigned/D-10_log-format-contract/spec.md) | log format contract | D (defect in the wrap and continue pair) | draft | draft | `_unassigned/` | - | P2 | No |
+| [D-10](_unassigned/D-10_log-format-contract/spec.md) | log format contract | D (defect in the wrap and continue pair) | committed | in-progress | `_unassigned/` | - | P2 | No |
 | [H-05](_unassigned/H-05_retire-dash-enforcement/spec.md) | retire dash enforcement | H (hygiene and repo-wide) | draft | (no implementation plan yet) | `_unassigned/` | - | P3 | Yes |
 | [H-06](_unassigned/H-06_optional-release-plan-version/spec.md) | optional release plan version | H (hygiene and repo-wide) | draft | (no implementation plan yet) | `_unassigned/` | - | P3 | Yes |
 | [PH-01](_unassigned/PH-01_pages-hub/spec.md) | pages hub | PH (pages-hub roadmap item) | draft | (no implementation plan yet) | `_unassigned/` | - | P3 | Yes |

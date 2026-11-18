@@ -2,33 +2,71 @@
 id: D-10
 title: "Implementation plan: Make derive-log-facts.py's output the single log-format contract"
 type: implementation-plan
-status: draft
+status: in-progress
 created: 2026-08-23
-updated: 2026-10-06
+updated: 2026-11-17
 linked-spec: spec.md
 linked-release: null
 ac-coverage: complete
-phase-count: 5
+phase-count: 6
 ---
 
 # Implementation Plan: Make derive-log-facts.py's output the single log-format contract
 
-> **For agentic workers:** steps use checkbox syntax for tracking. Execute phases in order.
+> **For agentic workers:** steps use checkbox syntax for tracking. Execute phases in order. This plan was rewritten on 2026-11-13 against the code at `c572606` (main after v0.14.0), because the 2026-10-06 draft predated W-02 (derived log facts), W-05 (wrap hygiene order) and W-07 (session-aware logs), all of which changed the files below. It ships in one pull request with C-04 (consumption disposition), whose plan runs after this one and carries the version bookkeeping for both.
 
-**Goal:** Make every document that restates the wrap/continue session-log format defer to `derive-log-facts.py`'s actual output for the fields it derives, and delete the prose that used to restate them independently.
-
-**Architecture:** This plan is pure documentation and reference-file consolidation: no new code, no new script, no CI change. Every phase either deletes duplicated prose and replaces it with a pointer, or moves an assertion from several files down to one. Step-level detail is deliberately lighter than a v0.4.0 or v0.6.0 plan would carry, per the conventions' own depth-scaling rule for this release band, for two reasons: the exact line numbers in every touched file will have moved by execution time (W-02 changes `SKILL.md`, and, upstream of that, v0.4.0's D-11, D-12, and D-7 and v0.6.0's C-02 and C-03 will already have changed continue's files before this effort's turn), and the corrective text itself, what each pointer actually says, is better drafted against the real file content at execution time than pre-written now against a state that will already be stale.
+**Goal:** Every field of a session log is listed once, in `skills/plab-wrap-session/references/frontmatter-schema.md`, and every derived field's method is stated once, in `derive-log-facts.py`. Every other copy either points there or is held to it by a test, so the writer (`plab-wrap-session`), the validator (`check-log.py`) and the reader (`plab-continue-session` and `lib/session-logs.py`) cannot drift apart without a red CI run.
 
 **Spec:** `spec.md`
 
-**Target versions:** `plab-continue-session` 1.6.0; plugin v0.7.0. `plab-wrap-session` is unaffected by this plan; it is already at 1.7.0 from W-02 by the time this effort runs.
+**Target versions:** `plab-wrap-session` 1.11.1 to 1.12.0 and `plab-continue-session` 1.7.0 to 1.7.1, set in C-04's plan, Phase 4. The plugin version in `library.json` does not move, because versions are assigned at release time.
 
-**Global constraints:**
-- No em-dashes (U+2014) or en-dashes (U+2013) anywhere in any file this plan touches. Use " - " or restructure.
-- State a contract once, in one named file. This is the entire point of this effort, not an incidental rule to remember.
-- This plugin is built for its one maintainer. No configurability for hypothetical third-party users.
-- This effort stays at mechanization-ladder rung 3 (documented convention) deliberately; it does not add a new rung-1 or rung-2 check. See spec Non-Goal 3 and Open Questions item D3 for why.
-- Archive, never delete; dry-run by default; per-action confirmation for anything that touches the world. Not directly triggered here (this plan edits tracked, reviewable documentation files, not destructive operations), but no step in this plan should introduce a write path that skips review.
+**Global constraints:** No em-dashes or en-dashes. No hard-wrapped prose. Every reference ID carries a handle. Field names and log shape do not change in this plan (spec Non-Goal 4); C-04 adds one field afterwards.
+
+---
+
+## What the audit of 2026-11-13 found
+
+Each criterion was checked against the code at `c572606` before this plan was written.
+
+| AC | State on 2026-11-13 | Evidence |
+|---|---|---|
+| AC-1 (no "hostname" derivation text in wrap references) | Open, and wider than the spec knew | `grep -rn hostname` matches `frontmatter-schema.md:15`, `session-log-template.md:15`, `:124`, `:161`, and also wrap `SKILL.md:171`, which the spec fenced off as W-02's territory |
+| AC-2 (schema example matches its Tier 1 table) | Open, and worse | The Example Frontmatter block omits `type`, `machine`, `commit-range` and `latest-tag`, four of the nine Tier 1 fields |
+| AC-3 (no "18-field" claim) | Met literally, defect moved | "18-field" is gone, but `docs/skills/plab-wrap-session/README.md:295`, `:319` and `:339` now say 28 fields. C-04 makes that 29, so the count is wrong again on C-04's merge |
+| AC-4 (continue Phase 2 does not hand-list fields) | Open | `skills/plab-continue-session/SKILL.md:60` and `docs/skills/plab-continue-session/README.md:89` both carry the same eight-field list |
+| AC-5 (pairing claim in exactly one file) | Open | `skills/plab-continue-session/HISTORY.md:151` and root `README.md:134` |
+| AC-6 (wrap README defers to SKILL.md Body Sections) | Open | The Output Shape table at `docs/skills/plab-wrap-session/README.md:178-191` restates every section's purpose |
+| AC-7 (W-02 shipped first) | Met | `derive-log-facts.py` exists and wrap `SKILL.md:39` (Evidence Gathering) runs it |
+
+Five drifts the 2026-10-06 spec did not know about, each of which shows that a pointer alone will not hold:
+
+1. The template's three frontmatter blocks (`session-log-template.md` Final, Quick and Blocked) omit `commit-range` and `latest-tag`. A wrap that copies the template writes a log that `check-log.py` fails, because `check-log.py:123-124` requires all nine Tier 1 fields.
+2. The wrap README's Tier table (`README.md:287-291`) omits `skills-used`, `resumed-from`, `session-id`, `session-start` and `carried-from` from Tier 2, and `transcript-path` and `adrs-created` from Tier 3.
+3. `type` is not script output. The `data` dict in `derive-log-facts.py:1075-1112` has no `type` key, yet `frontmatter-schema.md:23` and wrap `SKILL.md:165` both say the script produces it. It is a constant, `session-log`.
+4. The reader side is now code, not prose. `lib/session-logs.py:55` reads six fields (`date`, `branch`, `session-id`, `session-start`, `resumed-from`, `carried-from`) and `reconcile.py:143` reads five (`date`, `branch`, `repo`, `commit-sha`, `commit-range`). The spec's premise that continue reads the log through the agent alone is out of date.
+5. The validator is also code: `check-log.py`'s `TIER1_REQUIRE_NONEMPTY` and `TIER1_REQUIRE_PRESENT_ONLY` are a second, independent statement of Tier 1.
+
+---
+
+## Rulings needed before Phase 1
+
+| ID | Question | Options | Recommendation |
+|---|---|---|---|
+| R1 (proof mechanism) | What proves the contract holds? | **A.** The AC greps only, quoted failing and then passing, as the spec says. **B.** Also a contract test in `test-check-log.py`, which CI already runs, binding the schema's tables to the writer, validator and reader code. B needs spec Non-Goal 3 amended. | **B.** Drift 1 above already shipped while every pointer was in place. Non-Goal 3 gave D-3 (bidirectional doc drift) and D-11 (three-state gate canaries) as the owners of drift detection, but D-3 checks version bumps and D-11 checks gate canaries; neither checks field lists. |
+| R2 (AC-3 scope) | Amend AC-3 from "no 18-field string" to "no hardcoded field count"? | **A.** Amend. **B.** Leave it; AC-3 is met. | **A.** Requirement 3 already says "any hardcoded field count", and C-04 makes the current 28 wrong. |
+| R3 (AC-5 survivor) | Which file keeps the pairing claim? | **A.** Root `README.md:134` keeps "versioned and released together"; the continue HISTORY 1.2.0 paragraph points to it. **B.** The HISTORY paragraph keeps "move and version together"; the README points to it. | **A.** The README is the live, reader-facing statement; the HISTORY paragraph is inside a dated 1.2.0 entry. Note that neither wording means the version numbers match: wrap is 1.11.1 and continue is 1.7.0. |
+
+The steps below assume R1 B, R2 A and R3 A. Under R1 A, Phase 2 is dropped and the greps in each phase's Verification are the only proof.
+
+**Ruled 2026-11-17.** The maintainer chose every recommendation: R1 B, R2 A and R3 A. They are recorded in the spec as D5, D6 and D7.
+
+**Execution record, 2026-11-17.** The plan ran as written, with four differences:
+
+1. **AC-3's grep was tightened.** The pattern in Phase 1 Step 3 also matched "Tier 1 fields". The spec now uses `\b[0-9]{2,}[- ]fields?\b|\b[0-9]+-field\b` over `*.md` files. Before Phase 5 it matched the three "28" lines; after Phase 5 it matches nothing.
+2. **`docs/status-skills.md` was also changed.** It carried a third wording of the pairing claim, "A session-log format change in one requires a matching change in the other", which the AC-5 grep does not scan. It now points to the root README, as continue's HISTORY paragraph does.
+3. **The wrap README's Example 1 was corrected.** Its frontmatter was a further hand-kept example that lacked four Tier 1 fields. It now carries all nine. The contract test does not check it, so it can drift again.
+4. **The manifests needed no change.** `gen-manifest.mjs` regenerated them byte for byte apart from line endings, because they carry no skill versions.
 
 ---
 
@@ -36,98 +74,123 @@ phase-count: 5
 
 | Phase | Goal | Fulfills AC | Owner | Status |
 |---|---|---|---|---|
-| P1 | Confirm W-02 has shipped, then consolidate `frontmatter-schema.md` and `session-log-template.md` | AC-7, AC-1, AC-2 | agent | Not started |
-| P2 | Consolidate continue's Phase 2 and `handoff-display.md` | AC-4 | agent | Not started |
-| P3 | Consolidate both skills' human-facing docs READMEs | AC-3, AC-6 | agent | Not started |
-| P4 | Consolidate the versioned-together pairing claim | AC-5 | agent | Not started |
-| P5 | Version bump and release bookkeeping for continue 1.6.0 | N/A - release hygiene | agent | Not started |
+| P1 | Refresh the spec against current code and the rulings | AC-7 | agent | Done 2026-11-17 |
+| P2 | Contract test first, failing on the current tree | AC-1, AC-2 (mechanical half) | agent | Done 2026-11-17 |
+| P3 | Wrap references and wrap SKILL.md's Frontmatter block point at the script | AC-1, AC-2 | agent | Done 2026-11-17 |
+| P4 | Continue's Phase 2, display reference and README stop hand-listing fields | AC-4 | agent | Done 2026-11-17 |
+| P5 | Wrap README defers to the schema and to SKILL.md | AC-3, AC-6 | agent | Done 2026-11-17 |
+| P6 | Pairing claim in exactly one file | AC-5 | agent | Done 2026-11-17 |
 
 ---
 
-## Phase 1: Gate check, then frontmatter-schema.md and session-log-template.md
+## Phase 1: Refresh the spec against current code and the rulings
 
-**Goal:** Confirm W-02 has shipped, then make `frontmatter-schema.md` and `session-log-template.md` defer to `derive-log-facts.py` for every field it produces.
+**Goal:** The spec describes the repository as it is on 2026-11-13, so the criteria this PR checks off are the criteria the PR actually meets.
 
-**Files:** Modify `skills/plab-wrap-session/references/frontmatter-schema.md`, `skills/plab-wrap-session/references/session-log-template.md`.
+**Files:** Modify `docs/internal/release-plans/_unassigned/D-10_log-format-contract/spec.md`.
 
-**Fulfills:** AC-7, AC-1, AC-2
+**Fulfills:** AC-7 (recorded as met, with the evidence).
 
 **Steps:**
-- [ ] Step 1: Confirm `skills/plab-wrap-session/scripts/derive-log-facts.py` exists and `SKILL.md`'s Evidence Gathering section references it. Stop and report if either is missing; this is AC-7's gate, not a step to skip.
-- [ ] Step 2: In `frontmatter-schema.md`, for each field the script produces, replace the "How to Derive" cell's hand-written method with a pointer to the script; leave the tiering rationale and the rows for agent-authored fields unchanged.
-- [ ] Step 3: Fix or remove the Example Frontmatter block so it no longer omits `type` and `machine` relative to its own Tier 1 table.
-- [ ] Step 4: In `session-log-template.md`, replace the "# hostname"-style inline comments (three per-mode occurrences, one each in Final, Quick, and Blocked mode) with a comment pointing at the script, for every field the script produces.
+- [x] Step 1: Retire Non-Goal 2. Before: "Does not modify `skills/plab-wrap-session/SKILL.md`'s Evidence Gathering or Frontmatter sections. W-02 owns wrap's own consumption of the script". After: "Does not modify `skills/plab-wrap-session/SKILL.md`'s Evidence Gathering section. Its Frontmatter block is in scope from 2026-11-13: W-02 shipped in 1.8.0, so the reason for fencing it off has expired, and the block carries the fourth copy of the `hostname` comment."
+- [x] Step 2: Under R1 B, amend Non-Goal 3 to rule out a new script or CI step while allowing a test inside the existing `test-check-log.py`, and add Requirement 8 and AC-8: "The schema's tables, `check-log.py`'s Tier 1 lists, the field lines of `derive-log-facts.py`'s text output, wrap `SKILL.md`'s Frontmatter block, the template's three frontmatter blocks, and the fields `lib/session-logs.py` and `reconcile.py` read agree, checked by `test-check-log.py`, with each assertion's canary proven to fail."
+- [x] Step 3: Under R2 A, amend AC-3's verification to a grep for field counts in the two skills' Markdown files and their usage READMEs, returning no claim about the size of the schema. (The exact pattern is in the spec's AC-3; see the execution record above for why it differs from the first draft.)
+- [x] Step 4: Add the wrap SKILL.md Frontmatter block and the wrap README Tier table to In Scope. Change the version line in In Scope item 7 from "continue to 1.6.0" to "both skills, per C-04's plan Phase 4".
+- [x] Step 5: Tick AC-7 in the Task Summary, set `updated: 2026-11-13`, `ac-count` to 8 under R1 B, and add a Revisions row naming every change above.
 
-**Verification:** `grep -rn hostname skills/plab-wrap-session/references/` returns no matches. The Example Frontmatter block, read directly, includes `type:` and `machine:`, or no longer exists as independent prose.
+**Verification:** `C:/Users/jpris/AppData/Local/Programs/Miniconda3/python.exe scripts/frontmatter-check.py && C:/Users/jpris/AppData/Local/Programs/Miniconda3/python.exe scripts/doc-lifecycle-check.py` both exit 0.
 
 ---
 
-## Phase 2: Continue's Phase 2 and handoff-display.md
+## Phase 2: Contract test first, failing on the current tree
 
-**Goal:** Make continue's Phase 2 and `handoff-display.md` defer to the same contract instead of hand-enumerating fields.
+**Goal:** A test exists that fails today, naming drift 1 (the template's missing `commit-range` and `latest-tag`), and each of its assertions is shown to fail when the rule it guards is broken.
 
-**Files:** Modify `skills/plab-continue-session/SKILL.md`, `skills/plab-continue-session/references/handoff-display.md`.
+**Files:** Modify `skills/plab-wrap-session/scripts/test-check-log.py`.
 
-**Fulfills:** AC-4
+**Fulfills:** AC-8 under R1 B, and the mechanical half of AC-1 and AC-2.
 
 **Steps:**
-- [ ] Step 1: Rewrite Phase 2's "Extract from frontmatter:" line to name the reference it defers to instead of hand-listing fields, following the deferral pattern already shipped at `skills/plab-wrap-session/SKILL.md:104`.
-- [ ] Step 2: Check `handoff-display.md` for the same pattern and apply the same fix if found.
-- [ ] Step 3: Confirm the corrected field set actually includes every Tier 1 field; `type`, `machine`, and `files-changed` were the three missing before this effort.
+- [x] Step 1: Add a parser that reads the field names from the three tier tables in `frontmatter-schema.md`, keyed by tier. It reads backtick-quoted names in the first column only.
+- [x] Step 2: Add these assertions, each written as a function of text so a canary can feed it a mutated copy:
+  - the Tier 1 set equals `TIER1_REQUIRE_NONEMPTY + TIER1_REQUIRE_PRESENT_ONLY` from `check-log.py`;
+  - every `name:` line under `Frontmatter fields` in `derive-log-facts.py`'s text output, from the fixture repository the existing derive tests already build, is a schema field;
+  - wrap `SKILL.md`'s Frontmatter YAML block and each of the template's three frontmatter blocks carry every Tier 1 field;
+  - every field in `lib/session-logs.py`'s `FIELDS` and in `reconcile.py`'s frontmatter regex is a schema field;
+  - no "How to Derive" cell for a field the script produces carries a shell command (`hostname`, `git `), so the method lives in the script.
+- [x] Step 3: Add one canary per assertion: drop a Tier 1 row, add a fake key to the reader list, delete `latest-tag:` from a block, and put `hostname` back in a cell. Each mutated input must make its assertion fail.
+- [x] Step 4: Run the suite on the unchanged tree and quote the failure. Expected: the template-block assertion fails for `commit-range` and `latest-tag` in all three modes, and the How-to-Derive assertion fails on `machine`, `repo`, `branch` and `files-changed`.
 
-**Verification:** Read Phase 2 after the edit and confirm no independently maintained field list remains that could drift from `frontmatter-schema.md` a second time.
+**Verification:** `C:/Users/jpris/AppData/Local/Programs/Miniconda3/python.exe skills/plab-wrap-session/scripts/test-check-log.py` exits non-zero before Phase 3, naming exactly those fields, and every canary reports that it failed as intended.
 
 ---
 
-## Phase 3: Human-facing docs READMEs
+## Phase 3: Wrap references and wrap SKILL.md's Frontmatter block point at the script
 
-**Goal:** Make both skills' `docs/skills/*/README.md` defer instead of re-describing the contract.
+**Goal:** The schema lists every field once, and each derived field's method is the script's. The template and wrap SKILL.md's block carry every Tier 1 field and no method text.
 
-**Files:** Modify `docs/skills/plab-wrap-session/README.md`, `docs/skills/plab-continue-session/README.md`.
+**Files:** Modify `skills/plab-wrap-session/references/frontmatter-schema.md`, `skills/plab-wrap-session/references/session-log-template.md`, `skills/plab-wrap-session/SKILL.md` (the Frontmatter section, lines 163-190, re-verified first).
 
-**Fulfills:** AC-3, AC-6
+**Fulfills:** AC-1, AC-2.
 
 **Steps:**
-- [ ] Step 1: Remove every "18-field" instance in `docs/skills/plab-wrap-session/README.md` (three at the time this spec was written); replace with a pointer to the canonical reference rather than a new hardcoded count.
-- [ ] Step 2: Rewrite the Tier table and the "Output Shape" table so they reference `SKILL.md`'s Body Sections prose and `frontmatter-schema.md` instead of independently re-describing every field and section a second time.
-- [ ] Step 3: Check `docs/skills/plab-continue-session/README.md` for the same pattern (field lists, pairing-relationship prose) and apply the same fix where found.
+- [x] Step 1: In the schema's Tier 1 table, set the "How to Derive" cell to `derive-log-facts.py` for `date`, `machine`, `repo`, `branch`, `files-changed`, `commit-range` and `latest-tag`. Keep the Example column. For instance, the `machine` cell, before: "`hostname` - which checkout wrote this log (logs are machine-local)". After: "`derive-log-facts.py`; which checkout wrote this log, because logs are machine-local". For `type`, before: "Always `session-log` (per document-conventions.md §2.4)". After: "Constant, always `session-log`; the agent writes it, the script does not".
+- [x] Step 2: Correct the paragraph under the table. Before: "Both come from the same `derive-log-facts.py` run as the other six script-derived Tier 1 fields (`date`, `type`, `machine`, `repo`, `branch`, `files-changed`); `summary` is the one Tier 1 field the agent writes." After: "Both come from the same `derive-log-facts.py` run as `date`, `machine`, `repo`, `branch` and `files-changed`. The agent writes `summary` and the constant `type`."
+- [x] Step 3: Delete the Example Frontmatter block and its heading. Put in its place: "The frontmatter a wrap writes is wrap `SKILL.md`'s Frontmatter block, filled from the script's `Frontmatter fields` output. `test-check-log.py` checks that the block carries every Tier 1 field, so there is no second hand-kept example here to drift."
+- [x] Step 4: In the template's three frontmatter blocks, add `commit-range:` and `latest-tag:` after `files-changed:`, each commented `# from derive-log-facts.py`. Change `machine: # hostname` to `machine: # from derive-log-facts.py`. Give `date:`, `repo:`, `branch:` and `files-changed:` the same comment.
+- [x] Step 5: In wrap `SKILL.md`, change line 171. Before: "`machine: # hostname - from derive-log-facts.py; which checkout wrote this log; logs are machine-local and cannot cross checkouts`". After: "`machine: # from derive-log-facts.py; which checkout wrote this log`". In line 165, remove `type` from the list of script-derived fields and add "`type` is the constant `session-log`."
 
-**Verification:** `grep -rn "18-field" skills/ docs/skills/ README.md CHANGELOG.md` returns zero matches. This scope deliberately excludes `docs/internal/release-plans/`, where D-10's own spec and plan name the stale string as the thing being removed; a repo-wide grep would never pass once those documents exist. Confirm the same command currently returns the three known matches in `docs/skills/plab-wrap-session/README.md` before this phase, and zero after.
+**Verification:** `grep -rn hostname skills/plab-wrap-session/references/ skills/plab-wrap-session/SKILL.md` returns nothing, and `test-check-log.py` exits 0.
 
 ---
 
-## Phase 4: The versioned-together pairing claim
+## Phase 4: Continue's Phase 2, display reference and README stop hand-listing fields
 
-**Goal:** Consolidate the pairing claim to one file.
+**Goal:** Continue names the fields it uses by their purpose and defers the field list to the schema, following the cross-skill pointer that wrap `SKILL.md:159` already uses for `log-discovery.md`.
 
-**Files:** Modify `skills/plab-continue-session/HISTORY.md`, `README.md` (repository root).
+**Files:** Modify `skills/plab-continue-session/SKILL.md`, `skills/plab-continue-session/references/handoff-display.md`, `docs/skills/plab-continue-session/README.md`.
 
-**Fulfills:** AC-5
+**Fulfills:** AC-4.
 
 **Steps:**
-- [ ] Step 1: Decide which of the two locations keeps the assertion (root README's install-facing framing, "versioned and released together," or continue's HISTORY.md provenance framing, "move and version together") and remove it from the other, replacing the removed copy with a cross-reference. Keep the surviving location's wording exactly as it already reads; do not invent a third phrasing, since the verification below checks for the two existing wordings by name.
-- [ ] Step 2: Re-check `skills/plab-wrap-session/HISTORY.md` to confirm it still does not carry a third copy. The task briefing's "both HISTORY files" framing did not match what direct verification found (spec Open Questions item D2); confirm that has not changed.
+- [x] Step 1: In continue `SKILL.md` Phase 2, change step 2. Before: "Extract from frontmatter: `date`, `repo`, `branch`, `summary`, `status`, `session-type`, `model`, `agent`." After: "Read the frontmatter. Its fields are defined once, in `plab-wrap-session/references/frontmatter-schema.md`; do not restate them here. Phase 4 displays `date`, `model`, `status`, `summary` and `branch`, and Constraints compares `repo` and `branch` with the current checkout."
+- [x] Step 2: In `handoff-display.md`, "What to include", change the Frontmatter facts bullet to cite the same schema for the field definitions and keep the five display fields.
+- [x] Step 3: In `docs/skills/plab-continue-session/README.md:89`, make the same change as Step 1 in reader-facing words.
 
-**Verification:** `grep -rlnE "version together|versioned and released together" skills/ docs/skills/ README.md CHANGELOG.md` returns exactly one file. This scope deliberately excludes `docs/internal/release-plans/`, where D-10's own spec and plan name both wordings. Confirm the same command currently returns two files (`skills/plab-continue-session/HISTORY.md` and root `README.md`) before this phase, and one after.
+**Verification:** `grep -n "Extract from frontmatter:" skills/plab-continue-session/SKILL.md docs/skills/plab-continue-session/README.md` returns nothing, and Phase 2 names the schema file.
 
 ---
 
-## Phase 5: Version bump and release bookkeeping
+## Phase 5: Wrap README defers to the schema and to SKILL.md
 
-**Goal:** Bump `plab-continue-session` to 1.6.0 and update the surrounding bookkeeping.
+**Goal:** The human-facing wrap README carries no field count, no tier table of its own, and no second description of each section's purpose.
 
-**Files:** Modify `skills/plab-continue-session/SKILL.md`, `skills/plab-continue-session/HISTORY.md`, `CHANGELOG.md`, `README.md`, `library.json`; regenerate `manifest.generated.json`, `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`.
+**Files:** Modify `docs/skills/plab-wrap-session/README.md`.
 
-**Fulfills:** N/A - release hygiene, not a functional AC.
+**Fulfills:** AC-3, AC-6.
 
 **Steps:**
-- [ ] Step 1: Bump `skills/plab-continue-session/SKILL.md`'s `metadata.version` to `1.6.0` and `updated` to the ship date.
-- [ ] Step 2: Add a `skills/plab-continue-session/HISTORY.md` entry for 1.6.0 describing the consolidation, following the existing entry style (see the 1.3.0 entry).
-- [ ] Step 3: Add a `CHANGELOG.md` `[Unreleased]` bullet for continue 1.6.0.
-- [ ] Step 4: Update continue's version cell in root `README.md`'s skill table and continue's `version` field in `library.json`.
-- [ ] Step 5: Run `node <agent-skills-toolkit>/scripts/generators/gen-manifest.mjs . --write --target=all` per `AGENTS.md:73` to regenerate the derived manifests; do not hand-edit them.
+- [x] Step 1: Replace the Tier table at lines 287-291 and the paragraph at line 293 with: "Every log carries YAML frontmatter in three tiers: Tier 1 always, Tier 2 and Tier 3 when the data exists. The field list, what each field means, and which ones `derive-log-facts.py` fills in are in [`references/frontmatter-schema.md`](../../../skills/plab-wrap-session/references/frontmatter-schema.md). `check-log.py` fails a log that is missing a Tier 1 field."
+- [x] Step 2: At line 295, change "(28 fields, including ...)" to drop the count. At lines 319 and 339, change "Complete 28-field metadata specification (3 tiers)" and "28-field metadata reference (3 tiers)" to "The field list, in three tiers".
+- [x] Step 3: In the Output Shape table at lines 178-191, keep the Section / Element column. Replace the Purpose column with one sentence above the table: "What each section must contain is defined in `SKILL.md`, Body Sections (Final Mode), and the Final-mode table under Four Modes above summarizes it." Leave the table as a list of section names in order.
 
-**Verification:** `git diff library.json manifest.generated.json .claude-plugin/plugin.json .codex-plugin/plugin.json` shows only continue's version and description fields changed.
+**Verification:** Under R2 A, the amended AC-3 grep returns no schema-size claim. `grep -n "28" docs/skills/plab-wrap-session/README.md` returns no field count.
+
+---
+
+## Phase 6: Pairing claim in exactly one file
+
+**Goal:** The claim that the two skills move together is stated once, in root `README.md`.
+
+**Files:** Modify `skills/plab-continue-session/HISTORY.md`.
+
+**Fulfills:** AC-5.
+
+**Steps:**
+- [x] Step 1: Under R3 A, in the 1.2.0 entry, change the Pairing contract paragraph. Before: "This skill reads what `/plab-wrap-session` writes. The two move and version together; a change to the session-log format in one requires a matching change in the other." After: "This skill reads what `/plab-wrap-session` writes. The pairing contract is stated in the root README, under How the skills fit together." Keep the legacy-locations sentence that follows.
+- [x] Step 2: Write the new HISTORY and CHANGELOG entries (C-04 plan, Phase 4) without either wording, because the AC-5 grep scans `skills/` and `CHANGELOG.md`.
+
+**Verification:** `grep -rlnE "version together|versioned and released together" skills/ docs/skills/ README.md CHANGELOG.md` prints exactly `README.md`.
 
 ---
 
@@ -135,18 +198,14 @@ phase-count: 5
 
 ### CI
 
-No CI change. This effort is entirely documentation and reference-file consolidation, verified by the grep and read checks named in each phase's Verification line and in the spec's AC. This plan explicitly declines to add a new automated detector for future contract drift (spec Non-Goal 3); D-3 (extending the hygiene sweep's documentation-drift check to catch content changed without a version bump) and D-11 (three-state gate canaries) are the closer-fitting places for that, and both are sequenced into v0.4.0, ahead of this release.
+No change to `.github/workflows/gate.yml`. Under R1 B, the contract test lives in `skills/plab-wrap-session/scripts/test-check-log.py`, which the gate already runs (`gate.yml:320`), so it runs on every pull request without a new step. Under R1 A, nothing new runs in CI, and the contract is held by the greps in this plan only on the day this plan runs.
 
-### Agent-facing documentation
+### Documentation
 
-`skills/plab-wrap-session/references/frontmatter-schema.md`, `skills/plab-wrap-session/references/session-log-template.md`, `skills/plab-continue-session/SKILL.md` (Phase 2 and `metadata.version` only), `skills/plab-continue-session/references/handoff-display.md`. No change to `skills/plab-wrap-session/SKILL.md` itself (W-02's territory) and no change to `AGENTS.md`.
-
-### Human-facing documentation
-
-`docs/skills/plab-wrap-session/README.md`, `docs/skills/plab-continue-session/README.md`, `skills/plab-continue-session/HISTORY.md`, `CHANGELOG.md`, root `README.md`.
+Agent-facing: `frontmatter-schema.md`, `session-log-template.md`, wrap `SKILL.md` (Frontmatter section only), continue `SKILL.md` (Phase 2 only), `handoff-display.md`. Human-facing: both `docs/skills/*/README.md` files and continue's `HISTORY.md` 1.2.0 paragraph. The version lines, `HISTORY.md` entries, `CHANGELOG.md` `[Unreleased]`, `library.json`, root `README.md` skill table and the regenerated manifests are done once for both efforts in C-04's plan, Phase 4. `AGENTS.md` does not change, because no trigger, skill name or blurb-level behaviour changes.
 
 ---
 
 ## Rollback
 
-Because this effort only deletes duplicated prose and replaces it with pointers, without changing any field name or log shape, rollback is a straightforward revert of the touched files' text. There is no data migration, no re-tagging, and no impact on logs already written, since parsing behavior for existing frontmatter is unchanged throughout. If a specific consolidation turns out to have deleted context a reader actually needed (for example, if collapsing the Output Shape table lost information its replacement pointer does not adequately cover), the fix is to restore that one paragraph's content, not to revert the whole effort.
+There is no schema change and no data migration: no field is renamed, and a log written before this plan parses the same way after it. To undo the whole effort, revert the six files Phases 3 to 6 touch and the test added in Phase 2. To restore the old text exactly, take it from `c572606`, for example `git show c572606:skills/plab-wrap-session/references/frontmatter-schema.md`. Reverting Phase 3 without Phase 2 leaves a red CI run, because the contract test then fails on the template again; revert the two together. Reverting Phase 6 alone puts the pairing claim back in two files, which is harmless but fails AC-5. C-04 depends on Phase 3's template blocks and Phase 2's test, so revert C-04 first if both are being undone.

@@ -180,6 +180,8 @@ def session_field_cases(root: Path) -> None:
           real["session-fields"]["state"] == "findings", str(real.get("session-fields")))
 
     session_order_cases(root, mod)
+    contract_cases(root, mod)
+    outcome_cases(root, mod)
 
 
 def session_order_cases(root: Path, mod) -> None:
@@ -238,6 +240,219 @@ def session_order_cases(root: Path, mod) -> None:
     real = mod.run_all_checks(slip, str(bad), "deep")
     check("session order canary: the real check flags the same log",
           real["session-fields"]["state"] == "findings", str(real.get("session-fields")))
+
+
+# ---------------------------------------------------------------------------
+# D-10 (log-format contract): every copy of the field list agrees with the
+# schema. The schema's three tier tables are the one list of fields; the
+# copies are check-log.py's Tier 1 lists, the field lines of
+# derive-log-facts.py's text output, wrap SKILL.md's Frontmatter block, the
+# template's three frontmatter blocks, and the fields lib/session-logs.py and
+# continue's reconcile.py read. Each assertion is a function of text, so a
+# canary can hand it a mutated copy and prove it fails.
+# ---------------------------------------------------------------------------
+
+import re  # noqa: E402
+
+SKILL_DIR = SCRIPT_DIR.parent
+REPO_ROOT = SCRIPT_DIR.parents[2]
+SCHEMA = SKILL_DIR / "references" / "frontmatter-schema.md"
+TEMPLATE = SKILL_DIR / "references" / "session-log-template.md"
+SKILL_MD = SKILL_DIR / "SKILL.md"
+LIB_SESSION_LOGS = REPO_ROOT / "lib" / "session-logs.py"
+RECONCILE = REPO_ROOT / "skills" / "plab-continue-session" / "scripts" / "reconcile.py"
+DERIVE = SCRIPT_DIR / "derive-log-facts.py"
+
+# A line in derive-log-facts.py's `Frontmatter fields` block that is not a
+# frontmatter field: `base` is the diff base the script reports so the agent
+# can judge commit-range, and nothing writes it into a log.
+NOT_A_FIELD = {"base"}
+SHELL_IN_CELL = re.compile(r"`(hostname|git [^`]*)`")
+
+
+def schema_rows(schema_text: str) -> dict[str, dict]:
+    """{field: {"tier": n, "derive": cell}} from the three tier tables. A row is
+    a table line whose first cell is one backtick-quoted name."""
+    rows: dict[str, dict] = {}
+    tier = None
+    for line in schema_text.splitlines():
+        heading = re.match(r"^## Tier (\d)\b", line)
+        if heading:
+            tier = int(heading.group(1))
+            continue
+        if line.startswith("## "):
+            tier = None
+            continue
+        if tier is None:
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        name = re.fullmatch(r"`([a-z][a-z0-9-]*)`", cells[0]) if cells else None
+        if name and len(cells) >= 3:
+            rows[name.group(1)] = {"tier": tier, "derive": cells[2]}
+    return rows
+
+
+def block_keys(block: str) -> list[str]:
+    return re.findall(r"^([a-z][a-z0-9-]*):", block, re.MULTILINE)
+
+
+def template_blocks(template_text: str) -> list[str]:
+    """The frontmatter of each mode skeleton: the `---` block that opens each
+    ```markdown fence."""
+    return re.findall(r"```markdown\n---\n(.*?)\n---", template_text, re.DOTALL)
+
+
+def skill_block(skill_text: str) -> str:
+    match = re.search(r"```yaml\n---\n(.*?)\n---", skill_text, re.DOTALL)
+    return match.group(1) if match else ""
+
+
+def lib_fields(lib_text: str) -> list[str]:
+    match = re.search(r"^FIELDS = \((.*?)\)", lib_text, re.MULTILINE)
+    return re.findall(r'"([a-z][a-z0-9-]*)"', match.group(1)) if match else []
+
+
+def reconcile_fields(reconcile_text: str) -> list[str]:
+    match = re.search(r"FRONTMATTER_SCALAR = re\.compile\(\s*r'\^\(([^)]*)\)", reconcile_text)
+    return match.group(1).split("|") if match else []
+
+
+def derive_fields(output: str) -> set[str]:
+    """Field names derive-log-facts.py prints under `Frontmatter fields`, plus
+    carried-from, which the wrap copies from the `carry-forward:` line."""
+    names: set[str] = set()
+    lines = output.splitlines()
+    if "Frontmatter fields" in lines:
+        for line in lines[lines.index("Frontmatter fields") + 1:]:
+            if not line.strip():
+                break
+            match = re.match(r"^  ([a-z][a-z0-9-]*)[: (]", line)
+            if match:
+                names.add(match.group(1))
+    if any(line.startswith("  carry-forward:") for line in lines):
+        names.add("carried-from")
+    return names - NOT_A_FIELD
+
+
+def contract_problems(schema_text: str, tier1_code: list[str], derived: set[str], skill_text: str,
+                      template_text: str, lib_text: str, reconcile_text: str) -> list[str]:
+    rows = schema_rows(schema_text)
+    fields = set(rows)
+    tier1 = {f for f, r in rows.items() if r["tier"] == 1}
+    problems = []
+    if tier1 != set(tier1_code):
+        problems.append(f"schema Tier 1 {sorted(tier1)} differs from check-log.py's {sorted(tier1_code)}")
+    for name in sorted(derived - fields):
+        problems.append(f"derive-log-facts.py prints '{name}', which the schema does not list")
+    for name, row in sorted(rows.items()):
+        if "derive-log-facts.py" in row["derive"] and name not in derived:
+            problems.append(f"the schema says derive-log-facts.py produces '{name}', but its output has no such line")
+        if name in derived and SHELL_IN_CELL.search(row["derive"]):
+            problems.append(f"the schema restates how '{name}' is derived; that is the script's job")
+    blocks = [("wrap SKILL.md's Frontmatter block", skill_block(skill_text))]
+    blocks += [(f"template frontmatter block {i + 1}", b) for i, b in enumerate(template_blocks(template_text))]
+    if len(blocks) != 4:
+        problems.append(f"expected SKILL.md's block and three template blocks, found {len(blocks)} blocks")
+    for label, block in blocks:
+        keys = set(block_keys(block))
+        for name in sorted(tier1 - keys):
+            problems.append(f"{label} lacks Tier 1 field '{name}'")
+        for name in sorted(keys - fields):
+            problems.append(f"{label} carries '{name}', which the schema does not list")
+    for label, read in (("lib/session-logs.py", lib_fields(lib_text)), ("reconcile.py", reconcile_fields(reconcile_text))):
+        if not read:
+            problems.append(f"could not find the fields {label} reads")
+        for name in sorted(set(read) - fields):
+            problems.append(f"{label} reads '{name}', which the schema does not list")
+    return problems
+
+
+def derive_output(root: Path) -> str:
+    """derive-log-facts.py's text output on a one-commit fixture repository,
+    with an empty transcript directory so no real session is read."""
+    repo = root / "contract-repo"
+    repo.mkdir()
+    env = os.environ.copy()
+    env.update({"GIT_AUTHOR_NAME": "T", "GIT_AUTHOR_EMAIL": "t@example.invalid",
+                "GIT_COMMITTER_NAME": "T", "GIT_COMMITTER_EMAIL": "t@example.invalid"})
+    for args in (["init", "-q", "-b", "main"], ["add", "-A"], ["commit", "-q", "-m", "init"]):
+        if args[0] == "add":
+            write(repo / "README.md", "fixture\n")
+        subprocess.run(["git", *args], cwd=repo, env=env, capture_output=True, check=True)
+    transcripts = root / "contract-transcripts"
+    transcripts.mkdir()
+    proc = subprocess.run(
+        [sys.executable, str(DERIVE), str(repo), "--session-id", "contract-test",
+         "--transcript-dir", str(transcripts)],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60, env=env,
+    )
+    return proc.stdout
+
+
+def contract_cases(root: Path, mod) -> None:
+    texts = {
+        "schema_text": SCHEMA.read_text(encoding="utf-8"),
+        "skill_text": SKILL_MD.read_text(encoding="utf-8"),
+        "template_text": TEMPLATE.read_text(encoding="utf-8"),
+        "lib_text": LIB_SESSION_LOGS.read_text(encoding="utf-8"),
+        "reconcile_text": RECONCILE.read_text(encoding="utf-8"),
+    }
+    tier1_code = list(mod.TIER1_REQUIRE_NONEMPTY) + list(mod.TIER1_REQUIRE_PRESENT_ONLY)
+    derived = derive_fields(derive_output(root))
+    check("D-10 contract: derive-log-facts.py's output was read", {"machine", "repo", "branch"} <= derived,
+          f"read {sorted(derived)}")
+    problems = contract_problems(tier1_code=tier1_code, derived=derived, **texts)
+    check("D-10 contract: every copy of the field list agrees with the schema", not problems,
+          "; ".join(problems))
+
+    # Canaries: each mutation breaks one rule, and must be reported.
+    schema = texts["schema_text"]
+    mutants = [
+        ("a Tier 1 row dropped from the schema",
+         dict(texts, schema_text=re.sub(r"^\| `latest-tag` \|.*\n", "", schema, flags=re.MULTILINE)), None),
+        ("a shell command restated in a derived field's cell",
+         dict(texts, schema_text=re.sub(r"^(\| `machine` \| [^|]+\| )[^|]+\|",
+                                        r"\1`hostname` |", schema, flags=re.MULTILINE)), None),
+        ("a Tier 1 field removed from a template block",
+         dict(texts, template_text=texts["template_text"].replace("latest-tag:", "latest-tagg:", 1)), None),
+        ("a Tier 1 field removed from wrap SKILL.md's block",
+         dict(texts, skill_text=texts["skill_text"].replace("\nmachine:", "\nmachinery:", 1)), None),
+        ("a field the schema does not list, read by lib/session-logs.py",
+         dict(texts, lib_text=texts["lib_text"].replace('"carried-from")', '"carried-from", "mystery")', 1)), None),
+        ("a field the schema does not list, read by reconcile.py",
+         dict(texts, reconcile_text=texts["reconcile_text"].replace("commit-range)", "commit-range|mystery)", 1)), None),
+        ("a field derive-log-facts.py prints that the schema does not list",
+         texts, derived | {"mystery"}),
+    ]
+    for label, mutated, mutated_derived in mutants:
+        found = contract_problems(tier1_code=tier1_code, derived=mutated_derived or derived, **mutated)
+        new = [p for p in found if p not in problems]
+        check(f"D-10 contract canary: {label} is reported", bool(new), "no new problem reported")
+
+
+OUTCOME_LOG = "2026-11-13_01-43_claude_v0140-shipped-release-on-merge-brief.md"
+
+
+def outcome_cases(root: Path, mod) -> None:
+    """C-04 (consumption disposition): resumed-from and resumed-from-outcome
+    are written together or not at all, and the outcome is one of three."""
+    cases = [
+        ("resumed-from with outcome fulfilled", {"resumed-from": OUTCOME_LOG, "resumed-from-outcome": "fulfilled"}, "clean"),
+        ("resumed-from with outcome ignored", {"resumed-from": OUTCOME_LOG, "resumed-from-outcome": "ignored"}, "clean"),
+        ("resumed-from without an outcome", {"resumed-from": OUTCOME_LOG}, "findings"),
+        ("an outcome without resumed-from", {"resumed-from-outcome": "superseded"}, "findings"),
+        ("an outcome outside the three values", {"resumed-from": OUTCOME_LOG, "resumed-from-outcome": "partial"}, "findings"),
+        ("an empty outcome", {"resumed-from": OUTCOME_LOG, "resumed-from-outcome": ""}, "findings"),
+        ("neither field", {}, "clean"),
+    ]
+    for i, (label, fields, want) in enumerate(cases):
+        repo = root / f"outcome-{i}"
+        repo.mkdir()
+        log = write(repo / "log.md", build_log(make_frontmatter(fields), DECISIONS_TWO, WAITING_OK,
+                                               LEDGER_OK, WYMNR_OK))
+        data = json.loads(run_check(log, repo, mode="deep").stdout)
+        got = data["checks"].get("session-fields", {}).get("state")
+        check(f"C-04: {label} is {want}", got == want, str(data["checks"].get("session-fields")))
 
 
 def main() -> int:

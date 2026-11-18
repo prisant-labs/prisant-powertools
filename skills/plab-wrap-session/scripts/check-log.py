@@ -316,6 +316,34 @@ def session_order_findings(frontmatter: str, log_name: str | None) -> list[str]:
     return findings
 
 
+# C-04 (consumption disposition): the three values `resumed-from-outcome`
+# may take. references/frontmatter-schema.md defines what each one means; this
+# is the one place in code that lists them.
+OUTCOME_VALUES = ("fulfilled", "superseded", "ignored")
+
+
+def outcome_findings(frontmatter: str) -> list[str]:
+    """`resumed-from` and `resumed-from-outcome` are written together or not
+    at all, because both are written only after a resume in this session, and
+    the outcome is one of OUTCOME_VALUES. A field with an empty value counts
+    as absent for `resumed-from` and as invalid for the outcome."""
+    resumed_raw = frontmatter_field(frontmatter, "resumed-from")
+    outcome_raw = frontmatter_field(frontmatter, "resumed-from-outcome")
+    resumed = unquote(resumed_raw) if resumed_raw is not None else ""
+    if outcome_raw is None:
+        if resumed:
+            return ["resumed-from is set, so resumed-from-outcome must be one of "
+                    f"{', '.join(OUTCOME_VALUES)}; it is missing"]
+        return []
+    outcome = unquote(outcome_raw)
+    findings = []
+    if not resumed:
+        findings.append("resumed-from-outcome is set without resumed-from; write both after a resume, or neither")
+    if outcome not in OUTCOME_VALUES:
+        findings.append(f"resumed-from-outcome must be one of {', '.join(OUTCOME_VALUES)}, not '{outcome}'")
+    return findings
+
+
 def check_session_fields(frontmatter: str, log_name: str | None = None) -> dict:
     """W-07's three optional fields: `session-id`, `session-start` and
     `carried-from`. All three are optional, because a log written before W-07,
@@ -323,7 +351,9 @@ def check_session_fields(frontmatter: str, log_name: str | None = None) -> dict:
     transcript was found. A value that is present must be well formed:
     `session-start` parses as ISO 8601, and `carried-from` is a bare session-log
     file name, because continue matches it against file names. Since 1.11.1 the
-    values must also agree with the log's own times; see session_order_findings."""
+    values must also agree with the log's own times; see session_order_findings.
+    Since 1.12.0 `resumed-from` and `resumed-from-outcome` must also appear
+    together, with a valid outcome; see outcome_findings."""
     import datetime as dt
 
     session_id = frontmatter_field(frontmatter, "session-id")
@@ -340,12 +370,15 @@ def check_session_fields(frontmatter: str, log_name: str | None = None) -> dict:
         value = unquote(carried)
         if not LOG_FILENAME_RE.match(value):
             findings.append(f"carried-from must be a session-log file name with no directory: {value}")
+    findings.extend(outcome_findings(frontmatter))
     if not findings:
         findings.extend(session_order_findings(frontmatter, log_name))
     if findings:
         return {"state": "findings", "detail": findings}
+    outcome = frontmatter_field(frontmatter, "resumed-from-outcome")
     present = [name for name, raw in (("session-id", session_id), ("session-start", start),
-                                      ("carried-from", carried)) if raw is not None]
+                                      ("carried-from", carried), ("resumed-from-outcome", outcome))
+               if raw is not None]
     if not present:
         return {"state": "clean", "detail": "no W-07 session fields (a log from before W-07, or from Codex)"}
     return {"state": "clean", "detail": f"well formed: {', '.join(present)}"}

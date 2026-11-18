@@ -41,7 +41,7 @@ After this block, ask the user one question (Phase 5): resume with the named imm
 ## What to include
 
 - **What changed since this log:** the output of `scripts/reconcile.py` (Phase 3), pasted verbatim, leading the display ahead of every other section. This is drift, not a re-derivation of the log: commits landed, a tag cut, the log's branch gone, a cited path missing or renamed, or an advisory that the named next action may already be done. See `references/reconciliation.md` for what each check covers and the `ok` / `finding` / `broken` states. A broken check must stay visible by name; never fold it into a clean-sounding paraphrase (AC-8).
-- **Frontmatter facts:** date, model, status, summary, branch. These set the cold-start context in three lines.
+- **Frontmatter facts:** date, model, status, summary, branch. These set the cold-start context in three lines. What each field holds is defined in `plab-wrap-session/references/frontmatter-schema.md`, not here.
 - **Waiting on you:** the log's open-obligations list, first. Resumption exists to close these loops; burying them below the fold defeats the section.
 - **Outstanding issues:** if the log recorded blockers, risks, or unfinished work, show them. The user resuming needs to know what's known to be incomplete.
 - **Declined hygiene proposals:** actions the wrap proposed and the user declined or left unanswered; they are re-decidable now.

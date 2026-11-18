@@ -2,6 +2,7 @@
 
 | Version | Date | Release | Type | Summary |
 |---|---|---|---|---|
+| 1.12.0 | 2026-11-17 | Unreleased | added | `references/frontmatter-schema.md` is the one list of log fields, and a CI test holds every other copy to it (D-10, log-format contract); the template's frontmatter blocks gain the two Tier 1 fields they lacked. A log that resumed records `resumed-from-outcome`, and `check-log.py` holds it to `resumed-from` (C-04, consumption disposition). |
 | 1.11.1 | 2026-11-12 | v0.14.0 | fixed | `check-log.py` fails a log stamped with its session's start time instead of the wrap's: `date` must be later than `session-start`, and the file name's time no earlier than the `carried-from` log's. |
 | 1.11.0 | 2026-11-12 | v0.14.0 | added | Closing Summary: every wrap tells the maintainer in the conversation what the session accomplished and what comes next in priority order, copied from the log just written, before any hygiene question. |
 | 1.10.0 | 2026-11-10 | v0.14.0 | added | Session-aware wrap (W-07): each log records its `session-id`, `session-start` and `carried-from`; the wrap carries items from the resumed log or else the newest; logs another session wrote while this one ran are named, never archived, and stay visible to continue; a linked worktree writes to the main checkout's store. |
@@ -17,6 +18,16 @@
 | 1.5.0 | 2026-08-18 | v0.2.0 | added | `--organize` files old logs into `YYYY-MM/` folders. Hygiene sweep gained Check 5. |
 | 1.4.1 | 2026-08-18 | v0.1.2 | fixed | Dropped the "what did we do" trigger. Added `type:` to the frontmatter block and `machine:` to the Quick and Blocked templates. |
 | 1.4.0 | 2026-08-14 | v0.1.0 | migrated | First release in prisant-utilities. Migrated from a private upstream at version 1.4.0; prior history remains there. |
+
+## 1.12.0 - 2026-11-17
+
+**Fixed: a wrap that follows the template now passes its own self-check.** The three frontmatter blocks in `references/session-log-template.md` lacked `commit-range` and `latest-tag`, two of the nine Tier 1 fields `check-log.py` requires, so a log copied from the template failed the Log Self-Check. Both are now in every block.
+
+**Changed: one list of fields, held by a test (D-10, log-format contract).** The field list had been written out by hand in the schema, the template, this skill's Frontmatter block, its usage README, `check-log.py`, and the two scripts continue reads logs with, and the copies had drifted apart. `references/frontmatter-schema.md` is now the one list. Its "How to Derive" cells name `derive-log-facts.py` for the seven fields the script produces, instead of restating `hostname` and `git` commands, and record `type` as a constant the agent writes, since the script never produced it. Its hand-kept example, which lacked four Tier 1 fields, is gone; the Frontmatter block in SKILL.md is the example. A new test in `scripts/test-check-log.py` checks that the schema's Tier 1 table matches `check-log.py`'s lists, that every field the script prints is in the schema, that SKILL.md's block and the template's three blocks carry every Tier 1 field, and that `lib/session-logs.py` and continue's `reconcile.py` read only fields the schema lists. The usage README drops its own tier table and field counts and points at the schema.
+
+**Added: did the resumed plan survive? (C-04, consumption disposition).** After a `/plab-continue-session` resume, Evidence Gathering step 9 has the wrap judge what became of the resumed log's named next action and write `resumed-from-outcome: fulfilled`, `superseded` or `ignored` into the new log. With no resume, neither `resumed-from` nor the new field is written. `check-log.py` reports a finding when one appears without the other or the value is not one of the three. Nothing else reads the field.
+
+**Proof.** Run before any fix, the new tests failed in 7 of 71 checks. The contract test named five schema cells that restated shell commands and both missing fields in all three template blocks. Four outcome cases failed for want of the rule, and two canaries failed because the tree already had the fault they inject. After the fix all 71 pass, and each of the seven contract canaries reports the fault it injects. `lib/test-session-logs.py` gains a case, with its own canary, proving that a reader which matched keys by prefix would read `resumed-from-outcome` as `resumed-from`, and that the real reader does not.
 
 ## 1.11.1 - 2026-11-12
 
