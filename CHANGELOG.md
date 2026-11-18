@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-11-17
+
+A patch release. `/plab-ship` no longer stops a merge because the branch edited a document that also holds an open decision. It stops only when the branch changes that decision's own entry. Existing use keeps working.
+
 ### Fixed
 
 - **`plab-ship` 1.1.0: an open decision blocks a merge only when the branch changes that decision.** Before, any edit to the document holding an open decision stopped the merge, so updating a count in a project plan blocked a branch that passed every check. The facts now report, for each branch and pull request, which open decisions sit in a changed document and whether the change touched each one's own entry. Only a touched decision blocks, and the agent still reads the changed lines once before merging past an untouched one.
