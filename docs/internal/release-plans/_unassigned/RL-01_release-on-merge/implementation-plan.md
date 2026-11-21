@@ -38,6 +38,8 @@ Steps use checkbox syntax and phases run in order. A phase is done when every st
 **Choices this plan makes on [model-inference] ground, flagged for review:**
 - A title with no recognised conventional type counts as a patch and is named in the check's output, rather than failing the check. Failing would block on any old untyped title since the tag.
 - `perf` and `revert` count as patches, as Conventional Commits treats them. `build` and `style` join the spec's sizeless types.
+- The configuration lists five surfaces, where the spec's Requirement 2 names seven. The other two, the CHANGELOG version heading and the `HISTORY.md` Release cells, hold many versions by design, so an equality check cannot read them; AC-5 and AC-17 check them instead, in Phase 3.
+- `run-tests.py` runs each command with its own interpreter (`sys.executable`) in place of a leading `python3`, so that it works on a machine where `python3` does not resolve, while `--check-gate` still compares the literal `gate.yml` strings.
 - When the repin fails or the token is missing, the release job fails red after the Release exists. Recovery is the manual repin, documented in `RELEASING.md`. There is no automatic retry, because AC-9 forbids a rerun from sending a request once the tag and Release exist.
 
 ---
@@ -49,11 +51,11 @@ Steps use checkbox syntax and phases run in order. A phase is done when every st
 | P1 | One test command runs every check the gate job runs, and CI fails when the two drift | N/A (prerequisite for AC-2's test command and AC-7) | agent | Not started |
 | P2 | The version-parity gate checks every surface the configuration lists | AC-3 | agent | Not started |
 | P3 | The pull request checks exist, run in the gate job, and rerun on title and body edits | AC-1, AC-2, AC-4, AC-5, AC-6, AC-17 | agent | Not started |
-| P4 | The release decision and the workflow's shape are scripts with self-tests | AC-7, AC-9, AC-10, AC-11, AC-12 (by fixture) | agent | Not started |
+| P4 | The release decision and the workflow's shape are scripts with self-tests | AC-7 to AC-12 (by fixture) | agent | Not started |
 | P5 | `plab-ship` 1.2.0 states the bump rule and the tag owner, and the repository's rule texts agree | AC-14, AC-15, AC-16 | agent | Not started |
-| P6 | The last manual release ships P1 to P5, and the installs carry `plab-ship` 1.2.0 | N/A (release bookkeeping) | agent; maintainer installs | Not started |
+| P6 | The last manual release ships P1 to P5, and the installs carry `plab-ship` 1.2.0 | N/A (release bookkeeping) | maintainer types `/plab-ship --release` and updates the installs; agent repins | Not started |
 | P7 | This repository opts in: `RELEASING.md`, the configuration and the release workflow land together | AC-1, AC-9, AC-12, AC-13 (live) | agent; blocked on maintainer: D6 rule amendment, token | Not started |
-| P8 | The first release through the pipeline, with the maintainer's go-ahead | AC-7, AC-8, AC-11 (live) | agent; maintainer go-ahead | Not started |
+| P8 | The first release through the pipeline, with the maintainer's go-ahead | AC-7, AC-8, AC-11 (live) | maintainer types `/plab-ship`; agent reads the run | Not started |
 
 Pull request grouping: P1 to P3 in one pull request, P4 and P5 in a second, P6 is the release pull request, and P7 is the opt-in pull request. P7 must be last, because the release workflow and the opt-in files switch the pipeline on together (see Rollback).
 
@@ -83,7 +85,7 @@ Pull request grouping: P1 to P3 in one pull request, P4 and P5 in a second, P6 i
 
 ## Phase 2: The version-parity gate checks the configured surfaces
 
-**Goal:** `scripts/version-parity-check.py` gains location L7, read only when `.github/release-on-merge.json` exists. Every surface the configuration lists must carry `library.json`'s version, and a disagreement is a finding naming the file. This extends the existing gate, as the spec's Requirement 2 proposes, rather than adding a second one.
+**Goal:** `scripts/version-parity-check.py` gains location L7, read only when both `RELEASING.md` and `.github/release-on-merge.json` exist, so that a half-done opt-in checks nothing, as AC-1 requires. Every surface the configuration lists must carry `library.json`'s version, and a disagreement is a finding naming the file. This extends the existing gate, as the spec's Requirement 2 proposes, rather than adding a second one.
 
 **Files:**
 - Modify `scripts/version-parity-check.py`
@@ -91,11 +93,11 @@ Pull request grouping: P1 to P3 in one pull request, P4 and P5 in a second, P6 i
 **Fulfills:** AC-3
 
 **Steps:**
-- [ ] Add L7 to the docstring's location list: "`.github/release-on-merge.json`'s `surfaces`. Read only when that file exists. Each entry is `{\"path\": ..., \"json\": \"<dotted key>\"}` or `{\"path\": ..., \"pattern\": \"<regex with one group>\"}`; each must yield exactly one version equal to `library.json`'s." Remove the docstring's sentence that manifests are the toolkit's job only, and say they are now read when configured.
+- [ ] Add L7 to the docstring's location list: "`.github/release-on-merge.json`'s `surfaces`. Read only when that file and `RELEASING.md` both exist. Each entry is `{\"path\": ..., \"json\": \"<dotted key>\"}` or `{\"path\": ..., \"pattern\": \"<regex with one group>\"}`; each must yield exactly one version equal to `library.json`'s." Remove the docstring's sentence that manifests are the toolkit's job only, and say they are now read when configured.
 - [ ] A surface whose file is missing, whose key is absent, or whose pattern matches zero or several times is BROKEN (exit 2), for the same reason an empty location is BROKEN today: a matcher that has gone blind must not read as clean.
 - [ ] L7 runs on every pull request, not only bumping ones. Surfaces that must always agree should agree between releases too, which is stricter than AC-3 and does not contradict it.
 - [ ] The CHANGELOG heading and the `HISTORY.md` Release cells are not L7 surfaces: they hold many versions by design. P3 checks them.
-- [ ] Self-test cases: no configuration file (L7 silent), all surfaces agree, one JSON surface disagrees (finding names the file), one pattern matches twice (BROKEN).
+- [ ] Self-test cases: no configuration file (L7 silent), the configuration without `RELEASING.md` (L7 silent), all surfaces agree, one JSON surface disagrees (finding names the file), one pattern matches twice (BROKEN).
 
 **Verification:** `python3 scripts/version-parity-check.py` exits 0 on this repository, which has no configuration yet. With a temporary configuration listing `.claude-plugin/plugin.json` and its `version` edited to `9.9.9`, it exits 1 and names `.claude-plugin/plugin.json`.
 
@@ -137,7 +139,7 @@ Pull request grouping: P1 to P3 in one pull request, P4 and P5 in a second, P6 i
 - Create `scripts/release-on-merge.py`
 - Modify `.github/workflows/gate.yml` (one step in `document-gates`), `scripts/run-tests.py` (`COMMANDS`)
 
-**Fulfills:** AC-7, AC-9, AC-10, AC-11, AC-12 (by fixture; live proof in P7 and P8)
+**Fulfills:** AC-7 to AC-12 (by fixture; live proof in P7 and P8)
 
 **Steps:**
 - [ ] `decide [--gh <path>]` writes `key=value` lines to `$GITHUB_OUTPUT` when it is set, and to stdout always. It reads the opt-in files, `library.json`'s version, whether tag `v<version>` exists (`git tag -l` after a full fetch), and whether its Release exists (`gh release view v<version>`, exit 0 or not). The decision table:
@@ -151,8 +153,8 @@ Pull request grouping: P1 to P3 in one pull request, P4 and P5 in a second, P6 i
   | yes | no | yes | exit 2, a Release without its tag is a state no step here creates | |
 
   It also outputs `version`, `tag`, `marketplace` and `test_command`.
-- [ ] `workflow-check [<file>]` reads `.github/workflows/release-on-merge.yml` and `gate.yml`'s `document-gates` job as text and fails when: any `uses:` names an owner other than `actions` (AC-12); any step containing `gh release create` comes before the step that runs the test command, or carries an `if:` with `always()` or `failure()` (AC-7); the file has no `concurrency:` group with `cancel-in-progress: false` (the spec's reliability requirement); or a `run:` line interpolates `${{ github.event`.
-- [ ] Self-test, run first: the five table rows with a fake `gh` script that answers `release view` from a fixture; `workflow-check` against a correct fixture workflow and against four mutations (a third-party `uses:`, publish before test, `if: always()` on publish, no concurrency), each of which must fail.
+- [ ] `workflow-check [<file>]` reads `.github/workflows/release-on-merge.yml` and `gate.yml`'s `document-gates` job as text and fails when: any `uses:` names an owner other than `actions` (AC-12); any step containing `gh release create` comes before the step that runs the test command, or carries an `if:` with `always()` or `failure()` (AC-7); `gh release create` appears in more than one job, or without `--notes-file` (AC-8); the `dispatches` call has no `if:` on the decision's `repin` output (AC-11); the file has no `concurrency:` group with `cancel-in-progress: false` (the spec's reliability requirement); or a `run:` line interpolates `${{ github.event`.
+- [ ] Self-test, run first: the five table rows with a fake `gh` script that answers `release view` from a fixture; `workflow-check` against a correct fixture workflow and against six mutations (a third-party `uses:`, publish before test, `if: always()` on publish, a publish step without `--notes-file`, an unconditioned dispatch, no concurrency), each of which must fail.
 - [ ] Add `- name: The release workflow decision and shape prove themselves` / `if: always()` / `run: python3 scripts/release-on-merge.py --self-test` to `document-gates`, and to `COMMANDS`.
 
 **Verification:** `python3 scripts/release-on-merge.py --self-test` exits 0, and `python3 scripts/release-on-merge.py decide` on this repository prints `action=none`. Removing the tag-exists branch makes the self-test exit 2 and name the `release-only` row.
@@ -172,10 +174,13 @@ Pull request grouping: P1 to P3 in one pull request, P4 and P5 in a second, P6 i
 
 **Steps:**
 - [ ] `derive-ship-facts.py`: add `"on_merge": (repo / "RELEASING.md").is_file() and (repo / ".github/release-on-merge.json").is_file()` to the `release` facts beside `plugin_repo` (line 427). Add a test for both values.
-- [ ] `SKILL.md` line 92, heading. Before: `### 7. Release, only with `--release``. After: `### 7. Release`.
-- [ ] `SKILL.md` line 94. Before: "Without the flag, create no version, tag or release. Write that the release was not approved in the record's Release section, and go to step 8." After, as two paragraphs ahead of it:
+- [ ] `SKILL.md` step 3 ("Document each branch, on the branch", line 52), which runs before verification and the merge, so the bump becomes part of the verified commit. After the line "Commit the documentation to the branch and push it." (line 61), add a paragraph:
 
-  "**When `release.on_merge` is true**, the repository releases on merge and needs no flag. Decide for each branch, before it is verified, whether it releases, because the bump is part of the branch. Bump for a change to what users run: a skill's `SKILL.md`, its scripts, its references, or `lib/`. Do not bump for internal material only: CI, internal documents, release plans or tests. You may hold a bump back to group several pull requests into one release; name every held-back bump in the report. When the branch releases, size the version with the table below against everything merged since `release.latest_version_tag`, set it in every surface `.github/release-on-merge.json` lists, fill every `Unreleased` Release cell in `skills/*/HISTORY.md` with the new tag, add the CHANGELOG section, and, when the branch changes a skill's description or body, put a `Behaviour evals: N/M passed` line from a local `claude plugin eval . --no-publish` run in the pull request body. Push no tag and create no GitHub Release: after the merge, the release workflow reruns the tests, tags and publishes. Confirm that its run succeeded, and record the version, its `**Why:**` line and the run's result in the Release section."
+  "**When `release.on_merge` is true**, the repository releases on merge and needs no flag, so decide here, for each branch, whether it releases. Bump for a change to what users run: a skill's `SKILL.md`, its scripts, its references, or `lib/`. Do not bump for internal material only: CI, internal documents, release plans or tests. You may hold a bump back to group several pull requests into one release; name every held-back bump in the report. When the branch releases, size the version with the table in step 7 against everything merged since `release.latest_version_tag`, and give the pull request a conventional title whose type matches that size (`fix` for a patch, `feat` for a minor, `!` for a breaking change), because the pull request check sizes the bump from the titles. Then set the version in every surface `.github/release-on-merge.json` lists, fill every `Unreleased` Release cell in `skills/*/HISTORY.md` with the new tag, add the CHANGELOG section, and, when the branch changes a skill's description or body, put a `Behaviour evals: N/M passed` line from a local `claude plugin eval . --no-publish` run in the pull request body. Commit and push these with the documentation."
+- [ ] `SKILL.md` line 92, heading. Before: `### 7. Release, only with `--release``. After: `### 7. Release`.
+- [ ] `SKILL.md` line 94. Before: "Without the flag, create no version, tag or release. Write that the release was not approved in the record's Release section, and go to step 8." After, as two paragraphs in its place:
+
+  "**When `release.on_merge` is true**, the version was decided in step 3 and merged in step 6. Push no tag and create no GitHub Release: the release workflow reruns the tests on the merged commit, then tags and publishes. Confirm that its run succeeded, and record the version, its `**Why:**` line and the run's result in the Release section, or that the bump was held back and why. Then go to step 8."
 
   "**Otherwise, release only with `--release`.** Without the flag, create no version, tag or release. Write that the release was not approved in the record's Release section, and go to step 8."
 - [ ] `SKILL.md` line 157. Before: "- **No version without the flag.** A merge never creates a tag or a release on its own." After: "- **No version without the flag, except where the repository releases on merge.** Elsewhere a merge never creates a tag or a release on its own. Where `release.on_merge` is true, the version travels in the pull request, and the release workflow, never this skill, creates the tag and the Release."
@@ -200,7 +205,7 @@ Pull request grouping: P1 to P3 in one pull request, P4 and P5 in a second, P6 i
 **Fulfills:** N/A (release bookkeeping)
 
 **Steps:**
-- [ ] Run `/plab-ship --release`. The tag and the Release need the maintainer's yes, which `--release` gives for that run.
+- [ ] The maintainer types `/plab-ship --release`. The skill is manual-only, and the tag and the Release need the maintainer's yes, which `--release` gives for that run, so an agent cannot start this phase on its own.
 - [ ] Repin `prisant-labs/agent-plugins` (pre-approved), and ask the maintainer to update the Claude Code and Codex installs.
 - [ ] Prove the install with a behaviour only 1.2.0 has: the facts report `release.on_merge`.
 
@@ -222,7 +227,7 @@ Pull request grouping: P1 to P3 in one pull request, P4 and P5 in a second, P6 i
 - [ ] `.github/release-on-merge.json`: `surfaces` for `library.json` (`version`), `.claude-plugin/plugin.json` (`version`), `.codex-plugin/plugin.json` (`version`), `manifest.generated.json` (its version key, read the file first), and `docs/status-skills.md` (pattern `^\*\*Plugin version:\*\* (\d+\.\d+\.\d+)`); `test_command` `python3 scripts/run-tests.py`; `plugin` `{"repin": true, "marketplace": "prisant-labs/agent-plugins"}`.
 - [ ] `release-on-merge.yml`: `on: push: branches: [main]`; `permissions: contents: write`; `concurrency: { group: release-on-merge, cancel-in-progress: false }`; one job. Steps: `actions/checkout` with `fetch-depth: 0`; `actions/setup-python`; `python3 scripts/release-on-merge.py decide` (id `decide`, `GH_TOKEN: ${{ github.token }}`); when `action` is not `none`: install `ripgrep` and `pyyaml`, run the test command through `env: TEST_COMMAND` and `bash -c "$TEST_COMMAND"`, extract the notes with `scripts/release-notes-from-changelog.py`, then publish. For `tag-and-release`, `gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --notes-file release-notes.md`, which creates the tag and the Release in one call (AC-8). For `release-only`, the same with `--verify-tag` in place of `--target` (AC-10). Then, when `repin` is true, `gh api "repos/$MARKETPLACE/dispatches" -f event_type=repin-plugin -f "client_payload[plugin]=prisant-powertools" -f "client_payload[version]=$VERSION" -f "client_payload[tag]=$TAG" -f "client_payload[sha]=$GITHUB_SHA"` with `GH_TOKEN: ${{ secrets.MARKETPLACE_REPIN_TOKEN }}`, failing with a named message when the secret is empty.
 - [ ] A tag created with the default workflow token starts no other workflow, so `publish-release.yml` does not fire twice. Its header gains: "In a repository that releases on merge, `release-on-merge.yml` creates the tag and the Release together; this workflow serves only a tag pushed by hand."
-- [ ] `RELEASING.md`, three sections (AC-13): **What a merge does** (the decision table in plain English, and that a merge without a version bump releases nothing); **How to stop it** (disable the workflow in the repository's Actions settings, or delete `.github/release-on-merge.json`, which turns every check and the workflow into no-ops); **Undoing a bad release** (publish a new patch release; a published version is never withdrawn by deleting its tag, because installs and the marketplace may already point at it). Add **When the repin fails**: the Release exists, the job is red, and the repin is done by hand in `prisant-labs/agent-plugins` as before; until that repository's receiver exists, every repin is by hand and the dispatch only proves the token.
+- [ ] `RELEASING.md`, three sections (AC-13): **What a merge does** (the decision table in plain English, and that a merge without a version bump releases nothing); **How to stop it** (the off switch is deleting `.github/release-on-merge.json`, which turns every check, `plab-ship`'s on-merge path and the workflow into no-ops in one commit; disabling the workflow in the repository's Actions settings is only a pause, because `plab-ship` keeps bumping versions and the first push after re-enabling it tags the pending one); **Undoing a bad release** (publish a new patch release; a published version is never withdrawn by deleting its tag, because installs and the marketplace may already point at it). Add **When the repin fails**: the Release exists, the job is red, and the repin is done by hand in `prisant-labs/agent-plugins` as before; until that repository's receiver exists, every repin is by hand and the dispatch only proves the token.
 - [ ] `release-checklist.yaml` header: the paragraph saying "Nothing else changes. The workflow chooses no version and writes no file; every row below is still a human edit." gains "In this repository, which releases on merge, these rows are edited in the pull request that carries the release, and `release-on-merge.yml` tags it."
 - [ ] Run `python3 scripts/release-on-merge.py workflow-check` and `python3 scripts/release-check.py` (which no longer prints `NOT OPTED IN`) before opening the pull request.
 
@@ -239,7 +244,7 @@ Pull request grouping: P1 to P3 in one pull request, P4 and P5 in a second, P6 i
 **Fulfills:** AC-7, AC-8, AC-11 (live)
 
 **Steps:**
-- [ ] With the maintainer's go-ahead, ship one small user-facing fix through `/plab-ship` without `--release`. The pull request carries the bump and passes the P3 checks.
+- [ ] The maintainer types `/plab-ship` on one small user-facing fix, without `--release`. The skill is manual-only, so an agent does not start this run. The pull request carries the bump and passes the P3 checks.
 - [ ] After the merge, read the release workflow's run: tests passed, then the tag and the Release appeared in the same job, then the dispatch returned 204. A 403 from the dispatch means the token's permission is wrong: report it to the maintainer, and repin by hand.
 - [ ] Record the result in this phase as the CS-01 plan records its live runs.
 

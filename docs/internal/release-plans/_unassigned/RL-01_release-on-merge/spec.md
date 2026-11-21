@@ -192,7 +192,7 @@ The merge check asks the maintainer whenever a workflow that runs on a push to t
 |------|--------|------|-------------|
 | 2026-11-21 | claude (Opus 5.5) | added | Initial draft from the release-on-merge proposal and its decision walk |
 | 2026-11-21 | claude (Opus 5.5) | clarified | Before first merge, after an advisor review: the size check reads every title since the tag; the surface list adds the `HISTORY.md` Release cells; the eval trigger excludes `metadata.version`; AC-9 requires the Release too; AC-12 allows only `actions` actions; AC-15 to AC-17 added for the bump rule, the tag owner and the `Unreleased` cells |
-| 2026-11-21 | claude (Opus 5.5) | clarified | The implementation plan closed three Gaps: titles are read from merge-commit bodies with git alone, the dispatch endpoint needs Contents write (medium-high confidence, proven live in the plan's Phase 8), and the names are `.github/release-on-merge.json` and `MARKETPLACE_REPIN_TOKEN`. No acceptance criterion changed |
+| 2026-11-21 | claude (Opus 5.5) | clarified | The implementation plan closed three Gaps: titles are read from merge-commit bodies with git alone, the dispatch endpoint needs Contents write (medium-high confidence, proven live in the plan's Phase 8), and the names are `.github/release-on-merge.json` and `MARKETPLACE_REPIN_TOKEN`. Of Requirement 2's seven surfaces, the configuration lists the five that hold one version; the CHANGELOG heading and the `HISTORY.md` Release cells are checked by AC-5 and AC-17. No acceptance criterion changed |
 
 ## Sources & Evidence
 
