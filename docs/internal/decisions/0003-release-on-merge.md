@@ -46,7 +46,7 @@ The agent decides whether a pull request releases, and gives it a version. The r
 
 - Releasing by hand is today's process, and today's process is the problem.
 - `/plab-ship` alone would leave every step to the model, and a merge made outside the skill would release nothing.
-- release-please releases only when its own pull request merges, generates its CHANGELOG from commit subjects, and had not reached cutover after four months in a sibling repository.
+- release-please releases only when its own pull request merges, and generates its CHANGELOG from commit subjects. A sibling repository has run it in shadow since July 2026 and, read from its commit subjects (medium confidence), still cut its recent releases by hand.
 
 ## More Information
 

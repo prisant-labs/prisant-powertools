@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **A draft specification for releasing on merge, and the decision record behind it.** [RL-01 (release on merge)](docs/internal/release-plans/_unassigned/RL-01_release-on-merge/spec.md) sets out fourteen acceptance criteria for a pipeline in which `/plab-ship` stays the one command and scripts do the tag, the GitHub Release and the marketplace repin request. [ADR-3 (release on merge)](docs/internal/decisions/0003-release-on-merge.md) records why that pipeline was chosen over releasing by hand, letting `/plab-ship` perform every step, or a release bot. Nothing changes for users yet: releases stay manual until the pipeline is built.
+- **A draft specification for releasing on merge, and the decision record behind it.** [RL-01 (release on merge)](docs/internal/release-plans/_unassigned/RL-01_release-on-merge/spec.md) sets out seventeen acceptance criteria for a pipeline in which `/plab-ship` stays the one command and scripts do the tag, the GitHub Release and the marketplace repin request. [ADR-3 (release on merge)](docs/internal/decisions/0003-release-on-merge.md) records why that pipeline was chosen over releasing by hand, letting `/plab-ship` perform every step, or a release bot. Nothing changes for users yet: releases stay manual until the pipeline is built.
 
 ## [0.14.1] - 2026-11-17
 
