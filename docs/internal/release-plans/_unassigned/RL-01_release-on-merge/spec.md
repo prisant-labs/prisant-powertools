@@ -6,7 +6,7 @@ status: draft
 created: 2026-11-21
 updated: 2026-11-21
 linked-effort: "the maintainer's private release-on-merge proposal of 2026-11-13 and its decision walk of 2026-11-20 to 2026-11-21, which decided D1 to D7"
-linked-plan: null
+linked-plan: implementation-plan.md
 linked-release: null
 ac-count: 17
 source-count: 10
@@ -19,10 +19,10 @@ priority: P1
 ## Task Summary
 
 **Status:** draft
-**Last updated:** 2026-11-21 by claude (Opus 5.5), revised after an advisor review of PR 98
-**Linked plan:** not yet planned
+**Last updated:** 2026-11-21 by claude (Opus 5.5), when the implementation plan was written
+**Linked plan:** [implementation-plan.md](implementation-plan.md), eight phases, not started
 **Open questions:** 0 (see Open Questions / Decisions)
-**Revisions:** 2 (see Revisions)
+**Revisions:** 3 (see Revisions)
 
 ### Acceptance Criteria Fulfillment
 
@@ -192,6 +192,7 @@ The merge check asks the maintainer whenever a workflow that runs on a push to t
 |------|--------|------|-------------|
 | 2026-11-21 | claude (Opus 5.5) | added | Initial draft from the release-on-merge proposal and its decision walk |
 | 2026-11-21 | claude (Opus 5.5) | clarified | Before first merge, after an advisor review: the size check reads every title since the tag; the surface list adds the `HISTORY.md` Release cells; the eval trigger excludes `metadata.version`; AC-9 requires the Release too; AC-12 allows only `actions` actions; AC-15 to AC-17 added for the bump rule, the tag owner and the `Unreleased` cells |
+| 2026-11-21 | claude (Opus 5.5) | clarified | The implementation plan closed three Gaps: titles are read from merge-commit bodies with git alone, the dispatch endpoint needs Contents write (medium-high confidence, proven live in the plan's Phase 8), and the names are `.github/release-on-merge.json` and `MARKETPLACE_REPIN_TOKEN`. No acceptance criterion changed |
 
 ## Sources & Evidence
 
@@ -219,10 +220,10 @@ The proposal and the walk are private documents, so their substance is summarize
 
 ### Gaps
 
-- Whether a fine-grained token with contents read and write is enough to send a repository dispatch to the marketplace. Medium-high confidence from GitHub's permission model; the implementation plan should confirm it against current GitHub documentation.
-- How the size check reads pull request titles merged since a tag, given that this repository uses merge commits whose subjects are "Merge pull request #N". The implementation plan decides between the GitHub API and the merged branches' own commit subjects.
+- Closed by the implementation plan: whether a fine-grained token with contents write can send a repository dispatch. GitHub's fine-grained permission reference lists the dispatch endpoint under Contents, write. Medium-high confidence, because the page was read through a summarizing fetcher; the plan's Phase 8 proves it with the first real dispatch.
+- Closed by the implementation plan: how the size check reads titles. A GitHub merge commit carries the pull request title as the first line of its body, so git alone suffices.
 - Whether Codex updates a plugin on its own after a repin. Not verified.
-- The exact names of the configuration file and the repin secret. The implementation plan fixes them; `MARKETPLACE_REPIN_TOKEN` is a placeholder.
+- Closed by the implementation plan: the names are `.github/release-on-merge.json` and `MARKETPLACE_REPIN_TOKEN`.
 
 ## Open Questions / Decisions
 
