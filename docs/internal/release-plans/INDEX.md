@@ -61,7 +61,7 @@ Specs written before being assigned to a release: the documented default home `/
 | [H-06](_unassigned/H-06_optional-release-plan-version/spec.md) | optional release plan version | H (hygiene and repo-wide) | draft | (no implementation plan yet) | P3 | Yes |
 | [PH-01](_unassigned/PH-01_pages-hub/spec.md) | pages hub | PH (pages-hub roadmap item) | draft | (no implementation plan yet) | P3 | Yes |
 | [PP-01](_unassigned/PP-01_project-pulse/spec.md) | project pulse | PP (project-pulse roadmap item) | committed | in-progress | P2 | Yes |
-| [RL-01](_unassigned/RL-01_release-on-merge/spec.md) | release on merge | RL (release pipeline roadmap item) | draft | (no implementation plan yet) | P1 | Yes |
+| [RL-01](_unassigned/RL-01_release-on-merge/spec.md) | release on merge | RL (release pipeline roadmap item) | draft | draft | P1 | Yes |
 | [RM-01](_unassigned/RM-01_profile-readme/spec.md) | profile readme | RM (profile-readme roadmap item) | committed | draft | P2 | Yes |
 | [SH-01](_unassigned/SH-01_ship-skill/spec.md) | ship skill | SH (ship-skill roadmap item) | committed | (no implementation plan yet) | P2 | Yes |
 | [UA-01](_unassigned/UA-01_usage-audit/spec.md) | usage audit | UA (usage-audit roadmap item) | committed | in-progress | P2 | Yes |
@@ -101,7 +101,7 @@ One row per effort, grouped by release in sequence order (see the Release column
 | [H-06](_unassigned/H-06_optional-release-plan-version/spec.md) | optional release plan version | H (hygiene and repo-wide) | draft | (no implementation plan yet) | `_unassigned/` | - | P3 | Yes |
 | [PH-01](_unassigned/PH-01_pages-hub/spec.md) | pages hub | PH (pages-hub roadmap item) | draft | (no implementation plan yet) | `_unassigned/` | - | P3 | Yes |
 | [PP-01](_unassigned/PP-01_project-pulse/spec.md) | project pulse | PP (project-pulse roadmap item) | committed | in-progress | `_unassigned/` | - | P2 | Yes |
-| [RL-01](_unassigned/RL-01_release-on-merge/spec.md) | release on merge | RL (release pipeline roadmap item) | draft | (no implementation plan yet) | `_unassigned/` | - | P1 | Yes |
+| [RL-01](_unassigned/RL-01_release-on-merge/spec.md) | release on merge | RL (release pipeline roadmap item) | draft | draft | `_unassigned/` | - | P1 | Yes |
 | [RM-01](_unassigned/RM-01_profile-readme/spec.md) | profile readme | RM (profile-readme roadmap item) | committed | draft | `_unassigned/` | - | P2 | Yes |
 | [SH-01](_unassigned/SH-01_ship-skill/spec.md) | ship skill | SH (ship-skill roadmap item) | committed | (no implementation plan yet) | `_unassigned/` | - | P2 | Yes |
 | [UA-01](_unassigned/UA-01_usage-audit/spec.md) | usage audit | UA (usage-audit roadmap item) | committed | in-progress | `_unassigned/` | - | P2 | Yes |
