@@ -4,7 +4,7 @@ title: "Implementation plan: release on merge"
 type: implementation-plan
 status: draft
 created: 2026-11-21
-updated: 2026-11-21
+updated: 2026-11-22
 linked-spec: spec.md
 linked-release: null
 ac-coverage: complete
@@ -48,7 +48,7 @@ Steps use checkbox syntax and phases run in order. A phase is done when every st
 
 | Phase | Goal | Fulfills AC | Owner | Status |
 |---|---|---|---|---|
-| P1 | One test command runs every check the gate job runs, and CI fails when the two drift | N/A (prerequisite for AC-2's test command and AC-7) | agent | Not started |
+| P1 | One test command runs every check the gate job runs, and CI fails when the two drift | N/A (prerequisite for AC-2's test command and AC-7) | agent | Done (2026-11-22) |
 | P2 | The version-parity gate checks every surface the configuration lists | AC-3 | agent | Not started |
 | P3 | The pull request checks exist, run in the gate job, and rerun on title and body edits | AC-1, AC-2, AC-4, AC-5, AC-6, AC-17 | agent | Not started |
 | P4 | The release decision and the workflow's shape are scripts with self-tests | AC-7 to AC-12 (by fixture) | agent | Not started |
@@ -72,14 +72,16 @@ Pull request grouping: P1 to P3 in one pull request, P4 and P5 in a second, P6 i
 **Fulfills:** N/A (prerequisite for AC-2's test command and AC-7)
 
 **Steps:**
-- [ ] `run-tests.py` holds `COMMANDS`, a list of the exact `run:` strings of the `python3 ...` steps in the `dash-check` and `document-gates` jobs, in job order. It runs each through `bash -c`, runs every one even after a failure, and prints one PASS or FAIL line per command and a summary. Exit 1 when any command exits non-zero.
-- [ ] Setup lines are excluded by rule, not by list: a `run:` that does not start with `python3 ` (the `apt-get install ripgrep` step) is not a test. The `run-tests.py --check-gate` step excludes itself.
-- [ ] `--check-gate [--workflow .github/workflows/gate.yml]` parses the two jobs' `run:` lines without a YAML library: find `  <job-id>:` at two-space indent, then each `run: ` value inside it until the next two-space key. Compare the sets. Exit 1 naming each command present on one side only.
-- [ ] The toolkit grading in `standard-gate` is deliberately not in the list. It is a `product-on-purpose` action, AC-12 bars it from the release workflow, and `gate.yml` still runs it on every push to `main`, which includes the merge commit.
-- [ ] Self-test, run first on every invocation: a fixture workflow with one extra and one missing command must make `--check-gate` fail; a fixture where one command exits 1 must make the runner exit 1.
-- [ ] Add to `document-gates`, after the existing steps: `- name: The release test command matches this job` / `if: always()` / `run: python3 scripts/run-tests.py --check-gate`.
+- [x] `run-tests.py` holds `COMMANDS`, a list of the exact `run:` strings of the `python3 ...` steps in the `dash-check` and `document-gates` jobs, in job order. It runs every one even after a failure, and prints one PASS or FAIL line per command and a summary. Exit 1 when any command exits non-zero. *As built:* no shell is used. Each command is split on `&&` with `shlex`, each part runs directly with `sys.executable` in place of `python3`, and any other shell syntax is refused as exit 2, because a bare `bash` on Windows can resolve to WSL.
+- [x] Setup lines are excluded by rule, not by list: a `run:` that does not start with `python3 ` (the `apt-get install ripgrep` step) is not a test. The `run-tests.py --check-gate` step excludes itself.
+- [x] `--check-gate [--workflow .github/workflows/gate.yml]` parses the two jobs' `run:` lines without a YAML library: find `  <job-id>:` at two-space indent, then each `run: ` value inside it until the next two-space key. Compare the sets. Exit 1 naming each command present on one side only.
+- [x] The toolkit grading in `standard-gate` is deliberately not in the list. It is a `product-on-purpose` action, AC-12 bars it from the release workflow, and `gate.yml` still runs it on every push to `main`, which includes the merge commit.
+- [x] Self-test, run first on every invocation: a fixture workflow with one extra and one missing command must make `--check-gate` fail; a fixture where one command exits 1 must make the runner exit 1.
+- [x] Add to `document-gates`, after the existing steps: `- name: The release test command matches this job` / `if: always()` / `run: python3 scripts/run-tests.py --check-gate`.
 
-**Verification:** `python3 scripts/run-tests.py --check-gate` exits 0 and prints the command count. Deleting one entry from `COMMANDS` makes it exit 1 and name that command. `python3 scripts/run-tests.py` exits 0 on a clean checkout, after `pip install pyyaml` and with `rg` on the path.
+**Verification (run 2026-11-22):** `--check-gate` printed `CLEAN: run-tests.py and the dash-check and document-gates jobs name the same 38 command(s).` Five mutations were each caught: deleting the `test-ship-scripts.py` entry gave exit 1 naming it, and blinding the drift comparison, stopping the runner at the first failure, counting setup lines, or accepting a block scalar each failed the self-test with exit 2. The full run's result is in the pull request.
+
+**Verification (as planned):** `python3 scripts/run-tests.py --check-gate` exits 0 and prints the command count. Deleting one entry from `COMMANDS` makes it exit 1 and name that command. `python3 scripts/run-tests.py` exits 0 on a clean checkout, after `pip install pyyaml` and with `rg` on the path.
 
 ---
 
