@@ -57,7 +57,7 @@ Steps use checkbox syntax and phases run in order. A phase is done when every st
 | P7 | This repository opts in: `RELEASING.md`, the configuration and the release workflow land together | AC-1, AC-9, AC-12, AC-13 (live) | agent; blocked on maintainer: D6 rule amendment, token | Not started |
 | P8 | The first release through the pipeline, with the maintainer's go-ahead | AC-7, AC-8, AC-11 (live) | maintainer types `/plab-ship`; agent reads the run | Not started |
 
-Pull request grouping: P1 to P3 in one pull request, P4 and P5 in a second, P6 is the release pull request, and P7 is the opt-in pull request. P7 must be last, because the release workflow and the opt-in files switch the pipeline on together (see Rollback).
+Pull request grouping: P1 in its own pull request (it was approved on its own, and it stands alone), P2 and P3 in a second, P4 and P5 in a third, P6 is the release pull request, and P7 is the opt-in pull request. P7 must be last, because the release workflow and the opt-in files switch the pipeline on together (see Rollback).
 
 ---
 

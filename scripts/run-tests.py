@@ -208,7 +208,11 @@ def run_one(command: str, cwd: Path, python: str):
     return 0, "".join(output)
 
 
-def run_all(commands: list, cwd: Path, python: str, echo=print) -> list:
+def flushed(line: str):
+    print(line, flush=True)
+
+
+def run_all(commands: list, cwd: Path, python: str, echo=flushed) -> list:
     """Run every command, even after a failure. Returns (command, code) pairs."""
     results = []
     for command in commands:
@@ -359,9 +363,9 @@ def main() -> int:
     results = run_all(COMMANDS, ROOT, sys.executable)
     failed = [c for c, code in results if code != 0]
     if failed:
-        print("FINDINGS: %d of %d command(s) failed." % (len(failed), len(results)))
+        print("FINDINGS: %d of %d command(s) failed." % (len(failed), len(results)), flush=True)
         return 1
-    print("CLEAN: all %d command(s) passed." % len(results))
+    print("CLEAN: all %d command(s) passed." % len(results), flush=True)
     return 0
 
 
