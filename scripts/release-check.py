@@ -669,6 +669,11 @@ def _self_test(fx, fails):
     fx.write_state(plain, "0.14.2", section=False, history=ok_history)
     expect("AC-5: a bump with no CHANGELOG section", run_checks(plain, pr_title="fix: x"), want_clean=False, has="CHANGELOG.md")
 
+    nochangelog = fx.fresh("0.14.1")
+    fx.write_state(nochangelog, "0.14.2", history=ok_history)
+    (nochangelog / "CHANGELOG.md").unlink()
+    broken("AC-5: CHANGELOG.md missing, so the extractor exits 2", lambda: run_checks(nochangelog, pr_title="fix: x"))
+
     fx.write_state(plain, "0.14.2", history=[("1.0.1", "Unreleased"), ("1.0.0", "v0.14.1")])
     expect("AC-17: a bump with an Unreleased row", run_checks(plain, pr_title="fix: x"), want_clean=False,
            has="skills/plab-a/HISTORY.md: the row for 1.0.1")
