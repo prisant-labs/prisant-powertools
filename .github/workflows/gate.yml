@@ -352,3 +352,14 @@ jobs:
       - name: The dispatch helper, against a fake companion
         if: always()
         run: python3 skills/plab-ai-review/scripts/test-dispatch.py
+
+      # RL-01 (release on merge). scripts/run-tests.py is the one test command
+      # the release workflow reruns on the merged commit before it tags, and
+      # it holds a copy of every python3 step in this job and in dash-check.
+      # This step fails when the copy and these steps differ, so a check added
+      # here without being added there cannot be skipped by a release. Keep
+      # this step last; it excludes itself from the comparison.
+      # Exit 2 means the checker could not prove itself. Never read it as clean.
+      - name: The release test command matches this job
+        if: always()
+        run: python3 scripts/run-tests.py --check-gate

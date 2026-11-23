@@ -4,7 +4,7 @@ title: "Release on merge: a deterministic release pipeline driven by plab-ship"
 type: spec
 status: draft
 created: 2026-11-21
-updated: 2026-11-21
+updated: 2026-11-22
 linked-effort: "the maintainer's private release-on-merge proposal of 2026-11-13 and its decision walk of 2026-11-20 to 2026-11-21, which decided D1 to D7"
 linked-plan: implementation-plan.md
 linked-release: null
@@ -20,7 +20,7 @@ priority: P1
 
 **Status:** draft
 **Last updated:** 2026-11-21 by claude (Opus 5.5), when the implementation plan was written
-**Linked plan:** [implementation-plan.md](implementation-plan.md), eight phases, not started
+**Linked plan:** [implementation-plan.md](implementation-plan.md), eight phases, Phase 1 done
 **Open questions:** 0 (see Open Questions / Decisions)
 **Revisions:** 3 (see Revisions)
 
