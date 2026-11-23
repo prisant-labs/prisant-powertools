@@ -22,6 +22,9 @@ name: Gate
 
 on:
   pull_request:
+    # `edited` reruns the gate when a title or body changes, because the release
+    # checks read both (RL-01 AC-4 and AC-6).
+    types: [opened, synchronize, reopened, edited]
   push:
     branches: [main]
 
@@ -352,6 +355,30 @@ jobs:
       - name: The dispatch helper, against a fake companion
         if: always()
         run: python3 skills/plab-ai-review/scripts/test-dispatch.py
+
+      # RL-01 (release on merge). The pull request checks for a release: the
+      # version surfaces agree (that is version-parity above), the bump size
+      # matches the changes since the last tag, the CHANGELOG has the section,
+      # no HISTORY.md row still reads Unreleased, and a skill change carries
+      # its eval line. A repository that has not opted in (RELEASING.md and
+      # .github/release-on-merge.json) prints NOT OPTED IN and passes. The
+      # self-test builds throwaway git repositories and proves each rule fails.
+      # Exit 2 means the checker could not prove itself. Never read it as clean.
+      - name: The release checks prove themselves
+        if: always()
+        run: python3 scripts/release-check.py --self-test
+
+      # The pull request text reaches the script through env:, never through
+      # ${{ }} inside a run: line, because a title is attacker-shaped text.
+      # On a push event the size and eval rules are skipped and the rest run.
+      - name: The release checks, against this pull request
+        if: always() && github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/release-check.py
 
       # RL-01 (release on merge). scripts/run-tests.py is the one test command
       # the release workflow reruns on the merged commit before it tags, and
