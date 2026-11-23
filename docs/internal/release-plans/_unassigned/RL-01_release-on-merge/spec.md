@@ -20,7 +20,7 @@ priority: P1
 
 **Status:** draft
 **Last updated:** 2026-11-21 by claude (Opus 5.5), when the implementation plan was written
-**Linked plan:** [implementation-plan.md](implementation-plan.md), eight phases, Phase 1 done
+**Linked plan:** [implementation-plan.md](implementation-plan.md), eight phases, Phases 1 to 3 done
 **Open questions:** 0 (see Open Questions / Decisions)
 **Revisions:** 3 (see Revisions)
 

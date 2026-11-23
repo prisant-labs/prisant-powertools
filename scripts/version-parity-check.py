@@ -25,7 +25,7 @@ WHY THIS IS A STRUCTURAL CHECK AND NOT A VERSION-STRING SWEEP
 ------------------------------------------------------------
 The obvious implementation, "find every `\\d+\\.\\d+\\.\\d+` in the tracked docs and compare it to something", is the implementation this repository already knows not to write. D-12's path-citation rule scored 13 flags with 11 false positives when a prose rule was mechanized literally (`docs/internal/release-plans/plan_04_gates-that-cannot-fail-open/D-12_path-citation-precision/spec.md`), and the lesson kept from it is "mechanize the structure, never the prose". Version-shaped strings in these documents are overwhelmingly historical: HISTORY tables, "carried through 1.2.1", changelog entries. Every one of those is correct precisely because it does NOT match the current version.
 
-This script therefore reads exactly five structured locations, each of which is a claim about what a version IS RIGHT NOW, and ignores every other version-shaped string in the repository:
+This script therefore reads exactly six structured locations, each of which is a claim about what a version IS RIGHT NOW, and ignores every other version-shaped string in the repository:
 
   L1  Retired 2026-11-10. It was `README.md`'s Skills table. The root README now lists skills as `name - what it does` and claims no per-skill version at all; it links to `docs/status-skills.md` instead, which L2 and L5 already check. A document that states no version cannot drift, so the location was removed rather than re-matched. The label stays unused so that L2 to L6 keep the names older records cite, and `_self_test_root_readme_not_read` proves the README is no longer read.
   L2  `docs/status-skills.md`, the At a glance table. Same row shape, same claim.
@@ -33,6 +33,7 @@ This script therefore reads exactly five structured locations, each of which is 
   L4  `docs/status-skills.md`, the `**Plugin version:**` line. A claim about `library.json`'s version, not a skill's.
   L5  `docs/status-skills.md`, the per-skill section headings in Per-skill detail (a line reading "### " then a backtick-quoted skill name then a version, optionally followed by a comma and a note such as ", explicit only"). One per skill.
   L6  `library.json`'s `components.skills[].version`. One entry per skill, a claim carried by the same manifest the toolkit's manifest generators read.
+  L7  `.github/release-on-merge.json`'s `surfaces` (RL-01, release on merge). Read only when that file and `RELEASING.md` both exist, so a half-done opt-in checks nothing. Each entry is `{"path": ..., "json": "<dotted key>"}` or `{"path": ..., "pattern": "<regex with one group>"}`; each must yield exactly one version, equal to `library.json`'s. A pattern is matched with `re.MULTILINE`, so `^` anchors a line. L7 runs on every pull request and every push, not only on one that bumps: surfaces that must agree at release time should agree between releases too. The CHANGELOG version heading and the `HISTORY.md` Release cells are not L7 surfaces, because they hold many versions by design; `scripts/release-check.py` checks them.
 
 Authoritative sources, never the other way round: a skill's version is whatever `skills/<name>/SKILL.md` says in `metadata.version`, and the library's version is whatever `library.json` says in its top-level `version`. This script never edits either, and never edits the documents; CI reports, it does not fix (`AGENTS.md`, Build and validate).
 
@@ -40,11 +41,11 @@ WHY AN UNPARSEABLE LOCATION IS BROKEN, NOT CLEAN
 ------------------------------------------------
 Each of L2, L3, L5 and L6 is matched by a shape. If someone reformats the At a glance table, renames the `**Version:**` label, changes the section-heading format, or empties `components.skills`, the matcher stops finding claims and this gate goes quiet while the documents drift freely. A gate that reports CLEAN because it has gone blind is worse than no gate, and this repository has been bitten by that exact failure twice: the empty `git tag -l` in v0.5.2, and `AGENTS.md` never loading in the superpowers experiment.
 
-So a location that yields ZERO claims when the repository has skills to claim is BROKEN, not clean. A location that yields SOME claims but is missing a particular skill is a FINDING, because that is real drift: a skill exists and the documentation does not list it.
+So a location that yields ZERO claims when the repository has skills to claim is BROKEN, not clean. L7 follows the same rule for each configured surface: a missing file, an absent key, a pattern that matches nothing or matches twice is BROKEN, because a matcher that has gone blind must not read as clean. A location that yields SOME claims but is missing a particular skill is a FINDING, because that is real drift: a skill exists and the documentation does not list it.
 
 WHAT THIS SCRIPT DELIBERATELY DOES NOT CHECK
 --------------------------------------------
-Whether a version SHOULD have been bumped (Check 4's question, and one that needs git history). Whether `HISTORY.md` has a row for the current version (also Check 4). Whether the generated manifests agree with `library.json`, which is the toolkit's `gen-manifest.mjs` and its own parity gate. Whether a version number is semantically the right increment. And any version-shaped string outside the five locations above, all of which are presumed historical and correct.
+Whether a version SHOULD have been bumped (Check 4's question, and one that needs git history). Whether `HISTORY.md` has a row for the current version (also Check 4). Whether the generated manifests agree with `library.json`, which is the toolkit's `gen-manifest.mjs` and its own parity gate, except where a repository that releases on merge lists a manifest as an L7 surface, in which case this script reads it. Whether a version number is semantically the right increment (`scripts/release-check.py` judges the size of a bump). And any version-shaped string outside the six locations above, all of which are presumed historical and correct.
 """
 
 import argparse
@@ -66,6 +67,8 @@ SECTION_HEADING = re.compile(r'^### `(plab-[a-z0-9-]+)` (\d+\.\d+\.\d+)(?:,.*)?$
 README_REL = "README.md"
 STATUS_REL = "docs/status-skills.md"
 LIBRARY_REL = "library.json"
+RELEASING_REL = "RELEASING.md"
+RELEASE_CONFIG_REL = ".github/release-on-merge.json"
 
 
 class Broken(Exception):
@@ -298,6 +301,65 @@ def check_library_components(repo_root, declared):
     return findings
 
 
+def _dotted_value(data, dotted):
+    """The value at a dotted key such as `a.b.c`, or None when any step is absent."""
+    cur = data
+    for part in dotted.split("."):
+        if not isinstance(cur, dict) or part not in cur:
+            return None
+        cur = cur[part]
+    return cur
+
+
+def check_configured_surfaces(repo_root, library_version):
+    """L7. Every surface `.github/release-on-merge.json` lists must carry `library.json`'s version, read only when that file AND `RELEASING.md` both exist (RL-01 AC-1, AC-3). A surface that cannot be read exactly once is BROKEN, never clean."""
+    config_path = os.path.join(repo_root, RELEASE_CONFIG_REL)
+    if not (os.path.isfile(config_path) and os.path.isfile(os.path.join(repo_root, RELEASING_REL))):
+        return []
+    try:
+        config = json.loads(read_text(config_path))
+    except json.JSONDecodeError as exc:
+        raise Broken("%s is not valid JSON: %s" % (RELEASE_CONFIG_REL, exc))
+    surfaces = config.get("surfaces") if isinstance(config, dict) else None
+    if not isinstance(surfaces, list) or not surfaces:
+        raise Broken("%s has no non-empty 'surfaces' list, so L7 would check nothing. A silent pass here "
+                     "would let every configured surface drift unchecked." % RELEASE_CONFIG_REL)
+    findings = []
+    for index, surface in enumerate(surfaces):
+        where = "%s surfaces[%d]" % (RELEASE_CONFIG_REL, index)
+        if not isinstance(surface, dict) or not isinstance(surface.get("path"), str):
+            raise Broken("%s needs an object with a string 'path'" % where)
+        if ("json" in surface) == ("pattern" in surface):
+            raise Broken("%s (%s) needs exactly one of 'json' or 'pattern'" % (where, surface["path"]))
+        rel = surface["path"]
+        text = read_text(os.path.join(repo_root, rel))
+        if "json" in surface:
+            try:
+                value = _dotted_value(json.loads(text), surface["json"])
+            except json.JSONDecodeError as exc:
+                raise Broken("%s is not valid JSON: %s" % (rel, exc))
+            if not isinstance(value, str):
+                raise Broken("%s has no string at key %r, so L7 cannot read this surface"
+                             % (rel, surface["json"]))
+            found = [value]
+        else:
+            try:
+                pattern = re.compile(surface["pattern"], re.MULTILINE)
+            except (re.error, TypeError) as exc:
+                raise Broken("%s (%s) has a pattern that does not compile: %s" % (where, rel, exc))
+            if pattern.groups != 1:
+                raise Broken("%s (%s) pattern must have exactly one group, found %d"
+                             % (where, rel, pattern.groups))
+            found = pattern.findall(text)
+            if len(found) != 1:
+                raise Broken("%s pattern matched %d time(s), expected exactly one version. A pattern that "
+                             "matches nothing or matches twice has gone blind." % (rel, len(found)))
+        if found[0] != library_version:
+            findings.append("%s: claims version %s, but library.json declares %s (a surface listed in %s)"
+                            % (rel, found[0], library_version, RELEASE_CONFIG_REL))
+    return findings
+
+
 def run_all_checks(repo_root):
     """The one top-level entry point the real run and the wiring self-test both drive. A check dropped from this list is a check that never runs in production."""
     declared = declared_skill_versions(repo_root)
@@ -308,6 +370,7 @@ def run_all_checks(repo_root):
     findings += check_plugin_version(repo_root, library_version)
     findings += check_section_headings(repo_root, declared)
     findings += check_library_components(repo_root, declared)
+    findings += check_configured_surfaces(repo_root, library_version)
     return declared, findings
 
 
@@ -539,6 +602,68 @@ def _self_test_ambiguous_row_is_broken(failures):
                             "Broken rather than guess which is the claim")
 
 
+PLUGIN_JSON = '{"name": "t", "version": "%s"}'
+STATUS_PATTERN = r"^\*\*Plugin version:\*\* (\d+\.\d+\.\d+)"
+
+
+def _opt_in(tmp, surfaces, releasing=True, plugin_version="1.0.0", config=True):
+    """Add the RL-01 opt-in files to a fixture: a plugin manifest at `plugin_version`, then the configuration listing `surfaces`."""
+    _write(os.path.join(tmp, ".claude-plugin", "plugin.json"), PLUGIN_JSON % plugin_version)
+    if releasing:
+        _write(os.path.join(tmp, RELEASING_REL), "# Releasing\n")
+    if config:
+        _write(os.path.join(tmp, RELEASE_CONFIG_REL),
+               json.dumps({"surfaces": surfaces, "test_command": "true",
+                           "plugin": {"repin": False}}))
+
+
+GOOD_SURFACES = [
+    {"path": "library.json", "json": "version"},
+    {"path": ".claude-plugin/plugin.json", "json": "version"},
+    {"path": STATUS_REL, "pattern": STATUS_PATTERN},
+]
+
+
+def _self_test_configured_surfaces(failures):
+    """L7. Silent without both opt-in files, clean when every surface agrees, a FINDING naming the file when one disagrees, and BROKEN when a surface cannot be read exactly once."""
+    def run(label, surfaces, expect, **opt):
+        with tempfile.TemporaryDirectory() as tmp:
+            _fixture(tmp, {"plab-a": "1.2.3"})
+            _opt_in(tmp, surfaces, **opt)
+            try:
+                _, findings = run_all_checks(tmp)
+            except Broken as exc:
+                if expect != "broken":
+                    failures.append("L7 %s: unexpectedly BROKEN: %r" % (label, exc))
+                return
+            except Exception as exc:                            # noqa: BLE001
+                failures.append("L7 %s: crashed with %s: %s instead of reporting or raising Broken"
+                                % (label, type(exc).__name__, exc))
+                return
+            if expect == "broken":
+                failures.append("L7 %s: must raise Broken (exit 2), reported %r" % (label, findings))
+            elif expect == "clean" and findings:
+                failures.append("L7 %s: must produce zero findings, got %r" % (label, findings))
+            elif expect not in ("clean",) and not [f for f in findings if expect in f]:
+                failures.append("L7 %s: expected a finding mentioning %r, got %r" % (label, expect, findings))
+
+    stale = [{"path": "library.json", "json": "version"},
+             {"path": ".claude-plugin/plugin.json", "json": "version"}]
+    run("all surfaces agree", GOOD_SURFACES, "clean")
+    run("no configuration file, only RELEASING.md", [], "clean", config=False)
+    run("configuration without RELEASING.md, one surface stale", stale, "clean",
+        releasing=False, plugin_version="9.9.9")
+    run("one JSON surface disagrees", stale, ".claude-plugin/plugin.json: claims version 9.9.9",
+        plugin_version="9.9.9")
+    run("a pattern that matches twice", [{"path": STATUS_REL, "pattern": r"(\d+\.\d+\.\d+)"}], "broken")
+    run("a pattern that matches nothing", [{"path": STATUS_REL, "pattern": r"^NOPE (\d+)$"}], "broken")
+    run("a JSON key that is absent", [{"path": ".claude-plugin/plugin.json", "json": "nope"}], "broken")
+    run("a surface whose file is missing", [{"path": "gone.json", "json": "version"}], "broken")
+    run("an empty surfaces list", [], "broken")
+    run("a surface with neither json nor pattern", [{"path": "library.json"}], "broken")
+    run("a pattern with no group", [{"path": STATUS_REL, "pattern": r"Plugin version"}], "broken")
+
+
 def self_test():
     failures = []
     _self_test_all_agree(failures)
@@ -549,17 +674,19 @@ def self_test():
     _self_test_history_versions_ignored(failures)
     _self_test_root_readme_not_read(failures)
     _self_test_ambiguous_row_is_broken(failures)
+    _self_test_configured_surfaces(failures)
     if failures:
         print("BROKEN: gate self-test failed, the detector is not trustworthy.", file=sys.stderr)
         for f in failures:
             print("  " + f, file=sys.stderr)
         print("\nExiting 2. Do NOT read this as a clean tree.", file=sys.stderr)
         return False
-    print("gate self-test: PASS (5 claim locations each proved against their own canary, an all-agree "
+    print("gate self-test: PASS (6 claim locations each proved against their own canary, an all-agree "
           "anti-canary, a missing-skill finding for the status table plus one for the "
           "section headings and the manifest components, four blind-matcher BROKEN cases, a "
           "history-version false-positive guard, a retired-L1 guard proving the root README is not "
-          "read, and an ambiguous-row BROKEN case)")
+          "read, an ambiguous-row BROKEN case, and the configured-surface location L7: silent without "
+          "both opt-in files, a finding for a stale surface, BROKEN for a surface read zero or two times)")
     return True
 
 
@@ -593,7 +720,7 @@ def main():
         print("\nAuthoritative sources: skills/<name>/SKILL.md metadata.version, and library.json version.")
         sys.exit(1)
 
-    print("CLEAN: canary proved, %d skill(s) checked across 5 claim locations, every claimed version "
+    print("CLEAN: canary proved, %d skill(s) checked across 6 claim locations, every claimed version "
           "matches what the repository declares." % len(declared))
     sys.exit(0)
 

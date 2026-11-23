@@ -109,6 +109,8 @@ COMMANDS = [
     "python3 lib/test-session-logs.py",
     "python3 skills/plab-continue-session/scripts/test-list-candidates.py",
     "python3 skills/plab-ai-review/scripts/test-dispatch.py",
+    "python3 scripts/release-check.py --self-test",
+    "python3 scripts/release-check.py",
 ]
 
 
