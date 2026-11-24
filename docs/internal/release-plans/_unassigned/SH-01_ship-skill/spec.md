@@ -4,7 +4,7 @@ title: "plab-ship: document, verify, merge and optionally release finished branc
 type: spec
 status: committed
 created: 2026-11-06
-updated: 2026-11-06
+updated: 2026-11-24
 linked-effort: "the maintainer's request of 2026-11-05 in session to turn a pasted close-out prompt into a skill"
 linked-plan: null
 linked-release: null
@@ -20,10 +20,10 @@ priority: P2
 ## Task Summary
 
 **Status:** committed. Built on `feat/plab-ship`; AC-15 waits on the first run in another repository
-**Last updated:** 2026-11-06 by claude (Opus 5.5), writing and building under the maintainer's instruction to deliver the skill
+**Last updated:** 2026-11-24 by claude (Opus 5.5), recording the maintainer's answer to D2 (where the merge check keeps its backups)
 **Linked plan:** none. The spec and the build landed together, under the instruction to deliver
-**Open questions:** D2 (see Open Questions / Decisions). It does not block the skill. D1 was decided on 2026-11-06
-**Revisions:** 3
+**Open questions:** none. D1 (the release sentence in the merge rule) was decided on 2026-11-06, and D2 (where the merge check keeps its backups) on 2026-11-10
+**Revisions:** 4
 
 ### Acceptance Criteria Fulfillment
 
@@ -184,7 +184,7 @@ The maintainer runs the skill on a machine whose instructions hold no merge rule
 | ID | Title | Resolution | Status | Updated |
 |----|-------|------------|--------|---------|
 | D1 | The sentence in the merge rule that lets `--release` answer the merge check's `release` ask | Added to both copies of the rule | Decided | 2026-11-06 |
-| D2 | Where the merge check keeps its backups | Pending | Open | 2026-11-06 |
+| D2 | Where the merge check keeps its backups | Under `refs/backups/pre-merge/`, not as tags | Decided | 2026-11-10 |
 
 ### D1: The sentence in the merge rule (Decided)
 
@@ -194,10 +194,20 @@ The maintainer runs the skill on a machine whose instructions hold no merge rule
 
 **Proposed text.** "Running `/plab-ship --release` is the maintainer's yes for that run's tag and release. It answers a `release` ask from the merge check and no other check."
 
-### D2: Where the merge check keeps its backups (Open)
+### D2: Where the merge check keeps its backups (Decided)
 
 **Summary.** The merge check's backup tags mislead every script that asks for the latest tag. Seven scripts in this plugin read tags, and only the `git describe` form is confirmed to give a wrong answer.
 
 **Recommendation.** Store backups under `refs/backups/pre-merge/` with `git update-ref`. A test in a throwaway repository on 2026-11-05 confirmed that `git describe` then returns the version, that the reference restores as a branch, and that a clone does not carry it. The cost is one change in `merge-check.py`, moving 46 tags in 9 repositories, and a change to the rule's text.
 
 **Why it is not built.** It deletes and rewrites tags across repositories, so it needs the maintainer's explicit yes. This skill is unaffected either way, because its facts script ignores backup tags.
+
+---
+
+> **Maintainer decision:** Decided 2026-11-10 by jprisant
+>
+> * **Status:** Decided
+> * **Choice:** The recommendation: store the backups under `refs/backups/pre-merge/` with `git update-ref`, not as tags.
+> * **Reasoning:** The maintainer answered "d1 a" in the walk of 2026-11-10, where this item was walk item D1. The maintainer ruled the same way on 2026-11-15 in the private configuration's own register, as O-33 (solo-repo merge rule).
+> * **Follow-up:** `merge-check.py` has written its backups as `refs/backups/pre-merge/<date>-<branch>` since 2026-11-15 (agent-config commit `1224204`). Two pieces remain, and both live in the private configuration rather than here: the older `pre-merge/*` tags still exist as local tags (22 in this checkout on 2026-11-24, none on the remote), and the merge rule's text still says "pre-merge tag" in its step 4 and its Why section. Moving or deleting the old tags needs the maintainer's yes for each repository.
+> * **Decided by / date:** jprisant / 2026-11-10
