@@ -79,7 +79,7 @@ The maintainer asked for skills that curate and update documentation, not only c
 
 1. A cited path that does not resolve is the most common stale claim, and a tracked file citing a gitignored one is "unresolvable by construction" [S3].
 2. Commands, flags and names in documents are tested against the current tree [S3].
-3. A file's promise about itself, such as "this list is generated" for a hand-maintained list, is "the highest-yield staleness finding" because the file states its own contract [S3].
+3. A file's promise about itself, such as "this list is generated" for a hand-maintained list, is among "the highest-yield staleness findings", because the file states its own contract [S3].
 4. Counts stated in prose, such as the number of skills, are checked against the repository. [model-inference]
 
 ### How findings are made

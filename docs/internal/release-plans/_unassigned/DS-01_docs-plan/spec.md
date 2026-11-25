@@ -178,7 +178,7 @@ A skill's user guide carries a step-by-step quick start (a how-to guide) and a f
 
 **Summary.** Plan, write and refresh can be one skill with three modes, three skills, or the plan can live inside `plab-audit`.
 
-**Context.** The decision page's DOC-1 recommended extending `plab-audit --lens=docs` and building no skill [S7]. That was written before the maintainer asked for these specs. The plan overlaps the lens's absence check, and the refresh overlaps its staleness check [S4]. Every auto-discoverable skill costs description budget in every session, so the number of skills matters [S6].
+**Context.** The decision page's DOC-1 recommended extending `plab-audit --lens=docs` and building no skill [S7]. That was written before the maintainer asked for these specs. A reply on the decision page maps to this decision as follows: DOC-1 A with DOC-2 A is option D; DOC-1 A with DOC-2 B is option C; DOC-1 B or C is option B; DOC-1 D defers this decision. Option A has no card on the page. The plan overlaps the lens's absence check, and the refresh overlaps its staleness check [S4]. Every auto-discoverable skill costs description budget in every session, so the number of skills matters [S6].
 
 **Desired outcome.** One name for the maintainer to remember, no duplicated logic between the lens and the docs skills, and modes that share one facts script and the documentation map.
 

@@ -62,7 +62,15 @@ Each mode follows the repository's checker pattern: one facts script, one checke
 
 ## How this relates to the decision page
 
-The Toolchain Decision Sitting page of 2026-11-22 carries DOC-1 (where documentation auditing lives) and DOC-2 (a skill that writes the documents). Its DOC-1 recommendation, extend `plab-audit --lens=docs` and build no skill, was written before the maintainer asked for these specs. DS-01's D1 now carries that choice as option C, beside the one-skill and three-skill options. An answer to DOC-1 on the page should be written back to DS-01 D1. No card on the page covered curating and updating; DS-03 fills that gap.
+The Toolchain Decision Sitting page of 2026-11-22 carries DOC-1 (where documentation auditing lives) and DOC-2 (a skill that writes the documents). Its DOC-1 recommendation, extend `plab-audit --lens=docs` and build no skill, was written before the maintainer asked for these specs. DS-01's D1 now carries the page's choices beside a one-skill option the page never offered. A reply on the page maps to DS-01 D1 as follows:
+
+| Reply on the decision page | DS-01 D1 option |
+|---|---|
+| DOC-1 A with DOC-2 A (lens only; decide on a writer later) | D |
+| DOC-1 A with DOC-2 B (lens for planning; build a writer now) | C |
+| DOC-1 B or C (a planning skill, or all three skills) | B |
+| DOC-1 D (not now) | D1 deferred |
+| None: option A, one `plab-docs` skill with three modes | A, the recommendation | No card on the page covered curating and updating; DS-03 fills that gap.
 
 ## The open questions, in one place
 
