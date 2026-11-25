@@ -2,7 +2,7 @@
 
 Generated file. Regenerate with `python scripts/gen-release-index.py` from the repository root. Hand edits will be overwritten on the next regeneration.
 
-**Releases:** 5 **Efforts:** 31 (23 unassigned) **Source:** every `plan.md` and `spec.md` under `docs/internal/release-plans/`, including `_unassigned/`, plus each effort's `implementation-plan.md` where present
+**Releases:** 5 **Efforts:** 34 (26 unassigned) **Source:** every `plan.md` and `spec.md` under `docs/internal/release-plans/`, including `_unassigned/`, plus each effort's `implementation-plan.md` where present
 
 ---
 
@@ -27,6 +27,7 @@ Every effort id's letter prefix names which series it belongs to. An id whose le
 | RM | profile-readme roadmap item |
 | PH | pages-hub roadmap item |
 | RL | release pipeline roadmap item |
+| DS | docs-skills roadmap item |
 
 ---
 
@@ -57,6 +58,9 @@ Specs written before being assigned to a release: the documented default home `/
 | [C-05](_unassigned/C-05_arc-resume/spec.md) | arc resume | C (continue-session roadmap item) | draft | draft | P2 | No |
 | [CS-01](_unassigned/CS-01_current-status/spec.md) | current status | CS (current-status roadmap item) | fulfilled | complete | P2 | Yes |
 | [D-10](_unassigned/D-10_log-format-contract/spec.md) | log format contract | D (defect in the wrap and continue pair) | draft | draft | P2 | No |
+| [DS-01](_unassigned/DS-01_docs-plan/spec.md) | docs plan | DS (docs-skills roadmap item) | draft | (no implementation plan yet) | P2 | Yes |
+| [DS-02](_unassigned/DS-02_docs-write/spec.md) | docs write | DS (docs-skills roadmap item) | draft | (no implementation plan yet) | P2 | Yes |
+| [DS-03](_unassigned/DS-03_docs-refresh/spec.md) | docs refresh | DS (docs-skills roadmap item) | draft | (no implementation plan yet) | P2 | Yes |
 | [H-05](_unassigned/H-05_retire-dash-enforcement/spec.md) | retire dash enforcement | H (hygiene and repo-wide) | draft | (no implementation plan yet) | P3 | Yes |
 | [H-06](_unassigned/H-06_optional-release-plan-version/spec.md) | optional release plan version | H (hygiene and repo-wide) | draft | (no implementation plan yet) | P3 | Yes |
 | [PH-01](_unassigned/PH-01_pages-hub/spec.md) | pages hub | PH (pages-hub roadmap item) | draft | (no implementation plan yet) | P3 | Yes |
@@ -97,6 +101,9 @@ One row per effort, grouped by release in sequence order (see the Release column
 | [C-05](_unassigned/C-05_arc-resume/spec.md) | arc resume | C (continue-session roadmap item) | draft | draft | `_unassigned/` | - | P2 | No |
 | [CS-01](_unassigned/CS-01_current-status/spec.md) | current status | CS (current-status roadmap item) | fulfilled | complete | `_unassigned/` | - | P2 | Yes |
 | [D-10](_unassigned/D-10_log-format-contract/spec.md) | log format contract | D (defect in the wrap and continue pair) | draft | draft | `_unassigned/` | - | P2 | No |
+| [DS-01](_unassigned/DS-01_docs-plan/spec.md) | docs plan | DS (docs-skills roadmap item) | draft | (no implementation plan yet) | `_unassigned/` | - | P2 | Yes |
+| [DS-02](_unassigned/DS-02_docs-write/spec.md) | docs write | DS (docs-skills roadmap item) | draft | (no implementation plan yet) | `_unassigned/` | - | P2 | Yes |
+| [DS-03](_unassigned/DS-03_docs-refresh/spec.md) | docs refresh | DS (docs-skills roadmap item) | draft | (no implementation plan yet) | `_unassigned/` | - | P2 | Yes |
 | [H-05](_unassigned/H-05_retire-dash-enforcement/spec.md) | retire dash enforcement | H (hygiene and repo-wide) | draft | (no implementation plan yet) | `_unassigned/` | - | P3 | Yes |
 | [H-06](_unassigned/H-06_optional-release-plan-version/spec.md) | optional release plan version | H (hygiene and repo-wide) | draft | (no implementation plan yet) | `_unassigned/` | - | P3 | Yes |
 | [PH-01](_unassigned/PH-01_pages-hub/spec.md) | pages hub | PH (pages-hub roadmap item) | draft | (no implementation plan yet) | `_unassigned/` | - | P3 | Yes |
