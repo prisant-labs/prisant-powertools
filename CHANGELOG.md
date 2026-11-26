@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-25
+
+A minor release that changes no skill. The Codex plugin page now shows a website, a developer, descriptions and suggested prompts. One command runs every repository check, the version check can read the files a release must update, and new pull request checks guard a release, though this repository has not yet opted in to them. Draft specifications and a plan for releasing on merge and for documentation skills are added. Existing use keeps working.
+
 ### Added
 
 - **The Codex plugin page now shows a website, a developer, descriptions and suggested prompts.** Codex builds that page from the `interface` block of `.codex-plugin/plugin.json`, which carried only a display name and a category, so its Website row read "Unavailable". `library.json` now carries a `codex.interface` object with the website (this repository), the developer (Prisant Labs), a short and a long description, the capabilities `Interactive`, `Read` and `Write`, and three suggested prompts, and the generator copies it into the Codex manifest. The Codex category moves from `Engineering`, which 1 of 187 Codex plugins uses, to `Developer Tools`. The author in both manifests gains a link to the Prisant Labs organization, and the plugin description now names the org profile README skill, which the marketplace entry already did. To see it, run `codex plugin marketplace upgrade prisant-labs` after this release and open the plugin's page in Codex: the Website row links to this repository. Regenerating needs the generator change in product-on-purpose/agent-skills-toolkit#406, which adds `codex.interface`; an older generator stops with a refusal naming each `interface.` field it would drop, and changes no file.
