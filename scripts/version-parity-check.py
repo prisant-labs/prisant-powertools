@@ -25,7 +25,7 @@ WHY THIS IS A STRUCTURAL CHECK AND NOT A VERSION-STRING SWEEP
 ------------------------------------------------------------
 The obvious implementation, "find every `\\d+\\.\\d+\\.\\d+` in the tracked docs and compare it to something", is the implementation this repository already knows not to write. D-12's path-citation rule scored 13 flags with 11 false positives when a prose rule was mechanized literally (`docs/internal/release-plans/plan_04_gates-that-cannot-fail-open/D-12_path-citation-precision/spec.md`), and the lesson kept from it is "mechanize the structure, never the prose". Version-shaped strings in these documents are overwhelmingly historical: HISTORY tables, "carried through 1.2.1", changelog entries. Every one of those is correct precisely because it does NOT match the current version.
 
-This script therefore reads exactly six structured locations, each of which is a claim about what a version IS RIGHT NOW, and ignores every other version-shaped string in the repository:
+This script therefore reads exactly seven structured locations, each of which is a claim about what a version IS RIGHT NOW, and ignores every other version-shaped string in the repository:
 
   L1  Retired 2026-11-10. It was `README.md`'s Skills table. The root README now lists skills as `name - what it does` and claims no per-skill version at all; it links to `docs/status-skills.md` instead, which L2 and L5 already check. A document that states no version cannot drift, so the location was removed rather than re-matched. The label stays unused so that L2 to L6 keep the names older records cite, and `_self_test_root_readme_not_read` proves the README is no longer read.
   L2  `docs/status-skills.md`, the At a glance table. Same row shape, same claim.
@@ -34,6 +34,7 @@ This script therefore reads exactly six structured locations, each of which is a
   L5  `docs/status-skills.md`, the per-skill section headings in Per-skill detail (a line reading "### " then a backtick-quoted skill name then a version, optionally followed by a comma and a note such as ", explicit only"). One per skill.
   L6  `library.json`'s `components.skills[].version`. One entry per skill, a claim carried by the same manifest the toolkit's manifest generators read.
   L7  `.github/release-on-merge.json`'s `surfaces` (RL-01, release on merge). Read only when that file and `RELEASING.md` both exist, so a half-done opt-in checks nothing. Each entry is `{"path": ..., "json": "<dotted key>"}` or `{"path": ..., "pattern": "<regex with one group>"}`; each must yield exactly one version, equal to `library.json`'s. A pattern is matched with `re.MULTILINE`, so `^` anchors a line. L7 runs on every pull request and every push, not only on one that bumps: surfaces that must agree at release time should agree between releases too. The CHANGELOG version heading and the `HISTORY.md` Release cells are not L7 surfaces, because they hold many versions by design; `scripts/release-check.py` checks them.
+  L8  The listing release date: the line `Released YYYY-MM-DD.` inside `library.json`'s `description` and `codex.interface.longDescription`, and inside the same strings in the generated `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json`. Neither Claude Code nor Codex has a date field, so this line is the only way a plugin listing shows when its version was released. Its authority is the `## [<library.json version>] - YYYY-MM-DD` heading in `CHANGELOG.md`, so a release that bumps the version and dates its CHANGELOG section must restamp the line and regenerate the manifests. A surface carrying the line zero or two times is BROKEN; a stale date, or a version with no dated heading, is a FINDING. The marketplace entry in the separate `agent-plugins` repository carries the same line and is restamped at repin time; this script cannot see it.
 
 Authoritative sources, never the other way round: a skill's version is whatever `skills/<name>/SKILL.md` says in `metadata.version`, and the library's version is whatever `library.json` says in its top-level `version`. This script never edits either, and never edits the documents; CI reports, it does not fix (`AGENTS.md`, Build and validate).
 
@@ -45,7 +46,7 @@ So a location that yields ZERO claims when the repository has skills to claim is
 
 WHAT THIS SCRIPT DELIBERATELY DOES NOT CHECK
 --------------------------------------------
-Whether a version SHOULD have been bumped (Check 4's question, and one that needs git history). Whether `HISTORY.md` has a row for the current version (also Check 4). Whether the generated manifests agree with `library.json`, which is the toolkit's `gen-manifest.mjs` and its own parity gate, except where a repository that releases on merge lists a manifest as an L7 surface, in which case this script reads it. Whether a version number is semantically the right increment (`scripts/release-check.py` judges the size of a bump). And any version-shaped string outside the six locations above, all of which are presumed historical and correct.
+Whether a version SHOULD have been bumped (Check 4's question, and one that needs git history). Whether `HISTORY.md` has a row for the current version (also Check 4). Whether the generated manifests agree with `library.json`, which is the toolkit's `gen-manifest.mjs` and its own parity gate, except where a repository that releases on merge lists a manifest as an L7 surface, in which case this script reads it. Whether a version number is semantically the right increment (`scripts/release-check.py` judges the size of a bump). And any version-shaped string outside the seven locations above, all of which are presumed historical and correct.
 """
 
 import argparse
@@ -69,6 +70,20 @@ STATUS_REL = "docs/status-skills.md"
 LIBRARY_REL = "library.json"
 RELEASING_REL = "RELEASING.md"
 RELEASE_CONFIG_REL = ".github/release-on-merge.json"
+CHANGELOG_REL = "CHANGELOG.md"
+
+# L8. The release date the plugin listings show. Neither Claude Code nor Codex has a date field, so the
+# date rides at the end of the descriptions those harnesses display, in this one fixed shape.
+RELEASE_LINE = re.compile(r'Released (\d{4}-\d{2}-\d{2})\.')
+# Every (file, dotted key) whose string a listing displays. The generated manifests are read as well as
+# library.json, so a release that restamps the source but forgets to regenerate is caught.
+LISTING_DATE_SURFACES = (
+    (LIBRARY_REL, "description"),
+    (LIBRARY_REL, "codex.interface.longDescription"),
+    (".claude-plugin/plugin.json", "description"),
+    (".codex-plugin/plugin.json", "description"),
+    (".codex-plugin/plugin.json", "interface.longDescription"),
+)
 
 
 class Broken(Exception):
@@ -360,6 +375,37 @@ def check_configured_surfaces(repo_root, library_version):
     return findings
 
 
+def check_listing_release_date(repo_root, library_version):
+    """L8. Every listing description must end its run with `Released YYYY-MM-DD.`, and that date must be the one CHANGELOG.md gives `library.json`'s version. A surface that carries the line zero times or twice is BROKEN, because a matcher that has gone blind must not read as clean; a stale date, or a version with no dated CHANGELOG heading, is a FINDING."""
+    heading = re.compile(r'^## \[%s\] - (\d{4}-\d{2}-\d{2})\s*$' % re.escape(library_version), re.MULTILINE)
+    dates = heading.findall(read_text(os.path.join(repo_root, CHANGELOG_REL)))
+    if len(dates) > 1:
+        raise Broken("%s has %d headings for version %s; L8 will not guess which date is the release date"
+                     % (CHANGELOG_REL, len(dates), library_version))
+    expected = dates[0] if dates else None
+    findings = []
+    if expected is None:
+        findings.append("%s has no '## [%s] - YYYY-MM-DD' heading, so the listing release date cannot be "
+                        "checked against it" % (CHANGELOG_REL, library_version))
+    for rel, key in LISTING_DATE_SURFACES:
+        text = read_text(os.path.join(repo_root, rel))
+        try:
+            value = _dotted_value(json.loads(text), key)
+        except json.JSONDecodeError as exc:
+            raise Broken("%s is not valid JSON: %s" % (rel, exc))
+        if not isinstance(value, str):
+            raise Broken("%s has no string at key %r, so L8 cannot read the listing date" % (rel, key))
+        found = RELEASE_LINE.findall(value)
+        if len(found) != 1:
+            raise Broken("%s %s carries the 'Released YYYY-MM-DD.' line %d time(s), expected exactly once. "
+                         "No harness has a date field, so this line is the only place a listing shows the "
+                         "release date." % (rel, key, len(found)))
+        if expected is not None and found[0] != expected:
+            findings.append("%s %s: says Released %s, but %s dates version %s %s"
+                            % (rel, key, found[0], CHANGELOG_REL, library_version, expected))
+    return findings
+
+
 def run_all_checks(repo_root):
     """The one top-level entry point the real run and the wiring self-test both drive. A check dropped from this list is a check that never runs in production."""
     declared = declared_skill_versions(repo_root)
@@ -371,6 +417,7 @@ def run_all_checks(repo_root):
     findings += check_section_headings(repo_root, declared)
     findings += check_library_components(repo_root, declared)
     findings += check_configured_surfaces(repo_root, library_version)
+    findings += check_listing_release_date(repo_root, library_version)
     return declared, findings
 
 
@@ -396,8 +443,11 @@ def _fixture(tmp, skills, readme_versions=None, status_versions=None,
              usage_versions=None, plugin_version="1.0.0", library_version="1.0.0",
              status_table=True, usage_label="**Version:**",
              heading_versions=None, library_skill_versions=None,
-             write_headings=True, library_has_components=True):
-    """Build a miniature repository. Each *_versions dict may override what a location CLAIMS, so a canary is one dict entry away from an anti-canary."""
+             write_headings=True, library_has_components=True,
+             listing_date="2026-01-01", changelog_heading=None, listing_overrides=None):
+    """Build a miniature repository. Each *_versions dict may override what a location CLAIMS, so a canary is one dict entry away from an anti-canary.
+
+    For L8, every listing surface carries `Released <listing_date>.` unless `listing_overrides` maps its (file, dotted key) to other text, and CHANGELOG.md dates `library_version` 2026-01-01 unless `changelog_heading` replaces that heading block."""
     readme_versions = dict(skills if readme_versions is None else readme_versions)
     status_versions = dict(skills if status_versions is None else status_versions)
     usage_versions = dict(skills if usage_versions is None else usage_versions)
@@ -413,7 +463,24 @@ def _fixture(tmp, skills, readme_versions=None, status_versions=None,
             "skills": [{"name": name, "version": version}
                       for name, version in sorted(library_skill_versions.items())]
         }
+    overrides = listing_overrides or {}
+
+    def listing(rel, key):
+        return overrides.get((rel, key), "Does things. Released %s." % listing_date)
+
+    library_obj["description"] = listing(LIBRARY_REL, "description")
+    library_obj["codex"] = {"interface": {"longDescription": listing(LIBRARY_REL, "codex.interface.longDescription")}}
     _write(os.path.join(tmp, LIBRARY_REL), json.dumps(library_obj))
+    _write(os.path.join(tmp, ".claude-plugin", "plugin.json"), json.dumps(
+        {"name": "t", "version": library_version,
+         "description": listing(".claude-plugin/plugin.json", "description")}))
+    _write(os.path.join(tmp, ".codex-plugin", "plugin.json"), json.dumps(
+        {"name": "t", "version": library_version,
+         "description": listing(".codex-plugin/plugin.json", "description"),
+         "interface": {"longDescription": listing(".codex-plugin/plugin.json", "interface.longDescription")}}))
+    if changelog_heading is None:
+        changelog_heading = "## [%s] - 2026-01-01\n\nNotes.\n" % library_version
+    _write(os.path.join(tmp, CHANGELOG_REL), "# Changelog\n\n## [Unreleased]\n\n%s" % changelog_heading)
 
     # The root README is written in the OLD table shape on purpose, carrying whatever readme_versions
     # says. L1 is retired, so nothing may read it; _self_test_root_readme_not_read puts a stale version
@@ -602,13 +669,15 @@ def _self_test_ambiguous_row_is_broken(failures):
                             "Broken rather than guess which is the claim")
 
 
-PLUGIN_JSON = '{"name": "t", "version": "%s"}'
 STATUS_PATTERN = r"^\*\*Plugin version:\*\* (\d+\.\d+\.\d+)"
 
 
 def _opt_in(tmp, surfaces, releasing=True, plugin_version="1.0.0", config=True):
-    """Add the RL-01 opt-in files to a fixture: a plugin manifest at `plugin_version`, then the configuration listing `surfaces`."""
-    _write(os.path.join(tmp, ".claude-plugin", "plugin.json"), PLUGIN_JSON % plugin_version)
+    """Add the RL-01 opt-in files to a fixture: the fixture's plugin manifest set to `plugin_version`, then the configuration listing `surfaces`. The manifest keeps its description, so L8 still reads a dated line."""
+    manifest_path = os.path.join(tmp, ".claude-plugin", "plugin.json")
+    manifest = json.loads(read_text(manifest_path))
+    manifest["version"] = plugin_version
+    _write(manifest_path, json.dumps(manifest))
     if releasing:
         _write(os.path.join(tmp, RELEASING_REL), "# Releasing\n")
     if config:
@@ -664,6 +733,47 @@ def _self_test_configured_surfaces(failures):
     run("a pattern with no group", [{"path": STATUS_REL, "pattern": r"Plugin version"}], "broken")
 
 
+def _self_test_listing_release_date(failures):
+    """L8. Clean when every listing line carries the CHANGELOG date; a FINDING naming the surface when one date is stale, including a generated manifest left unregenerated, or when the version has no dated heading; BROKEN when a surface carries the line zero or two times, or the CHANGELOG dates the version twice."""
+    def run(label, expect, **fixture):
+        with tempfile.TemporaryDirectory() as tmp:
+            _fixture(tmp, {"plab-a": "1.2.3"}, **fixture)
+            try:
+                _, findings = run_all_checks(tmp)
+            except Broken as exc:
+                if expect != "broken":
+                    failures.append("L8 %s: unexpectedly BROKEN: %r" % (label, exc))
+                return
+            except Exception as exc:                            # noqa: BLE001
+                failures.append("L8 %s: crashed with %s: %s instead of reporting or raising Broken"
+                                % (label, type(exc).__name__, exc))
+                return
+            if expect == "broken":
+                failures.append("L8 %s: must raise Broken (exit 2), reported %r" % (label, findings))
+            elif expect == "clean" and findings:
+                failures.append("L8 %s: must produce zero findings, got %r" % (label, findings))
+            elif expect != "clean" and len([f for f in findings if expect in f]) != 1:
+                failures.append("L8 %s: expected exactly one finding mentioning %r, got %r"
+                                % (label, expect, findings))
+
+    stale = "Does things. Released 2025-06-30."
+    run("every surface carries the CHANGELOG date", "clean")
+    run("the source description is stale", "library.json description: says Released 2025-06-30",
+        listing_overrides={(LIBRARY_REL, "description"): stale})
+    run("a generated manifest was not regenerated",
+        ".codex-plugin/plugin.json interface.longDescription: says Released 2025-06-30",
+        listing_overrides={(".codex-plugin/plugin.json", "interface.longDescription"): stale})
+    run("the version has no dated CHANGELOG heading", "has no '## [1.0.0] - YYYY-MM-DD' heading",
+        changelog_heading="## [0.9.0] - 2026-01-01\n\nOlder.\n")
+    run("a surface lost the line", "broken",
+        listing_overrides={(".claude-plugin/plugin.json", "description"): "Does things."})
+    run("a surface carries the line twice", "broken",
+        listing_overrides={(LIBRARY_REL, "codex.interface.longDescription"):
+                           "Released 2026-01-01. Released 2026-01-01."})
+    run("the CHANGELOG dates the version twice", "broken",
+        changelog_heading="## [1.0.0] - 2026-01-01\n\n## [1.0.0] - 2026-02-02\n")
+
+
 def self_test():
     failures = []
     _self_test_all_agree(failures)
@@ -675,6 +785,7 @@ def self_test():
     _self_test_root_readme_not_read(failures)
     _self_test_ambiguous_row_is_broken(failures)
     _self_test_configured_surfaces(failures)
+    _self_test_listing_release_date(failures)
     if failures:
         print("BROKEN: gate self-test failed, the detector is not trustworthy.", file=sys.stderr)
         for f in failures:
@@ -686,7 +797,9 @@ def self_test():
           "section headings and the manifest components, four blind-matcher BROKEN cases, a "
           "history-version false-positive guard, a retired-L1 guard proving the root README is not "
           "read, an ambiguous-row BROKEN case, and the configured-surface location L7: silent without "
-          "both opt-in files, a finding for a stale surface, BROKEN for a surface read zero or two times)")
+          "both opt-in files, a finding for a stale surface, BROKEN for a surface read zero or two times, "
+          "and the listing release date L8: a finding for a stale date in the source or a generated "
+          "manifest or a version with no dated CHANGELOG heading, BROKEN for a line carried zero or two times)")
     return True
 
 
@@ -720,8 +833,9 @@ def main():
         print("\nAuthoritative sources: skills/<name>/SKILL.md metadata.version, and library.json version.")
         sys.exit(1)
 
-    print("CLEAN: canary proved, %d skill(s) checked across 6 claim locations, every claimed version "
-          "matches what the repository declares." % len(declared))
+    print("CLEAN: canary proved, %d skill(s) checked across 7 claim locations, every claimed version "
+          "matches what the repository declares, and every listing shows the CHANGELOG's release date."
+          % len(declared))
     sys.exit(0)
 
 

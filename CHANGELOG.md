@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **The plugin listings now show the release date.** Neither Claude Code nor Codex has a field for a release date, so each description the listings display now ends with `Released YYYY-MM-DD.`, the date of the current version's CHANGELOG section. The line is in the plugin's description, which Claude Code shows, and in the Codex long description, which the Codex plugin page shows. The Codex page shows it from the next release, because Codex reads the copy at the release tag; Claude Code shows it once `claude plugin marketplace update prisant-labs` reads the marketplace entry, which carries the same line. `scripts/version-parity-check.py` gains location L8, which fails when a listing's date disagrees with the CHANGELOG date for `library.json`'s version, including a generated manifest that was not regenerated, and exits 2 when a listing carries the line zero or two times. A release therefore restamps the line in `library.json` and regenerates the manifests in the same pull request.
+
 ## [0.15.0] - 2026-11-25
 
 A minor release that changes no skill. The Codex plugin page now shows a website, a developer, descriptions and suggested prompts. One command runs every repository check, the version check can read the files a release must update, and new pull request checks guard a release, though this repository has not yet opted in to them. Draft specifications and a plan for releasing on merge and for documentation skills are added. Existing use keeps working.
